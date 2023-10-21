@@ -1,0 +1,73 @@
+# Copyright (C) 2023 MR
+# This file is distributed under the same license as the KOPA Payment Method plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: KOPA Payment Method 1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kopa-payment\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-09-29T10:58:48+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.8.1\n"
+"X-Domain: kopa_payment\n"
+
+#. Plugin Name of the plugin
+msgid "KOPA Payment Method"
+msgstr ""
+
+#. Description of the plugin
+msgid "Add a KOPA payment method to WooCommerce."
+msgstr ""
+
+#. Author of the plugin
+msgid "MR"
+msgstr ""
+
+#: inc/curl.php:86
+#: inc/curl.php:111
+msgid "There was problem with Kopa Payment method"
+msgstr ""
+
+#: inc/curl.php:135
+#: inc/curl.php:180
+msgid "There was problem with Kopa Payment method. Saving CC"
+msgstr ""
+
+#: inc/curl.php:173
+msgid "Credit card already saved"
+msgstr ""
+
+#: inc/kopa-class.php:95
+msgid "CC Type"
+msgstr ""
+
+#: inc/kopa-class.php:108
+msgid "Credit card number"
+msgstr ""
+
+#: inc/kopa-class.php:119
+msgid "Expiration Date"
+msgstr ""
+
+#: inc/kopa-class.php:130
+msgid "CCV"
+msgstr ""
+
+#: inc/kopa-class.php:142
+msgid "Save credit card"
+msgstr ""
+
+#: inc/kopa-class.php:173
+msgid "Please fill in a valid credit card number."
+msgstr ""
+
+#: inc/kopa-class.php:176
+msgid "Please fill in a valid credit card exparation date."
+msgstr ""
+
+#: inc/kopa-class.php:179
+msgid "Please fill in a valid credit card CCV number."
+msgstr ""
