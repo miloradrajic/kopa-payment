@@ -10,7 +10,11 @@ $(document).ready(async function() {
   });
 });
 
-
+/**
+ * Delete saved CC 
+ * @param {string} ccId 
+ * @returns 
+ */
 async function deleteCard(ccId){
   return $.ajax({
     type: 'POST',

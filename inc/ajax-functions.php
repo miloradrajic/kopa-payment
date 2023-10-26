@@ -11,7 +11,7 @@ function get_secret_key() {
     $response = array('success' => true, 'key' => $secretKey);
   } else {
     // If errors, return them to the JavaScript
-    $response = array('success' => false, 'message' => __('Error getting pi key'));
+    $response = array('success' => false, 'message' => __('Error getting pi key', 'kopa-payment'));
   }
 
   echo json_encode($response);
@@ -33,7 +33,7 @@ function save_cc_ajax(){
   $saved = $kopaCurl->saveCC($_POST['ccNumbEncoded'], $_POST['ccExpDateEncoded'], $ccType, $_POST['ccAlias']);
 
   if($saved == true){
-    $response = array('success' => true, 'message' => 'CC Saved');
+    $response = array('success' => true, 'message' => __('CC Saved', 'kopa-payment'));
   }else{
     $response = array('success' => false, 'message' => __('Error saving CC'));
   }
@@ -52,9 +52,9 @@ function deleteCc(){
   check_ajax_referer('ajax-my-account-nonce', 'security');
   $deleted = $kopaCurl->deleteCc($_POST['ccId']);
   if($deleted == true){
-    $deleted = array('success' => true, 'message' => 'CC Deleted');
+    $deleted = array('success' => true, 'message' => __('CC Deleted', 'kopa-payment'));
   }else{
-    $deleted = array('success' => false, 'message' => __('Error deleting CC'));
+    $deleted = array('success' => false, 'message' => __('Error deleting CC', 'kopa-payment'));
   }
 
   echo json_encode($deleted);
@@ -75,7 +75,7 @@ function getSavedCardDetails(){
   if($card){
     $response = array('success' => true, 'card' => $card);
   }else{
-    $response = array('success' => false, 'message' => __('Error getting card details'));
+    $response = array('success' => false, 'message' => __('Error getting card details', 'kopa-payment'));
   }
 
   echo json_encode($response);
@@ -103,11 +103,11 @@ function complete3dPayment(){
     $order->save();
     // Redirect to the thank you page
     $redirect_url = $order->get_checkout_order_received_url();
-    wp_send_json_success(['redirect' => $redirect_url, 'message' => __('Order has been completed', 'kopa_payment')]);
+    wp_send_json_success(['redirect' => $redirect_url, 'message' => __('Order has been completed', 'kopa-payment')]);
     die();
   }
 
-  echo json_encode(['success' => false, 'message' => __('Order could not be completed', 'kopa_payment')]);
+  echo json_encode(['success' => false, 'message' => __('Order could not be completed', 'kopa-payment')]);
   die();
 }
 add_action('wp_ajax_complete_3d_payment', 'complete3dPayment');
@@ -126,7 +126,7 @@ function log3dPaymentError(){
 
   kopaMessageLog('3D Payment', $orderId, get_current_user_id(), $_SESSION['userId'], $errorMessage);
 
-  echo json_encode(['success' => false, 'message' => __('Error log has been updated', 'kopa_payment')]);
+  echo json_encode(['success' => false, 'message' => __('Error log has been updated', 'kopa-payment')]);
   die();
 }
 add_action('wp_ajax_error_log_on_payment', 'log3dPaymentError');

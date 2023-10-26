@@ -1,3 +1,20 @@
 .kopaCcPaymentInput.optionalNewCcInputs {
   display: none;
 }
+#overflowKopaLoader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#kopaLoaderIcon {
+  width: 100px;
+  height: 100px;
+  background: url(../images/ajax_loader.gif) center center no-repeat;
+  background-size: contain;
+}

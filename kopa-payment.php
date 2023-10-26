@@ -67,10 +67,10 @@ function addKopaPaymentGateway($gateways) {
 function enqueue_kopa_scripts() {
   if (is_checkout() && !is_wc_endpoint_url()) {
     // enqueue scripts and styles on checkout
-    wp_enqueue_script('jquery-validate', plugin_dir_url(__FILE__) .'js/jquery.validate.min.js', array('jquery'), '1.0', true);
-    wp_enqueue_script('jquery-validate-additional', plugin_dir_url(__FILE__) .'js/additional-validate-methods.min.js', array('jquery'), '1.0', true);
-    wp_enqueue_script('crypto-js', plugin_dir_url(__FILE__) .'js/crypto-js.js', array('jquery'), '1.0', true);
-    wp_enqueue_script('socket-io', plugin_dir_url(__FILE__) .'js/socket.io.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('jquery-validate', plugin_dir_url(__FILE__) .'js/inc/jquery.validate.min.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('jquery-validate-additional', plugin_dir_url(__FILE__) .'js/inc/additional-validate-methods.min.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('crypto-js', plugin_dir_url(__FILE__) .'js/inc/crypto-js.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('socket-io', plugin_dir_url(__FILE__) .'js/inc/socket.io.js', array('jquery'), '1.0', true);
     wp_enqueue_script('ajax-checkout', plugin_dir_url(__FILE__) .'js/kopa-scripts.js', array('jquery'), '1.0', true);
 
     // Pass the necessary variables to the JavaScript file
@@ -78,6 +78,11 @@ function enqueue_kopa_scripts() {
       'ajaxurl'   => admin_url('admin-ajax.php'),
       'security'  => wp_create_nonce('ajax-checkout-nonce'),
       'loggedIn'  => is_user_logged_in(),
+      'paymentError' => __('There was a problem with connection with payment', 'kopa-payment'),
+      'validationCCDate' => __('Please enter a valid expiration date (MM/YY)', 'kopa-payment'),
+      'validationCCNumber' => __('Please enter a valid credit card number', 'kopa-payment'),
+      'validationCcvValid' => __('Please enter valid CCV number', 'kopa-payment'),
+      'validationDigits' => __('Only digits are allowed', 'kopa-payment'),
     ));
 
     wp_enqueue_style( 'kopa-styles', plugin_dir_url(__FILE__) .'/css/kopa-styles.css' );
@@ -124,7 +129,7 @@ function detectCreditCardType($cardNumber, $sentType = '') {
 }
 
 function translatablePlugin() {
-  load_plugin_textdomain('kopa_payment', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+  load_plugin_textdomain('kopa-payment', false, dirname(plugin_basename(__FILE__)) . '/languages/');
 }
 add_action('plugins_loaded', 'translatablePlugin');
 
@@ -153,7 +158,7 @@ add_filter( 'query_vars', 'bbloomer_premium_support_query_vars', 0 );
 // 3. Insert the new endpoint into the My Account menu
 
 function bbloomer_add_premium_support_link_my_account( $items ) {
-  $items['kopa-manage-cc'] = __('Manage Credit Cards', 'kopa_payment');
+  $items['kopa-manage-cc'] = __('Manage Credit Cards', 'kopa-payment');
   return $items;
 }
 
@@ -200,7 +205,7 @@ function bbloomer_premium_support_content() {
     </table>
     <?php
   } else {
-    echo __('There are no saved credit cards.', 'kopa_payment');
+    echo __('There are no saved credit cards.', 'kopa-payment');
   }
 }
 
@@ -219,7 +224,7 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
     if($postAuthResult['success'] == true){
       $notice = sprintf(
-        __('Order #%d has been completed, and postAuth has been completed', 'kopa-payment'),
+        __('Order %d has been completed, and postAuth has been completed', 'kopa-payment') /* translator %d is a order number */,
         $order_id
       );
 
@@ -236,7 +241,7 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
       }
 
       $notice = sprintf(
-        __('Order #%d could not be completed because PostAuth has failed', 'kopa-payment'),
+        __('Order %d could not be completed because PostAuth has failed', 'kopa-payment') /* translators: %d is the order number */, 
         $order_id
       );
 
@@ -301,7 +306,7 @@ add_action('woocommerce_order_action_kopa_refund', 'kopaRefundActionCallback',);
 
 
 /*
-  Adding custom page under settings
+  Adding custom page under Woocommerce menu item
 */
 function add_custom_admin_menu_item() {
   add_submenu_page(
@@ -315,24 +320,18 @@ function add_custom_admin_menu_item() {
 }
 add_action('admin_menu', 'add_custom_admin_menu_item');
 
-// Step 2: Define the callback function to display your custom page.
+// Display log entries 
 function displayKopaLogs() {
   ob_start(); ?>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" media="all">
   <div class="wrap">
-    <h2>Kopa Logs Preview</h2>
-    <p>This is your custom page content.</p>
+    <h2><?php echo __('Kopa Logs Preview', 'kopa-payment') ?></h2>
+    <p><?php echo __('Log preview content', 'kopa-payment') ?></p>
     
     <table id="tblReportResultsDemographics" class="display" width="100%"></table>
   </div>
-  <?php 
-    $logEntries = get_option('kopa_log_messages', array()); 
-    // echo 'logs<pre>' . print_r($logEntries, true) . '</pre>';
-    // if(!empty($logEntries)){
-    //   foreach
-    // }
-  ?>
+  <?php $logEntries = get_option('kopa_log_messages', array()); ?>
   <script>
     let $ = jQuery.noConflict();
 
@@ -357,12 +356,13 @@ function displayKopaLogs() {
                 },},
           { "data": "function", "title": 'Function name' },
           { "data": "response", "title": 'Response data' },
+          { "data": "message", "title": 'Message' },
           { "data": "userId", "title": "User ID (WP)" },
           { "data": "kopaUserId", "title": "User ID (KOPA)" },
           { "data": "orderId", "title": "Order ID" }
         ],
         "draw": 1, // A request identifier (used for paging)
-
+        "order": [[0, 'desc']],
       });
     });
   </script>
@@ -370,11 +370,13 @@ function displayKopaLogs() {
   echo ob_get_clean();
 }
 
-
-function kopaMessageLog($function, $orderId = '', $userId = '', $kopaUserId = '', $response = '') {
+/**
+ * Custom logging function
+ */
+function kopaMessageLog($function, $orderId = '', $userId = '', $kopaUserId = '', $response = '', $message = '') {
   // Load the existing log entries from the database
-  $log_entries = get_option('kopa_log_messages', array());
-
+  $log_entries = get_option('kopa_log_messages', []);
+  if(empty($log_entries) || !is_array($log_entries)) $log_entries = [];
   // Add the new log entry
   $log_entries[] = array(
     'timestamp' => current_time('timestamp'),
@@ -383,6 +385,7 @@ function kopaMessageLog($function, $orderId = '', $userId = '', $kopaUserId = ''
     'userId'    => $userId,
     'kopaUserId'=> $kopaUserId,
     'orderId'   => $orderId,
+    'message'   => $message
   );
 
   // Keep only the last 50 entries

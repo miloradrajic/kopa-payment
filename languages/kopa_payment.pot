@@ -9,10 +9,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-09-29T10:58:48+02:00\n"
+"POT-Creation-Date: 2023-10-26T21:23:03+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.8.1\n"
-"X-Domain: kopa_payment\n"
+"X-Domain: kopa-payment\n"
 
 #. Plugin Name of the plugin
 msgid "KOPA Payment Method"
@@ -26,48 +26,183 @@ msgstr ""
 msgid "MR"
 msgstr ""
 
-#: inc/curl.php:86
-#: inc/curl.php:111
+#: inc/ajax-functions.php:14
+msgid "Error getting pi key"
+msgstr ""
+
+#: inc/ajax-functions.php:36
+msgid "CC Saved"
+msgstr ""
+
+#: inc/ajax-functions.php:55
+msgid "CC Deleted"
+msgstr ""
+
+#: inc/ajax-functions.php:57
+msgid "Error deleting CC"
+msgstr ""
+
+#: inc/ajax-functions.php:78
+msgid "Error getting card details"
+msgstr ""
+
+#: inc/ajax-functions.php:100
+msgid "Order has been payed with KOPA system"
+msgstr ""
+
+#: inc/ajax-functions.php:106
+msgid "Order has been completed"
+msgstr ""
+
+#: inc/ajax-functions.php:110
+msgid "Order could not be completed"
+msgstr ""
+
+#: inc/ajax-functions.php:129
+msgid "Error log has been updated"
+msgstr ""
+
+#: inc/curl.php:201
 msgid "There was problem with Kopa Payment method"
 msgstr ""
 
-#: inc/curl.php:135
-#: inc/curl.php:180
-msgid "There was problem with Kopa Payment method. Saving CC"
+#: inc/curl.php:222
+msgid "There was problem with Kopa Payment method."
 msgstr ""
 
-#: inc/curl.php:173
+#: inc/curl.php:254
 msgid "Credit card already saved"
 msgstr ""
 
-#: inc/kopa-class.php:95
+#: inc/curl.php:261
+msgid "There was problem with Kopa Payment method. Saving CC"
+msgstr ""
+
+#: inc/curl.php:285
+msgid "There was problem with Kopa Payment method. DELETE CC"
+msgstr ""
+
+#: inc/curl.php:537
+msgid "Order was not payed with KOPA payment method."
+msgstr ""
+
+#: inc/curl.php:541
+msgid "Transaction on this order was not completed with KOPA system"
+msgstr ""
+
+#: inc/curl.php:544
+msgid "Status of the order is PreAuth"
+msgstr ""
+
+#: inc/curl.php:547
+msgid "Order has been refunded"
+msgstr ""
+
+#: inc/kopa-class.php:112
+msgid "New credit card"
+msgstr ""
+
+#: inc/kopa-class.php:120
+msgid "Use saved credit cards"
+msgstr ""
+
+#: inc/kopa-class.php:133
 msgid "CC Type"
 msgstr ""
 
-#: inc/kopa-class.php:108
+#: inc/kopa-class.php:146
 msgid "Credit card number"
 msgstr ""
 
-#: inc/kopa-class.php:119
+#: inc/kopa-class.php:157
 msgid "Expiration Date"
 msgstr ""
 
-#: inc/kopa-class.php:130
+#: inc/kopa-class.php:169
 msgid "CCV"
 msgstr ""
 
-#: inc/kopa-class.php:142
+#: inc/kopa-class.php:182
 msgid "Save credit card"
 msgstr ""
 
-#: inc/kopa-class.php:173
+#: inc/kopa-class.php:191
+msgid "CC Alias"
+msgstr ""
+
+#: inc/kopa-class.php:233
+msgid "Please check CC number and selected CC type."
+msgstr ""
+
+#: inc/kopa-class.php:239
+#: inc/kopa-class.php:250
+msgid "Please fill in a valid credit card CCV number."
+msgstr ""
+
+#: inc/kopa-class.php:244
 msgid "Please fill in a valid credit card number."
 msgstr ""
 
-#: inc/kopa-class.php:176
+#: inc/kopa-class.php:247
 msgid "Please fill in a valid credit card exparation date."
 msgstr ""
 
-#: inc/kopa-class.php:179
-msgid "Please fill in a valid credit card CCV number."
+#: inc/kopa-class.php:253
+msgid "Please enter credit card alias."
+msgstr ""
+
+#: inc/kopa-class.php:302
+msgid "Starting 3D incognito payment"
+msgstr ""
+
+#: inc/kopa-class.php:354
+msgid "Starting 3D payment"
+msgstr ""
+
+#: inc/kopa-class.php:379
+msgid "Starting moto payment"
+msgstr ""
+
+#: kopa-payment.php:81
+msgid "There was a problem with connection with payment"
+msgstr ""
+
+#: kopa-payment.php:82
+msgid "Please enter a valid expiration date (MM/YY)"
+msgstr ""
+
+#: kopa-payment.php:83
+msgid "Please enter a valid credit card number"
+msgstr ""
+
+#: kopa-payment.php:84
+msgid "Please enter valid CCV number"
+msgstr ""
+
+#: kopa-payment.php:85
+msgid "Only digits are allowed"
+msgstr ""
+
+#: kopa-payment.php:161
+msgid "Manage Credit Cards"
+msgstr ""
+
+#: kopa-payment.php:208
+msgid "There are no saved credit cards."
+msgstr ""
+
+#: kopa-payment.php:227
+msgid "Order %d has been completed, and postAuth has been completed"
+msgstr ""
+
+#: kopa-payment.php:244
+msgid "Order %d could not be completed because PostAuth has failed"
+msgstr ""
+
+#: kopa-payment.php:329
+msgid "Kopa Logs Preview"
+msgstr ""
+
+#: kopa-payment.php:330
+msgid "Log preview content"
 msgstr ""

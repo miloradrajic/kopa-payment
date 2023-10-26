@@ -57,18 +57,17 @@ $(document).ready(async function() {
     },
     messages: {
       kopa_cc_exparation_date: {
-        required: 'Please enter a valid expiration date (MM/YY)',
-        dateMMYY: 'Please enter a valid expiration date (MM/YY)'
+        required: ajax_checkout_params.validationCCDate,
+        dateMMYY: ajax_checkout_params.validationCCDate,
       },
       kopa_cc_number: {
-        required: 'Please enter a valid credit card number',
-        dateMMYY: 'Please enter a valid credit card number'
+        required: ajax_checkout_params.validationCCNumber,
       },
       kopa_ccv: {
-        required: 'Please enter valid CCV number',
-        digits: 'Only digits are allowed',
-        minlength: 'Please enter valid CCV number',
-        maxlength: 'Please enter valid CCV number'
+        required: ajax_checkout_params.validationCcvValid,
+        digits: ajax_checkout_params.validationDigits,
+        minlength: ajax_checkout_params.validationCcvValid,
+        maxlength: ajax_checkout_params.validationCcvValid
       },
       kopa_cc_alias: {
         required: 'Please enter credit card alias',
@@ -79,7 +78,7 @@ $(document).ready(async function() {
   // Custom validation method for MM/YY format
   $.validator.addMethod('dateMMYY', function (value, element) {
     return /^(0[1-9]|1[0-2])\/\d{2}$/.test(value);
-  }, 'Please enter a valid expiration date (MM/YY)');
+  }, ajax_checkout_params.validationCCDate);
 
 
   // Validate CCV number
@@ -122,7 +121,7 @@ $(document).ready(async function() {
   $('body').on('click', '#place_order', async function(e){
     e.preventDefault();
     const form = $(this).closest('form');
-    // If incognito card and type == dina // MIKI
+    // If incognito card and type == dina
     if(
       (
         $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
@@ -131,7 +130,6 @@ $(document).ready(async function() {
       $('input[name="kopa_cc_type"]:checked').val() == 'dina'
     ){
       // use API payment
-      console.log('starting API payment incognito card');
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
       let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
       let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
@@ -155,8 +153,6 @@ $(document).ready(async function() {
       $('input[name="kopa_cc_type"]:checked').val() != 'dina'
     ){
       // use 3D incognito CC payment
-      console.log('starting 3D incognito CC payment');
-
       form.append('<input type="hidden" name="paymentType" value="3d incognito">');
       if($('#kopa_save_cc').is(':checked')){
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
@@ -188,7 +184,6 @@ $(document).ready(async function() {
         cardParsed.type !== 'amex'
       ){
         // use 3D payment
-        console.log('starting 3D payment');
         const secretKey = await getPiKey();
         const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
 
@@ -206,7 +201,6 @@ $(document).ready(async function() {
         cardParsed.type !== 'amex'
       ){
         //use MOTO payment 
-        console.log('starting Moto payment');
         form.append(' <input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
                     +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
                     +'<input type="hidden" name="paymentType" value="moto">'
@@ -215,7 +209,6 @@ $(document).ready(async function() {
         return;
       }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
         // use API payment
-        console.log('starting API payment');
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
         let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
@@ -244,6 +237,7 @@ $(document).ready(async function() {
       xhr.responseJSON.socketUrl !== null
     ){
       // Call the function to establish the initial socket connection
+      $('body').append('<div id="overflowKopaLoader"><div id="kopaLoaderIcon"></div></div>')
       establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.orderId);
       const browser = window.open('', '_blank');
       browser.document.write(xhr.responseJSON.htmlCode);
@@ -320,7 +314,7 @@ async function getPiKey() {
     }
   } catch (error) {
     // Handle AJAX or JSON parsing error
-    console.error('Error in getPiKey:', error);
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
   }
 }
 
@@ -373,7 +367,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
     }
   } catch (error) {
     // Handle AJAX or JSON parsing error
-    console.error('Error in getPiKey:', error);
+    console.error(error);
   }
 }
 
@@ -389,12 +383,8 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
     socket.emit('joinRoom', roomId);
   });
 
-  socket.on('joinRoom', (payload) => {
-    console.log('Joined room - '+roomId);
-  });
-  
   socket.on('notification', async (msg) => {
-    console.log('msg', msg);
+    $('body').find('#overflowKopaLoader').remove();
     if(
       (msg.success == true && msg.response == 'Approved') ||
       (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
@@ -410,7 +400,6 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
             orderId: orderId,
           },
         });
-        console.log(response);
         if (response.success) {
           // Redirect to the thank you page
           window.location.href = response.data.redirect;
@@ -420,7 +409,8 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
         }
       } catch (error) {
         // Handle AJAX or JSON parsing error
-        console.error('Error in completing 3d payment:', error);
+        $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+        logErrorOnOrderPayment(orderId, error);
       }
     }else{
       // Display error message
@@ -428,7 +418,16 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
       logErrorOnOrderPayment(orderId, msg.errMsg);
     }
   });
-  // socket.on('disconnect', function(){console.log('disconnected')} );
-  // socket.on('connect_error', function(){console.log('connection error')} );
-  // socket.on('reconnect_error', function(){console.log('reconnect error')} );
+  socket.on('disconnect', function(){
+    $('body').find('#overflowKopaLoader').remove();
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+  } );
+  socket.on('connect_error', function(){
+    $('body').find('#overflowKopaLoader').remove();
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+  } );
+  socket.on('reconnect_error', function(){
+    $('body').find('#overflowKopaLoader').remove();
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+  } );
 }

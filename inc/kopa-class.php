@@ -109,7 +109,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       $savedCC = $this->curl->getSavedCC();
       if(is_array($savedCC) && !empty($savedCC)){
         $userHaveSavedCcClass = ' optionalNewCcInputs';
-        $ccOptions = ['new' => __('New credit card', 'kopa_payment')];
+        $ccOptions = ['new' => __('New credit card', 'kopa-payment')];
         foreach($savedCC as $cc){
           $ccOptions[$cc['id']] = $cc['alias'];
         }
@@ -117,7 +117,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           'kopa_use_saved_cc', array(
           'type'        => 'radio',
           'class'       => array('input-text'),
-          'label'       => __('Use saved credit cards', 'kopa_payment'),
+          'label'       => __('Use saved credit cards', 'kopa-payment'),
           'options'     => $ccOptions,
           'default'     => $savedCC[0]['id'],
           'required' => true,
@@ -130,7 +130,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       'kopa_cc_type', array(
       'type'        => 'radio',
       'class'       => array('input-text'),
-      'label'       => __('CC Type', 'kopa_payment'),
+      'label'       => __('CC Type', 'kopa-payment'),
       'options'     => array(
                         'dynamic' => 'Master Card, Visa, American Express',
                         'dina' => 'Dina'
@@ -143,7 +143,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       array(
         'type' => 'text',
         'class' => array('form-row-wide', 'input-text'),
-        'label' => __('Credit card number', 'kopa_payment'),
+        'label' => __('Credit card number', 'kopa-payment'),
         'placeholder' => 'xxxx-xxxx-xxxx-xxxx',
         'required' => true,
         'clear' => false,
@@ -154,7 +154,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       array(
         'type' => 'text',
         'class' => array('form-row-wide', 'input-text'),
-        'label' => __('Expiration Date', 'kopa_payment'),
+        'label' => __('Expiration Date', 'kopa-payment'),
         'placeholder' => 'xx/xx',
         'required' => true,
         'clear' => false,
@@ -166,7 +166,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       array(
         'type' => 'text',
         'class' => array('input-text'),
-        'label' => __('CCV', 'kopa_payment'),
+        'label' => __('CCV', 'kopa-payment'),
         'placeholder' => 'xxx',
         'required' => true,
         'clear' => false,
@@ -179,7 +179,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         array(
           'type' => 'checkbox',
           'class' => array('input-checkbox'),
-          'label' => __('Save credit card', 'kopa_payment'),
+          'label' => __('Save credit card', 'kopa-payment'),
           'required' => false,
         ),
       );
@@ -188,7 +188,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         array(
           'type' => 'text',
           'class' => array('input-text hidden'),
-          'label' => __('CC Alias', 'kopa_payment'),
+          'label' => __('CC Alias', 'kopa-payment'),
           'placeholder' => '',
           'required' => true,
           'clear' => false,
@@ -205,6 +205,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
     // Use a payment gateway or API to process the payment.
     $paymentMethod = '';
     $order = wc_get_order($orderId);
+    $_SESSION['orderID'] = $orderId;
     $physicalProducts = $this->physicalProductsCheck($order);
     $errors = [];
 
@@ -229,27 +230,27 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
 
     if($kopa_cc_type == 'dynamic' && $kopaUseSavedCcId == false){
       $cardTypeCheck = detectCreditCardType($kopa_cc_number, $_POST['kopa_cc_type']);
-      if(!$cardTypeCheck) $errors[] = __('Please check CC number and selected CC type.', 'kopa_payment');
+      if(!$cardTypeCheck) $errors[] = __('Please check CC number and selected CC type.', 'kopa-payment');
       $kopa_cc_type = $cardTypeCheck;
     }
     // Performing validation of custom payment fields
     // Check if using already saved CC
     if (empty($kopa_ccv)) {
-      $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa_payment');
+      $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa-payment');
     }
     $roomId = $orderId . '_' . rand(1000,9999);
     if($kopaUseSavedCcId == false){
       if (empty($kopa_cc_number)) {
-        $errors[] = __('Please fill in a valid credit card number.', 'kopa_payment');
+        $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
       }
       if (empty($kopa_cc_exparation_date)) {
-        $errors[] = __('Please fill in a valid credit card exparation date.', 'kopa_payment');
+        $errors[] = __('Please fill in a valid credit card exparation date.', 'kopa-payment');
       }
       if (empty($kopa_ccv)) {
-        $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa_payment');
+        $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa-payment');
       }
       if($kopaSaveCc == true && empty($kopaCcAlias)){
-        $errors[] = __('Please enter credit card alias.', 'kopa_payment');
+        $errors[] = __('Please enter credit card alias.', 'kopa-payment');
       }
 
       if(!$this->errorsCheck($errors)){
@@ -298,7 +299,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
 
         return [
           'result'    => 'success',
-          'messages'  => 'Starting 3D incognito payment',
+          'messages'  => __('Starting 3D incognito payment', 'kopa-payment'),
           'htmlCode'  => $htmlCode,
           'socketUrl' => $this->serverUrl,
           'roomId'    => $roomId,
@@ -350,7 +351,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         $order->save();
         return [
           'result'    => 'success',
-          'messages'  => 'Starting 3D payment',
+          'messages'  => __('Starting 3D payment', 'kopa-payment'),
           'htmlCode'  => $htmlCode,
           'socketUrl' => $this->serverUrl,
           'roomId'    => $roomId,
@@ -375,7 +376,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           $order->save();
           return [
             'result' => 'success',
-            'messages' => 'Starting moto payment',
+            'messages' => __('Starting moto payment', 'kopa-payment'),
             'redirect' => $this->get_return_url($order),
           ];
         }else{
