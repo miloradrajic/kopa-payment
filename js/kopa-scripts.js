@@ -1,7 +1,8 @@
 let $ = jQuery.noConflict();
 
 $(document).ready(async function() {
-  
+  const kopaIdReferenceId = generateUUID();
+  // Format CC number 
   $("body").on("input", "#kopa_cc_number", function() {
     if ($(this).val().length >= 19) {
       $(this).val($(this).val().substring(0, 19))
@@ -28,7 +29,7 @@ $(document).ready(async function() {
         return;
       }
       // Add slash sign every 2 digits
-      if (value.length > 2) {
+      if (value.length >= 2) {
         value = value.substr(0, 2) + '/' + value.substr(2);
       }
       $(this).val(value);
@@ -70,7 +71,7 @@ $(document).ready(async function() {
         maxlength: ajax_checkout_params.validationCcvValid
       },
       kopa_cc_alias: {
-        required: 'Please enter credit card alias',
+        required: ajax_checkout_params.validationCcAlias,
       }
     },
   });
@@ -137,6 +138,7 @@ $(document).ready(async function() {
       let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
 
       form.append(' <input type="hidden" name="paymentType" value="api">'
+                  +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
                   +'<input type="hidden" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
                   +'<input type="hidden" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
                   +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
@@ -153,7 +155,7 @@ $(document).ready(async function() {
       $('input[name="kopa_cc_type"]:checked').val() != 'dina'
     ){
       // use 3D incognito CC payment
-      form.append('<input type="hidden" name="paymentType" value="3d incognito">');
+      form.append('<input type="hidden" name="paymentType" value="3d incognito"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
       if($('#kopa_save_cc').is(':checked')){
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
         let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
@@ -188,6 +190,7 @@ $(document).ready(async function() {
         const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
 
         form.append(' <input type="hidden" name="ccNumber" value="'+decodedData.ccDecoded+'">'
+                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
                     +'<input type="hidden" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
                     +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
                     +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
@@ -202,6 +205,7 @@ $(document).ready(async function() {
       ){
         //use MOTO payment 
         form.append(' <input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
+                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
                     +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
                     +'<input type="hidden" name="paymentType" value="moto">'
                   );
@@ -216,6 +220,7 @@ $(document).ready(async function() {
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
 
         form.append(' <input type="hidden" name="paymentType" value="api">'
+                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
                     +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
                     +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
                     );
@@ -242,6 +247,11 @@ $(document).ready(async function() {
       const browser = window.open('', '_blank');
       browser.document.write(xhr.responseJSON.htmlCode);
       browser.document.forms[0].submit();
+    }
+
+    if( settings.url.indexOf("?wc-ajax=update_order_review") >= 0 ){
+      updateOrderTotalForKopaPaymentDetails();
+      $('body').find('#kopaPaymentDetailsReferenceId').text(kopaIdReferenceId);
     }
   });
 
@@ -430,4 +440,25 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
     $('body').find('#overflowKopaLoader').remove();
     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
   } );
+}
+
+function updateOrderTotalForKopaPaymentDetails(){
+  var orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();
+  $('body').find('#kopaPaymentDetailsTotal').html(orderTotal);
+}
+
+function generateUUID() { // Public Domain/MIT
+  var d = new Date().getTime();//Timestamp
+  var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16;//random number between 0 and 16
+      if(d > 0){//Use timestamp until depleted
+          r = (d + r)%16 | 0;
+          d = Math.floor(d/16);
+      } else {//Use microseconds since page-load if supported
+          r = (d2 + r)%16 | 0;
+          d2 = Math.floor(d2/16);
+      }
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
 }

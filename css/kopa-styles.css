@@ -18,3 +18,59 @@
   background: url(../images/ajax_loader.gif) center center no-repeat;
   background-size: contain;
 }
+
+.kopaCheckoutRadioButton {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.kopaCheckoutRadioButton label {
+  margin: 0px 0px 0px 5px;
+}
+
+input#kopa_ccv {
+  width: 4ch;
+  box-sizing: content-box;
+  line-height: 1;
+  padding: 5px 10px;
+  margin: 0 10px;
+}
+
+input#kopa_cc_exparation_date {
+  width: 5ch;
+  box-sizing: content-box;
+  display: inline-block;
+}
+input#kopa_cc_number {
+  width: 20ch;
+  box-sizing: content-box;
+}
+
+.kopaCcPaymentInput p,
+#kopa_ccv_field
+{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: center;
+}
+#kopaPaymentIcons {
+  margin: 15px 0;
+  padding: 15px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: #fff;
+  border-radius: 5px;
+}
+
+.woocommerce-checkout #payment .payment_box.payment_method_kopa_payment div#kopaPaymentIcons img {
+  max-height: 25px;
+  width: auto;
+  margin: 10px;
+}

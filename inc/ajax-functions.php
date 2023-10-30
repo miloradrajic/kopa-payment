@@ -97,7 +97,7 @@ function complete3dPayment(){
     $order->update_status('processing');
 
     // Add an order note
-    $note = __('Order has been payed with KOPA system', 'kopa-payment');
+    $note = __('Order has been paid with KOPA system', 'kopa-payment');
     $order->add_order_note($note);
     // Save changes
     $order->save();

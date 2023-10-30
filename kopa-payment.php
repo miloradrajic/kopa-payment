@@ -18,6 +18,7 @@ if(session_id() == '' || !isset($_SESSION) || session_status() === PHP_SESSION_N
 }
 
 define('KOPA_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('KOPA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 /**
  * Require plugins.php for deactivate_plugins function if wocommerce is not active
@@ -49,9 +50,10 @@ function check_for_woocommerce() {
     echo '<div class="error"><p>KOPA payment Plugin Checker requires WooCommerce to be active. Please activate WooCommerce to use this plugin.</p></div>';
     return;
   }
-  include_once KOPA_PLUGIN_PATH . '/inc/kopa-class.php';
-  include_once KOPA_PLUGIN_PATH . '/inc/curl.php';
-  include_once KOPA_PLUGIN_PATH . '/inc/ajax-functions.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/kopa-class.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/curl.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/ajax-functions.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/order-status-change.php';
 }
 
 // Add a custom payment gateway
@@ -83,6 +85,7 @@ function enqueue_kopa_scripts() {
       'validationCCNumber' => __('Please enter a valid credit card number', 'kopa-payment'),
       'validationCcvValid' => __('Please enter valid CCV number', 'kopa-payment'),
       'validationDigits' => __('Only digits are allowed', 'kopa-payment'),
+      'validationCcAlias' => __('Please enter credit card alias', 'kopa-payment')
     ));
 
     wp_enqueue_style( 'kopa-styles', plugin_dir_url(__FILE__) .'/css/kopa-styles.css' );
@@ -126,6 +129,40 @@ function detectCreditCardType($cardNumber, $sentType = '') {
 
   // If no match is found, return error
   return false;
+}
+
+function validateCreditCard($creditCardNumber) {
+  if (empty($creditCardNumber)) {
+    return false;
+  }
+  if (!preg_match('/^[0-9 \-]+$/', $creditCardNumber)) {
+    return false;
+  }
+  $creditCardNumber = preg_replace('/\D/', '', $creditCardNumber);
+  if (strlen($creditCardNumber) < 13 || strlen($creditCardNumber) > 19) {
+    return false;
+  }
+  $e = 0;
+  $f = 0;
+  $g = false;
+  for ($c = strlen($creditCardNumber) - 1; $c >= 0; $c--) {
+    $d = $creditCardNumber[$c];
+    $f = intval($d, 10);
+    if ($g) {
+      $f *= 2;
+      if ($f > 9) {
+        $f -= 9;
+      }
+    }
+    $e += $f;
+    $g = !$g;
+  }
+
+  if ($e % 10 === 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function translatablePlugin() {
@@ -210,100 +247,6 @@ function bbloomer_premium_support_content() {
 }
 
 add_action( 'woocommerce_account_kopa-manage-cc_endpoint', 'bbloomer_premium_support_content' );
-
-
-// When order is completed change status to PostAuth on KOPA system
-function kopaPostAuthOnOrderCompleted( $order_id ) {
-  $order = wc_get_order($order_id);
-  $user_id = $order->get_user_id();
-  $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
-  
-	// Check if the custom metadata exists and if playment was done with MOTO or API payment
-  if (!empty($custom_metadata) && in_array($custom_metadata, ['moto', 'api'])) {
-    $kopaCurl = new KopaCurl();
-    $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
-    if($postAuthResult['success'] == true){
-      $notice = sprintf(
-        __('Order %d has been completed, and postAuth has been completed', 'kopa-payment') /* translator %d is a order number */,
-        $order_id
-      );
-
-      // Add the admin notice
-      add_action('admin_notices', function () use ($notice) {
-        printf('<div class="notice notice-success is-dismissible"><p>%s</p></div>', $notice);
-      });
-    }else{
-      // Get the previous order status
-      $previous_status = $order->get_status_before('completed');
-      if (!empty($previous_status)) {
-        // Set the order status back to the previous status
-        $order->set_status($previous_status);
-      }
-
-      $notice = sprintf(
-        __('Order %d could not be completed because PostAuth has failed', 'kopa-payment') /* translators: %d is the order number */, 
-        $order_id
-      );
-
-      // Add the admin notice
-      add_action('admin_notices', function () use ($notice) {
-        printf('<div class="error is-dismissible"><p>%s</p></div>', $notice);
-      });
-    }
-  }
-	return;
-}
-
-add_action( 'woocommerce_order_status_completed', 'kopaPostAuthOnOrderCompleted', 1 );
-
-
-// Ading custom KOPA refund option in dropdown on order preview
-function addKopaRefundOnOrderActions($actions) {
-  global $post; // Get the post object
-
-  // Check if the post type is 'shop_order' (WooCommerce order)
-  if ($post->post_type == 'shop_order') {
-    $order = wc_get_order($post->ID); // Get the order object
-
-    // Get the payment method from custom meta
-    $custom_meta_field = $order->get_meta('_kopa_payment_method');
-
-    // Check if order payment was done with MOTO or APY method
-    if (!empty($custom_meta_field) && in_array($custom_meta_field, ['moto', 'api'])) {
-      $actions['kopa_refund'] = 'KOPA Refund';
-    }
-  }
-
-  return $actions;
-}
-add_filter('woocommerce_order_actions', 'addKopaRefundOnOrderActions');
-
-
-// Calling refund function on KOPA refund and adding order note with result
-function kopaRefundActionCallback($order) {
-  $user_id = $order->get_user_id();
-  $order_id = $order->get_id();
-  
-  // Refund function
-  $kopaCurl = new KopaCurl();
-  $refundResult = $kopaCurl->refundProcess($order_id, $user_id);
-  
-  if(!empty($refundResult) && isset($refundResult['success']) && $refundResult['success'] == true){
-    // Set the order status back to the previous status
-    $order->set_status('refunded');
-  }
-
-  // Recheck refund proccess and add note 
-  $refundResult = $kopaCurl->refundCheck($order_id, $user_id);
-  $note = $refundResult['message'];
-  $order->add_order_note($note);
-  
-  // Save changes
-  $order->save();
-}
-add_action('woocommerce_order_action_kopa_refund', 'kopaRefundActionCallback',);
-
-
 
 /*
   Adding custom page under Woocommerce menu item
@@ -394,3 +337,37 @@ function kopaMessageLog($function, $orderId = '', $userId = '', $kopaUserId = ''
   // Update the theme option with the updated log entries
   update_option('kopa_log_messages', $log_entries);
 }
+
+
+
+// Custom function to modify radio buttons using woocommerce_form_field
+function custom_radio_button_field($field, $key, $args, $value) {
+  $output = '<p class="form-row kopaPaymentTitle">';
+  
+  // Label for the field
+  if (isset($args['label']) && $args['label']) {
+    $output .= '<label for="' . esc_attr($key) . '">' . esc_html($args['label']) . '</label>';
+  }
+  
+  // Wrap options in a div
+  $output .= '<div class="kopaCheckoutRadioButtons">';
+  
+  foreach ($args['options'] as $option_key => $option_label) {
+    $output .= '<div class="kopaCheckoutRadioButton">';
+    $output .= '<input type="radio" name="' . esc_attr($key) . '" id="' . esc_attr($key . '_' . $option_key) . '" value="' . esc_attr($option_key) . '"';
+    
+    if ($value === $option_key) {
+      $output .= ' checked="checked"';
+    }
+    $output .= ' />';
+    $output .= '<label for="' . esc_attr($key . '_' . $option_key) . '">' . esc_html($option_label) . '</label>';
+    $output .= '</div>';
+  }
+  
+  $output .= '</div>'; // kopaCheckoutRadioButtons div
+  $output .= '</p>';
+  return $output;
+}
+
+// Hook into the woocommerce_form_field filter
+add_filter('woocommerce_form_field_radio', 'custom_radio_button_field', 10, 4);

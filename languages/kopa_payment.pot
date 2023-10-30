@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-10-26T21:23:03+02:00\n"
+"POT-Creation-Date: 2023-10-26T21:28:49+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.8.1\n"
 "X-Domain: kopa-payment\n"
@@ -47,7 +47,7 @@ msgid "Error getting card details"
 msgstr ""
 
 #: inc/ajax-functions.php:100
-msgid "Order has been payed with KOPA system"
+msgid "Order has been paid with KOPA system"
 msgstr ""
 
 #: inc/ajax-functions.php:106
@@ -83,7 +83,7 @@ msgid "There was problem with Kopa Payment method. DELETE CC"
 msgstr ""
 
 #: inc/curl.php:537
-msgid "Order was not payed with KOPA payment method."
+msgid "Order was not paid with KOPA payment method."
 msgstr ""
 
 #: inc/curl.php:541

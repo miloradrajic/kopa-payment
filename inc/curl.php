@@ -297,7 +297,7 @@ class KopaCurl {
     $this->close();
     
     array_pop($this->headers);
-    if($decodedReturn['response'] == 'Error'){
+    if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getSavedCC'));
     }
@@ -316,7 +316,6 @@ class KopaCurl {
     
     array_pop($this->headers);
     
-    // echo '<pre>' . print_r($decodedReturn, true) . '</pre>';
     // Retry function if invalid JWT
     if(!isset($decodedReturn['resultCode']) || $decodedReturn['resultCode'] !== 'ok'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
@@ -520,9 +519,28 @@ class KopaCurl {
     array_pop($this->headers);
 
     $returnDataDecoded = json_decode($returnData, true);
-    // Log event
-    kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $returnDataDecoded);
+    return $returnDataDecoded;
+  }
 
+  /**
+   * Get Void last step on order KOPA platform
+   */
+  private function voidLastStepOnOrder($orderId, $userId){
+    $loginResult = $this->loginUserByAdmin($userId);
+    $orderDetails = $this->serverUrl.'/api/payment/void';
+
+    $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
+    $data = json_encode(
+      [
+        'oid'     => $orderId, 
+        'userId'  => $loginResult['userId'], 
+      ]
+    );
+    $returnData = $this->post($orderDetails, $data);
+    $this->close();
+    array_pop($this->headers);
+
+    $returnDataDecoded = json_decode($returnData, true);
     return $returnDataDecoded;
   }
 
@@ -532,9 +550,9 @@ class KopaCurl {
   public function refundCheck($orderId, $userId){
     $custom_meta_field = get_post_meta($orderId, '_kopa_payment_method', true);
 
-    // Check if order payment was done with MOTO or API method
+    // Check if order payment was done with KOPA system
     if (empty($custom_meta_field)) {
-      return ['success' => false, 'message'=> __('Order was not payed with KOPA payment method.','kopa-payment'), 'isKopa'=> false];
+      return ['success' => false, 'message'=> __('Order was not paid with KOPA payment method.','kopa-payment'), 'isKopa'=> false];
     }
     $orderDetails = $this->getOrderDetails($orderId, $userId);
     if($orderDetails['transaction'] == null){
@@ -548,6 +566,26 @@ class KopaCurl {
     }
   }
 
+  public function orderTrantypeStatusCheck($orderId, $userId){
+    $orderDetails = $this->getOrderDetails($orderId, $userId);
+    if(isset($orderDetails['trantype'])){
+      return $orderDetails['trantype'];
+    }
+    return false;
+  }
+
+  public function orderVoidLastFunction($orderId, $userId){
+    $returnData = $this->voidLastStepOnOrder($orderId, $userId);
+    
+    // echo '<pre>' . print_r($returnData, true) . '</pre>';
+    // die();
+    if($returnData['response'] == 'Approved'){
+      return ['success'=> true, 'response'=>'Approved'];
+    }
+
+    return ['success'=> false, 'response'=> $returnData['errMsg']];
+  }
+
   /**
    * Refunding process
    * Checking if payment is in PostAuth state, if not updating payment status
@@ -559,30 +597,43 @@ class KopaCurl {
     $orderDetails = $this->getOrderDetails($orderId, $userId);
     
     // If transaction is not equal to NULL
-    if($orderDetails['transaction'] == null) return ['success'=> true, 'response'=>'Approved'];
+    if($orderDetails['transaction'] == null) return ['success'=> true, 'response'=> __('Order payment was not completed on KOPA', 'kopa-payment')];
 
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'PreAuth') {
-      // Change order to PostAuth state before refund
-      $postAuthResult = $this->postAuth($orderId, $userId);
-      if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
-        $refundResult = $this->refund($orderId, $userId);
-        if($refundResult['success'] == true){
-          return ['success'=> true, 'response'=>'Approved'];
-        }
+      
+      // if Order is in PreAuth state, Void last order action will initiate refund
+      $returnData = $this->voidLastStepOnOrder($orderId, $userId);
+      if($returnData['success'] == true ) {
+        return ['success'=> true, 'response'=> __('Canceled payment with KOPA system', 'kopa-payment')];
       }
+
+      // // Change order to PostAuth state before refund
+      // $postAuthResult = $this->postAuth($orderId, $userId);
+      // if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
+      //   $refundResult = $this->refund($orderId, $userId);
+      //   if($refundResult['success'] == true){
+      //     return ['success'=> true, 'response'=>'Approved'];
+      //   }
+      // }
     }
 
     // Check transaction status if it was already refunded 
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'Refund') {
       // Already refunded
-      return ['success'=> true, 'response'=>'Approved'];
+      return ['success'=> true, 'response'=> __('Already refunded with KOPA', 'kopa-payment')];
     }
     
-    // Refund function
-    $refundResult = $this->refund($orderId, $userId);
-    if($refundResult['success'] == true){
-      return ['success'=> true, 'response'=>'Approved'];
+    if(isset($orderDetails['trantype']) && in_array($orderDetails['trantype'], ['PostAuth', 'Void']) ) {
+      // Refund function
+      $refundResult = $this->refund($orderId, $userId);
+      if($refundResult['success'] == true && $refundResult['response'] == 'Approved'){
+        return ['success'=> true, 'response'=> __('Refunded completed on KOPA system', 'kopa-payment')];
+      }
+      if($refundResult['response'] == 'Error' && $refundResult['transaction']['errorCode'] == 'CORE-2504') {
+        return ['success'=> true, 'response'=> __('Already refunded with KOPA system', 'kopa-payment')];
+      }
     }
+    return ['success' => false, 'response' => __('There was a problem with KOPA refund process', 'kopa-payment')];
   }
 
   /**
