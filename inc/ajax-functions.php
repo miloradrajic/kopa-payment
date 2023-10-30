@@ -90,8 +90,7 @@ function complete3dPayment(){
   // Check if the request is an AJAX request
   if (isset($_POST['orderId']) && is_numeric($_POST['orderId']) && defined('DOING_AJAX') && DOING_AJAX) {
     // Get the order ID from the AJAX request
-    $orderId = intval($_POST['orderId']);
-
+    $orderId = $_POST['orderId'];
     // Set the order status to "processing"
     $order = wc_get_order($orderId);
     $order->update_status('processing');

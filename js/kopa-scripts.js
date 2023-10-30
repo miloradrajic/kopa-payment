@@ -243,7 +243,7 @@ $(document).ready(async function() {
     ){
       // Call the function to establish the initial socket connection
       $('body').append('<div id="overflowKopaLoader"><div id="kopaLoaderIcon"></div></div>')
-      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.orderId);
+      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.order_id, xhr.responseJSON.orderId);
       const browser = window.open('', '_blank');
       browser.document.write(xhr.responseJSON.htmlCode);
       browser.document.forms[0].submit();
@@ -387,7 +387,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
  * @param {string} roomId 
  * @param {number} orderId 
  */
-function establishSocketConnection(socketUrl, roomId, orderId) {
+function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId) {
   let socket = io(socketUrl); // Initialize the socket connection
   socket.on('connect', () => {
     socket.emit('joinRoom', roomId);
@@ -407,7 +407,8 @@ function establishSocketConnection(socketUrl, roomId, orderId) {
             action: 'complete_3d_payment',
             security: ajax_checkout_params.security,
             dataType: 'json',
-            orderId: orderId,
+            orderId,
+            kopaOrderId,
           },
         });
         if (response.success) {

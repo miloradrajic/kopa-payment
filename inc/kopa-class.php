@@ -264,9 +264,9 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       echo '</div>';
     }
     ?>
-    <h4>Payment details</h4>
-    <p><strong>Payment total:</strong> <span id="kopaPaymentDetailsTotal"></span></p>
-    <p><strong>Payment ID Reference:</strong> <span id="kopaPaymentDetailsReferenceId"></span></p>
+    <h4><?php echo __('Payment details', 'kopa-payment'); ?></h4>
+    <p><strong><?php echo __('Payment total:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsTotal"></span></p>
+    <p><strong><?php echo __('Payment ID Reference:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsReferenceId"></span></p>
     <?php
   }
 
@@ -281,6 +281,8 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
     $order = wc_get_order($orderId);
     $_SESSION['orderID'] = $kopaOrderId;
     $physicalProducts = $this->physicalProductsCheck($order);
+
+    update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
     $errors = [];
 
     // Get the custom payment fields value
@@ -343,7 +345,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       if(in_array($kopa_cc_type, ['dina', 'amex'])){
         // Start API incognito cc payment
         $paymentMethod = 'api';
-        $apiPaymentStatus = $this->startApiPayment($_POST, [], $kopa_cc_type, $orderTotalAmount, $physicalProducts, $orderId);
+        $apiPaymentStatus = $this->startApiPayment($_POST, [], $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId);
     
         if($apiPaymentStatus['result'] == 'success'){
           // API PAYMENT SUCCESS
@@ -364,7 +366,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         }
       }else{
         // 3d incognito cc payment
-        $bankDetails = $this->curl->getBankDetails($orderId, $orderTotalAmount, $physicalProducts);
+        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
         $htmlCode = $this->generateHtmlFor3DPaymentForm(
           $bankDetails, 
           $_POST['kopa_cc_number'], 
@@ -387,7 +389,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           'htmlCode'  => $htmlCode,
           'socketUrl' => $this->serverUrl,
           'roomId'    => $roomId,
-          'orderId'   => $orderId,
+          'orderId'   => $kopaOrderId,
         ];
       }
     }else{
@@ -400,7 +402,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       // Check for CC Type, if amex or dina use API payment
       if(in_array($kopa_cc_type, ['dina', 'amex'])){
         // Start API payment
-        $apiPaymentStatus =  $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $orderId);
+        $apiPaymentStatus =  $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId);
     
         if($apiPaymentStatus['result'] == 'success'){
           // API PAYMENT SUCCESS
@@ -424,7 +426,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       $decodedExpDate = $_POST['ccExpDate'];
       if($savedCard['is3dAuth'] == false){
         // Init 3D payment
-        $bankDetails = $this->curl->getBankDetails($orderId, $orderTotalAmount, $physicalProducts);
+        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
         $htmlCode = $this->generateHtmlFor3DPaymentForm($bankDetails, $decodedCCNumber, $decodedExpDate, $kopaCcAlias, $_POST['kopa_ccv'], $roomId);
 
         $paymentMethod = '3d';
@@ -436,7 +438,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           'htmlCode'  => $htmlCode,
           'socketUrl' => $this->serverUrl,
           'roomId'    => $roomId,
-          'orderId'   => $orderId,
+          'orderId'   => $kopaOrderId,
         ];
       }else{
         // Init Moto payment
@@ -446,7 +448,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           $kopaUseSavedCcId,
           $orderTotalAmount,
           $physicalProducts,
-          $orderId,
+          $kopaOrderId,
         );
         
         if($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved'){
@@ -467,7 +469,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
       }
     }
     // NONE OF PAYMENTS WERE ENGAGED
-    error_log('[KOPA ERROR]: None of the payment methods were engaged '. $orderId);
+    error_log('[KOPA ERROR]: None of the payment methods were engaged '. $kopaOrderId);
 
     return false;
   }
