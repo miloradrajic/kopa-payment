@@ -115,6 +115,7 @@ add_action('wp_ajax_nopriv_complete_3d_payment', 'complete3dPayment');
 
 function log3dPaymentError(){
   $orderId = $_POST['orderId'];
+  $kopaOrderId = $_POST['kopaOrderId'];
   $errorMessage = $_POST['errorMessage'];
   $order = wc_get_order($orderId);
 
@@ -123,7 +124,7 @@ function log3dPaymentError(){
   // Save changes
   $order->save();
 
-  kopaMessageLog('3D Payment', $orderId, get_current_user_id(), $_SESSION['userId'], $errorMessage);
+  kopaMessageLog('3D Payment', $orderId, get_current_user_id(), $_SESSION['userId'], $errorMessage, $kopaOrderId);
 
   echo json_encode(['success' => false, 'message' => __('Error log has been updated', 'kopa-payment')]);
   die();

@@ -74,3 +74,14 @@ input#kopa_cc_number {
   width: auto;
   margin: 10px;
 }
+
+.kopaPciDssIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.kopaPciDssIcon img {
+  width: auto;
+  height: 90px !important;
+}

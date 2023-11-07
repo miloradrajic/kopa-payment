@@ -98,12 +98,17 @@ $(document).ready(async function() {
   /**
    * Hiding input fields if user selects saved CC, and checking if card has is3dAuth == true
    */
-  $('body').on('change','input[name="kopa_use_saved_cc"]', async function(){
+  let startingCcValue = $('input[name="kopa_use_saved_cc"]:checked').val();
+  $('body').on('change','input[name="kopa_use_saved_cc"]', async function(e){
+    if($('input[name="kopa_use_saved_cc"]:checked').val() == startingCcValue ) return;
+    startingCcValue = $('input[name="kopa_use_saved_cc"]:checked').val();
     if($('input[name="kopa_use_saved_cc"]:checked').val() == 'new'){
       $('.kopaCcPaymentInput.optionalNewCcInputs').removeClass('optionalNewCcInputs');
       $('#kopa_ccv_field').show();
-    }else if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
-      $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
+    }else{
+      if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
+        $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
+      }
       let cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
       let cardDetails = await getCardDetails(cardId);
       let is3dAuth = $.parseJSON(cardDetails).card.is3dAuth;
@@ -243,8 +248,8 @@ $(document).ready(async function() {
     ){
       // Call the function to establish the initial socket connection
       $('body').append('<div id="overflowKopaLoader"><div id="kopaLoaderIcon"></div></div>')
-      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.order_id, xhr.responseJSON.orderId);
       const browser = window.open('', '_blank');
+      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.order_id, xhr.responseJSON.orderId, browser);
       browser.document.write(xhr.responseJSON.htmlCode);
       browser.document.forms[0].submit();
     }
@@ -359,7 +364,7 @@ async function getCardDetails(ccId){
  * @param {number} orderId 
  * @param {string} errorMessage 
  */
-async function logErrorOnOrderPayment(orderId, errorMessage){
+async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
   try {
     const response = await $.ajax({
       type: 'POST',
@@ -370,6 +375,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
         dataType: 'json',
         orderId,
         errorMessage,
+        kopaOrderId,
       },
     });
     if (response.success) {
@@ -387,7 +393,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
  * @param {string} roomId 
  * @param {number} orderId 
  */
-function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId) {
+function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId, borwser) {
   let socket = io(socketUrl); // Initialize the socket connection
   socket.on('connect', () => {
     socket.emit('joinRoom', roomId);
@@ -395,6 +401,8 @@ function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId) {
 
   socket.on('notification', async (msg) => {
     $('body').find('#overflowKopaLoader').remove();
+    
+    // If transaction was a success or it was already payed
     if(
       (msg.success == true && msg.response == 'Approved') ||
       (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
@@ -421,13 +429,15 @@ function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId) {
       } catch (error) {
         // Handle AJAX or JSON parsing error
         $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
-        logErrorOnOrderPayment(orderId, error);
+        logErrorOnOrderPayment(orderId, error, kopaOrderId);
       }
     }else{
+      // Payment was unsuccessfull
       // Display error message
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + msg.errMsg + '</li></ul>');
-      logErrorOnOrderPayment(orderId, msg.errMsg);
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + ajax_checkout_params.paymentErrorMessageFor3D + '<br>' + msg.errMsg + '</li></ul>');
+      logErrorOnOrderPayment(orderId, msg.errMsg, kopaOrderId);
     }
+    borwser.close();
   });
   socket.on('disconnect', function(){
     $('body').find('#overflowKopaLoader').remove();

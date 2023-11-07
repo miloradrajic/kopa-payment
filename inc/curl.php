@@ -239,10 +239,12 @@ class KopaCurl {
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
     $returnData = $this->post($saveCcUrl, $data);
     $decodedReturn = json_decode($returnData, true);
-    // echo 'saveCC return data<pre>' . print_r($returnData, true) . '</pre>';
+
     $this->close();
+
     // Remove the last added header, which is the "Authorization" header
     array_pop($this->headers);
+
     if($decodedReturn['response'] == 'Error'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'saveCC'), $encCcNumber, $encCcExpDate, $ccType, $ccAlias);
@@ -274,7 +276,8 @@ class KopaCurl {
     array_pop($this->headers);
 
     $decodedReturn = json_decode($returnData, true);
-    if($decodedReturn['response'] == 'Error'){
+
+    if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'deleteCc'), $ccId);
     }
@@ -371,9 +374,9 @@ class KopaCurl {
     $userId = $current_user->ID;
     // Log event
     if(isset(json_decode($returnData, true)['message'])){
-      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userID'], $returnData, json_decode($returnData, true)['message']);
+      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userId'], $returnData, json_decode($returnData, true)['message'], $_SESSION['kopaOrderId']);
     }else{
-      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userID'], $returnData, 'ERROR - '.$httpCode);
+      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userId'], $returnData, 'ERROR - '.$httpCode, $_SESSION['kopaOrderId']);
     }
   }
 
@@ -397,7 +400,7 @@ class KopaCurl {
 
     array_pop($this->headers);
 
-    if($decodedReturn['response'] == 'Error'){
+    if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
       // Retry function if invalid JWT
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getBankDetails'), $orderId, $amount, $physicalProduct);
@@ -410,7 +413,7 @@ class KopaCurl {
   /**
    * MOTO payment
    */
-  public function motoPayment($card, $cardId, $amount, $physicalProduct, $orderId){
+  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId){
     $motoPaymentUrl = $this->serverUrl.'/api/payment/moto';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
     $data = json_encode(
@@ -423,7 +426,7 @@ class KopaCurl {
         'userId'          => $_SESSION['userId'],
         'amount'          => $amount, 
         'physicalProduct' => $physicalProduct,
-        'oid'             => $orderId,
+        'oid'             => $kopaOrderId,
         'ccv'             => null,
       ]
     );
@@ -435,7 +438,7 @@ class KopaCurl {
     if($decodedReturn['response'] == 'Error'){
       // Retry function if invalid JWT
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'motoPayment'), $card, $cardId, $amount, $physicalProduct, $orderId);
+      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'motoPayment'), $card, $cardId, $amount, $physicalProduct, $kopaOrderId);
     }
 
     $returnDataDecoded = json_decode($returnData, true);
@@ -445,20 +448,20 @@ class KopaCurl {
   /**
    * API Payment
    */
-  public function apiPayment($card, $amount, $physicalProduct, $orderId){
+  public function apiPayment($card, $amount, $physicalProduct, $kopaOrderId){
     $apiPaymentUrl = $this->serverUrl.'/api/payment/api';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
     $data = json_encode(
       [
         'alias'           => $card['alias'], 
-        'expirationDate'  => $card['expirationDate'], 
+        'exparationDate'  => $card['exparationDate'], 
         'type'            => $card['type'],
         'cardNo'          => $card['cardNo'], 
         'userId'          => $_SESSION['userId'],
         'ccv'             => $card['ccv'],
         'amount'          => $amount, 
         'physicalProduct' => $physicalProduct,
-        'oid'             => $orderId,
+        'oid'             => $kopaOrderId,
       ]
     );
     $returnData = $this->post($apiPaymentUrl, $data);
@@ -468,7 +471,7 @@ class KopaCurl {
     $decodedReturn = json_decode($returnData, true);
     if($decodedReturn['response'] == 'Error'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'apiPayment'), $card, $amount, $physicalProduct, $orderId);
+      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'apiPayment'), $card, $amount, $physicalProduct, $kopaOrderId);
     }
     return $decodedReturn;
   }
@@ -478,12 +481,14 @@ class KopaCurl {
    * It is triggered on changing order status to "Completed"
    */
   public function postAuth($orderId, $userId){
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+
     $loginResult = $this->loginUserByAdmin($userId);
     $postAuthUrl = $this->serverUrl.'/api/payment/postauth';
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
     $data = json_encode(
       [
-        'oid'     => strval($orderId), 
+        'oid'     => strval($kopaOrderId), 
         'userId'  => $loginResult['userId'], 
       ]
     );
@@ -503,14 +508,14 @@ class KopaCurl {
   /**
    * Get order details from KOPA platform
    */
-  private function getOrderDetails($orderId, $userId){
+  private function getOrderDetails($kopaOrderId, $userId){
     $loginResult = $this->loginUserByAdmin($userId);
-    $orderDetails = $this->serverUrl.'/api/orders/'.$orderId;
+    $orderDetails = $this->serverUrl.'/api/orders/'.$kopaOrderId;
 
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
     $data = json_encode(
       [
-        'oid'     => $orderId, 
+        'oid'     => $kopaOrderId, 
         'userId'  => $loginResult['userId'], 
       ]
     );
@@ -526,13 +531,15 @@ class KopaCurl {
    * Get Void last step on order KOPA platform
    */
   private function voidLastStepOnOrder($orderId, $userId){
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+
     $loginResult = $this->loginUserByAdmin($userId);
     $orderDetails = $this->serverUrl.'/api/payment/void';
 
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
     $data = json_encode(
       [
-        'oid'     => $orderId, 
+        'oid'     => $kopaOrderId, 
         'userId'  => $loginResult['userId'], 
       ]
     );
@@ -549,12 +556,12 @@ class KopaCurl {
    */
   public function refundCheck($orderId, $userId){
     $custom_meta_field = get_post_meta($orderId, '_kopa_payment_method', true);
-
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
     // Check if order payment was done with KOPA system
     if (empty($custom_meta_field)) {
       return ['success' => false, 'message'=> __('Order was not paid with KOPA payment method.','kopa-payment'), 'isKopa'=> false];
     }
-    $orderDetails = $this->getOrderDetails($orderId, $userId);
+    $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
     if($orderDetails['transaction'] == null){
       return ['success' => false, 'message'=> __('Transaction on this order was not completed with KOPA system', 'kopa-payment'), 'isKopa'=> true];
     }
@@ -567,7 +574,9 @@ class KopaCurl {
   }
 
   public function orderTrantypeStatusCheck($orderId, $userId){
-    $orderDetails = $this->getOrderDetails($orderId, $userId);
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+    
+    $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
     if(isset($orderDetails['trantype'])){
       return $orderDetails['trantype'];
     }
@@ -575,7 +584,9 @@ class KopaCurl {
   }
 
   public function orderVoidLastFunction($orderId, $userId){
-    $returnData = $this->voidLastStepOnOrder($orderId, $userId);
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+    
+    $returnData = $this->voidLastStepOnOrder($kopaOrderId, $userId);
     
     // echo '<pre>' . print_r($returnData, true) . '</pre>';
     // die();
@@ -593,8 +604,10 @@ class KopaCurl {
    * Running refund cURL
    */
   public function refundProcess($orderId, $userId){
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+    
     // check if order is in preAuth state
-    $orderDetails = $this->getOrderDetails($orderId, $userId);
+    $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
     
     // If transaction is not equal to NULL
     if($orderDetails['transaction'] == null) return ['success'=> true, 'response'=> __('Order payment was not completed on KOPA', 'kopa-payment')];
@@ -606,15 +619,6 @@ class KopaCurl {
       if($returnData['success'] == true ) {
         return ['success'=> true, 'response'=> __('Canceled payment with KOPA system', 'kopa-payment')];
       }
-
-      // // Change order to PostAuth state before refund
-      // $postAuthResult = $this->postAuth($orderId, $userId);
-      // if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
-      //   $refundResult = $this->refund($orderId, $userId);
-      //   if($refundResult['success'] == true){
-      //     return ['success'=> true, 'response'=>'Approved'];
-      //   }
-      // }
     }
 
     // Check transaction status if it was already refunded 
@@ -625,7 +629,7 @@ class KopaCurl {
     
     if(isset($orderDetails['trantype']) && in_array($orderDetails['trantype'], ['PostAuth', 'Void']) ) {
       // Refund function
-      $refundResult = $this->refund($orderId, $userId);
+      $refundResult = $this->refund($kopaOrderId, $userId);
       if($refundResult['success'] == true && $refundResult['response'] == 'Approved'){
         return ['success'=> true, 'response'=> __('Refunded completed on KOPA system', 'kopa-payment')];
       }
@@ -640,12 +644,14 @@ class KopaCurl {
    * Refund cURL
    */
   private function refund($orderId, $userId){
+    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+
     $loginResult = $this->loginUserByAdmin($userId);
     $refundUrl = $this->serverUrl.'/api/payment/refund';
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
     $data = json_encode(
       [
-        'oid'     => $orderId, 
+        'oid'     => $kopaOrderId, 
         'userId'  => $loginResult['userId'], 
       ]
     );

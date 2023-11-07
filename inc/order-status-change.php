@@ -51,41 +51,33 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
 
 	// Check if the custom metadata exists and if payment was done with MOTO or API payment
   if (!empty($custom_metadata)) {
-    if(in_array($custom_metadata, ['moto', 'api'])) {
-      $kopaCurl = new KopaCurl();
-      $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
-      if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
-        // Add an order note
-        $note = __('Order has been completed on KOPA system.', 'kopa-payment');
-        $order->add_order_note($note);
-      }else{
-        // Get the previous order status
-        $previous_status = $order->get_status_before('completed');
-        if (!empty($previous_status)) {
-          // Set the order status back to the previous status
-          $order->set_status($previous_status);
-        }
-
-        // Check transaction type on order
-        $tranType = $kopaCurl->orderTrantypeStatusCheck($order_id, $user_id);
-        if($tranType == 'Void'){
-          $note = __('Order could not be completed on KOPA because order transaction was set to Void', 'kopa-payment');
-        }
-        if($tranType == 'Refund'){
-          $note = __('Order could not be completed on KOPA because order transaction was set to Refund', 'kopa-payment');
-        }
-        $note = __('Order could not be completed on KOPA because PostAuth has failed', 'kopa-payment');
-        $order->add_order_note($note);
-      }
-      // Save changes for notes
-      $order->save();
-    }else{
+    $kopaCurl = new KopaCurl();
+    $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
+    if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
       // Add an order note
-      $note = __('Order has been completed on Kopa system.', 'kopa-payment');
+      $note = __('Order has been completed on KOPA system.', 'kopa-payment');
       $order->add_order_note($note);
-      // Save changes for notes
-      $order->save();
+    }else{
+      // Get the previous order status
+      $previous_status = $order->get_status_before('completed');
+      if (!empty($previous_status)) {
+        // Set the order status back to the previous status
+        $order->set_status($previous_status);
+      }
+
+      // Check transaction type on order
+      $tranType = $kopaCurl->orderTrantypeStatusCheck($order_id, $user_id);
+      if($tranType == 'Void'){
+        $note = __('Order could not be completed on KOPA because order transaction was set to Void', 'kopa-payment');
+      }
+      if($tranType == 'Refund'){
+        $note = __('Order could not be completed on KOPA because order transaction was set to Refund', 'kopa-payment');
+      }
+      $note = __('Order could not be completed on KOPA because PostAuth has failed', 'kopa-payment');
+      $order->add_order_note($note);
     }
+    // Save changes for notes
+    $order->save();
   }
 	return;
 }
