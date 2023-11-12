@@ -35,6 +35,7 @@ function enqueue_kopa_scripts() {
       'ajaxurl'   => admin_url('admin-ajax.php'),
       'security'  => wp_create_nonce('ajax-my-account-nonce'),
       'loggedIn'  => is_user_logged_in(),
+      'confirmCardDelete' => __('Are you sure you want to remove saved credit card', 'kopa-payment'),
     ));
   }
 }

@@ -20,7 +20,9 @@ $(document).ready(async function() {
   
   
   // Add a slash after the first two digits in the expiration date field
-  $('body').on('input', '#kopa_cc_exparation_date', function () {
+  $('body').on('keydown', '#kopa_cc_exparation_date', function (e) {
+    var key = e.keyCode || e.charCode;
+    if(key != 8 && key != 46){
       // Remove non numeric characters
       var value = $(this).val().replace(/\D/g, '');
       // Limit exparation date to 5 characters
@@ -33,10 +35,11 @@ $(document).ready(async function() {
         value = value.substr(0, 2) + '/' + value.substr(2);
       }
       $(this).val(value);
+    }
   });
 
   // Validate the expiration date using the jQuery Validation plugin
-  $('.checkout.woocommerce-checkout').validate({
+  $('form.checkout').validate({
     rules: {
       kopa_cc_exparation_date: {
         required: true,
@@ -74,11 +77,55 @@ $(document).ready(async function() {
         required: ajax_checkout_params.validationCcAlias,
       }
     },
+    highlight: function(element, errorClass, validClass) {
+      // Remove the 'woocommerce-invalid' class when an error is fixed
+      $(element).closest('p').removeClass('woocommerce-invalid');
+    },
+
+    unhighlight: function(element, errorClass, validClass) {
+      // Remove the 'woocommerce-invalid' class when the field is valid
+      $(element).closest('p').removeClass('woocommerce-invalid');
+    },
+
+    // errorPlacement: function(error, element) {
+    //   // Handle error placement if needed 
+    //   $(element).addClass('error');
+    //   $(element).parent().append(error);
+    // },
+
+    success: function (label, element) {
+      // hide the tooltip
+      $(element).removeClass('error');
+      $(element).siblings('.label').remove();
+    },
+    onkeyup: function(element, event) {
+      console.log('revalidate', element);
+      this.element(element);
+      console.log(!this.valid());
+      if (!this.valid()) {
+        $(element).closest('p').addClass('woocommerce-invalid');
+        $(element).addClass('error');
+      } else {
+        $(element).closest('p').removeClass('woocommerce-invalid');
+        $(element).remove('error');
+      }
+    },
   });
 
   // Custom validation method for MM/YY format
   $.validator.addMethod('dateMMYY', function (value, element) {
-    return /^(0[1-9]|1[0-2])\/\d{2}$/.test(value);
+    const currMonth = parseInt(new Date().getMonth().toString()) +1;
+    const currYear = parseInt(new Date().getFullYear().toString().substr(-2));
+    const month = parseInt(value.substr(0, 2));
+    const year = parseInt(value.substr(-2)); 
+
+    if(/^(0[1-9]|1[0-2])\/\d{2}$/.test(value)){
+      if(month > 12) return false;
+      if(year < currYear) return false;
+      if( year == currYear && month < currMonth ) return false;
+      return true;
+    }
+    return false;
   }, ajax_checkout_params.validationCCDate);
 
 
@@ -257,6 +304,7 @@ $(document).ready(async function() {
     if( settings.url.indexOf("?wc-ajax=update_order_review") >= 0 ){
       updateOrderTotalForKopaPaymentDetails();
       $('body').find('#kopaPaymentDetailsReferenceId').text(kopaIdReferenceId);
+      $('form.checkout').find('.payment_method_kopa-payment p').removeClass('woocommerce-invalid');
     }
   });
 

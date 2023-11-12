@@ -1,11 +1,11 @@
 <?php
-class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
+class KOPA_Payment extends WC_Payment_Gateway {
   private $curl, $serverUrl; // Declare the $curl property
   public $errors;
   public function __construct() {
-    $this->id = 'kopa_payment';
-    $this->method_title = 'KOPA Payment Method';
-    $this->method_description = 'KOPA Payment Method description';
+    $this->id = 'kopa-payment';
+    $this->method_title = __('KOPA Payment Method', 'kopa-payment');
+    $this->method_description = __('KOPA Payment Method description', 'kopa-payment');
     $this->has_fields = true;
     $this->init_form_fields();
     $this->init_settings();
@@ -14,17 +14,72 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
     $this->userLoginKopa();
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     $this->errors = [];
-    if(isset(get_option('woocommerce_kopa_payment_settings')['kopa_server_url'])){
-      $this->serverUrl = trim(get_option('woocommerce_kopa_payment_settings')['kopa_server_url']);
+    if(
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) || 
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
+    ){
+      $this->errors[] = __('Kopa server URL cannot be empty!', 'kopa-payment');
     }else{
-      $this->errors[] = 'Kopa server URL cannot be empty!';
+      $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
+    }
+    if(
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
+    ){
+      $this->errors[] = 'Kopa merchant ID cannot be empty!';      
     }
     if(!empty($this->errors)){
       add_action( 'admin_notices', array($this,'admin_warnings'));
     }
+    add_action('after_setup_theme', array($this, 'load_textdomain'));
   }
+
+   /*
+	 * Function that will load translations from the language files in the /languages folder in the root folder of the plugin.
+	 */
+  public function load_textdomain(){
+    load_plugin_textdomain('kopa-payment', false, KOPA_PLUGIN_PATH . 'languages/');
+    
+    // Find proper locale
+    $locale = get_locale();
+    if( is_user_logged_in() ) {
+      if( $user_locale = get_user_locale( get_current_user_id() ) ) {
+        $locale = $user_locale;
+      }
+    }
+    
+    // Get locale
+    $locale = apply_filters( 'woo_kopa_payment_plugin_locale', $locale, 'kopa-payment');
+    
+    // We need standard file
+    $mofile = sprintf( '%s-%s.mo', 'kopa-payment', $locale );
+    
+    // Check first inside `/wp-content/languages/plugins`
+    $domain_path = path_join( WP_LANG_DIR, 'plugins' );
+    $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, $mofile ) );
+    // Or inside `/wp-content/languages`
+    if ( ! $loaded ) {
+      $loaded = load_textdomain( 'kopa-payment', path_join( WP_LANG_DIR, $mofile ) );
+    }
+    
+    // Or inside `/wp-content/plugin/kopa-payment/languages`
+    if ( ! $loaded ) {
+      $domain_path = KOPA_PLUGIN_PATH . '/languages';
+      $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, $mofile ) );
+      
+      // Or load with only locale without prefix
+      if ( ! $loaded ) {
+        $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, "{$locale}.mo" ) );
+      }
+
+      // Or old fashion way
+      if ( ! $loaded && function_exists('load_plugin_textdomain') ) {
+        load_plugin_textdomain( 'kopa-payment', false, $domain_path );
+      }
+    }
+  }
+  
   function admin_warnings($message) {
-    // Write some conditional logic here
     foreach($this->errors as $error){
       echo '<div class="notice notice-error">
               <p>'.$error.' <a href="'.get_admin_url().'admin.php?page=wc-settings&tab=checkout&section=kopa_payment">Check here</a></p>
@@ -46,62 +101,62 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
     $this->form_fields = 
     [
       'enabled' => [
-        'title' => 'Enable/Disable',
+        'title' => __('Enable/Disable', 'kopa-payment'),
         'type' => 'checkbox',
-        'label' => 'Enable KOPA Payment Method',
+        'label' => __('Enable KOPA Payment Method', 'kopa-payment'),
         'default' => 'no',
       ],
       'title' => [
-        'title' => 'Title',
+        'title' => __('Title', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'This is the title that the user sees during checkout.',
+        'description' => __('This is the title that the user sees during checkout.', 'kopa-payment'),
         'default' => 'KOPA Payment',
         'desc_tip' => true,
       ],
       'kopa_merchant_id' => [
-        'title' => 'Merchant id',
+        'title' => __('Merchant id', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'Merchant ID. Without this, KOPA payment will not be active',
+        'description' => __('Merchant ID. Without this, KOPA payment will not be active', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
       'kopa_server_url' => [
-        'title' => 'Server URL',
+        'title' => __('Server URL', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'Server URL to KOPA system',
+        'description' => __('Server URL to KOPA system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
       'kopa_api_username' => [
-        'title' => 'API Username',
+        'title' => __('API Username', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'API username for banking system',
+        'description' => __('API username for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
       'kopa_api_password' => [
-        'title' => 'API password',
+        'title' => __('API password', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'API password for banking system',
+        'description' => __('API password for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
       'kopa_api_storekey' => [
-        'title' => 'API storekey',
+        'title' => __('API storekey', 'kopa-payment'),
         'type' => 'text',
-        'description' => 'API storekey for banking system',
+        'description' => __('API storekey for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
       'title_payment_methods' => array(
-        'title' => 'Banking payment methods:', // Title between inputs
+        'title' => __('Banking payment methods:', 'kopa-payment'), // Title between inputs
         'type'  => 'title',
       ),
       'kopa_api_payment_methods_api' => [
         'title' => '',
         'type' => 'checkbox',
         'label' => 'API & 3D',
-        'description' => 'API & 3D Payment method for banking system',
+        'description' => __('API & 3D Payment method for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
@@ -109,7 +164,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         'title' => '',
         'type' => 'checkbox',
         'label' => 'MOTO',
-        'description' => 'MOTO Payment method for banking system',
+        'description' => __('MOTO Payment method for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
@@ -121,17 +176,17 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
    */
   public function payment_fields() {
     if(
-      !isset(get_option('woocommerce_kopa_payment_settings')['kopa_merchant_id']) ||
-      empty(get_option('woocommerce_kopa_payment_settings')['kopa_merchant_id'])
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
     ){
-      echo "Merchant ID needs to be entered for this option to be active";
+      _e('Merchant ID needs to be entered for this option to be active', 'kopa-payment');
       return;
     }
     if(
-      !isset(get_option('woocommerce_kopa_payment_settings')['kopa_server_url']) ||
-      empty(get_option('woocommerce_kopa_payment_settings')['kopa_server_url'])
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
     ){
-      echo "Server URL needs to be entered for this option to be active";
+      _e('Server URL needs to be entered for this option to be active', 'kopa-payment');
       return;
     }
     ?>
@@ -200,9 +255,9 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         'type' => 'text',
         'class' => array('form-row-wide', 'input-text'),
         'label' => __('Credit card number', 'kopa-payment'),
-        'placeholder' => 'xxxx-xxxx-xxxx-xxxx',
+        'placeholder' => 'xxxx xxxx xxxx xxxx',
         'required' => true,
-        'clear' => false,
+        'clear' => true,
       ),
     );
     woocommerce_form_field(
@@ -213,7 +268,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         'label' => __('Exparation Date', 'kopa-payment'),
         'placeholder' => 'xx/xx',
         'required' => true,
-        'clear' => false,
+        'clear' => true,
       ),
     );
     echo '</div>';
@@ -225,7 +280,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
         'label' => __('CCV', 'kopa-payment'),
         'placeholder' => 'xxx',
         'required' => true,
-        'clear' => false,
+        'clear' => true,
       ),
     );
     if ( is_user_logged_in() ) {
@@ -247,7 +302,7 @@ class WC_KOPA_Payment_Gateway extends WC_Payment_Gateway {
           'label' => __('CC Alias', 'kopa-payment'),
           'placeholder' => '',
           'required' => true,
-          'clear' => false,
+          'clear' => true,
         ),
       );
       echo '</div>';

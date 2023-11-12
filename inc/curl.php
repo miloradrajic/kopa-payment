@@ -15,32 +15,9 @@ class KopaCurl {
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     ));
-    $this->errors = [];
-    if(isset(get_option('woocommerce_kopa_payment_settings')['kopa_server_url'])){
-      $this->serverUrl = trim(get_option('woocommerce_kopa_payment_settings')['kopa_server_url']);
-    }else{
-      $this->errors[] = 'Kopa server URL cannot be empty!';
-    }
-    if(isset(get_option('woocommerce_kopa_payment_settings')['kopa_merchant_id'])){
-      $this->merchantId = get_option('woocommerce_kopa_payment_settings')['kopa_merchant_id'];
-    }else{
-      $this->errors[] = 'Kopa merchant ID cannot be empty!';      
-    }
-    if(!empty($this->errors)){
-      add_action( 'admin_notices', array($this,'admin_warnings'));
-    }
+    $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
+    $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
   }
-  /**
-   * Adding admin warnings when data is not entered in KOPA settings
-   */
-  function admin_warnings($message) {
-    foreach($this->errors as $error){
-      echo '<div class="notice notice-error">
-              <p>'.$error.' <a href="'.get_admin_url().'admin.php?page=wc-settings&tab=checkout&section=kopa_payment">Check here</a></p>
-            </div>';
-    }
-  }
-
   /**
    * cURL GET function
    */

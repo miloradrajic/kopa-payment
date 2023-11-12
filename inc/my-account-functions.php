@@ -36,18 +36,18 @@ function contentMyAccountManageCc() {
   $kopaCurl = new KopaCurl();
   $savedCc = $kopaCurl->getSavedCC();
 
-  echo '<h3>Premium WooCommerce Support</h3>';
+  echo '<h3>'.__('Manage Credit Cards', 'kopa-payment').'</h3>';
   if (!empty($savedCc)) {
     ob_start(); ?>
 
     <table border="1">
       <thead>
         <tr>
-          <th>Alias</th>
-          <th>Type</th>
-          <th>Last Four Digits</th>
-          <th>Created At</th>
-          <th>Delete</th>
+          <th><?php _e('Alias', 'kopa-payment'); ?></th>
+          <th><?php _e('Type', 'kopa-payment'); ?></th>
+          <th><?php _e('Last Four Digits', 'kopa-payment'); ?></th>
+          <th><?php _e('Created At', 'kopa-payment'); ?></th>
+          <th><?php _e('Delete', 'kopa-payment'); ?></th>
         </tr>
       </thead>
       <tbody>
@@ -61,7 +61,7 @@ function contentMyAccountManageCc() {
           <td><?php echo $row['type']; ?></td>
           <td><?php echo $row['lastFourDigits']; ?></td>
           <td><?php echo $formattedDate; ?></td>
-          <td><button class="kopaDeleteCC" data-cc-id="<?php echo htmlspecialchars($row['id']); ?>">Delete</button></td>
+          <td><button class="kopaDeleteCC" data-cc-id="<?php echo htmlspecialchars($row['id']); ?>"><?php _e('Delete', 'kopa-payment'); ?></button></td>
         </tr>          
           <?php
       }

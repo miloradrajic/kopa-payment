@@ -1,5 +1,11 @@
+.hidden {
+  display: none !important;
+}
 .kopaCcPaymentInput.optionalNewCcInputs {
   display: none;
+}
+.checkout .input-text.error {
+  border-color: #ca1919;
 }
 #overflowKopaLoader {
   position: fixed;
@@ -31,33 +37,6 @@
   margin: 0px 0px 0px 5px;
 }
 
-input#kopa_ccv {
-  width: 4ch;
-  box-sizing: content-box;
-  line-height: 1;
-  padding: 5px 10px;
-  margin: 0 10px;
-}
-
-input#kopa_cc_exparation_date {
-  width: 5ch;
-  box-sizing: content-box;
-  display: inline-block;
-}
-input#kopa_cc_number {
-  width: 20ch;
-  box-sizing: content-box;
-}
-
-.kopaCcPaymentInput p,
-#kopa_ccv_field
-{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: flex-start;
-  align-items: center;
-}
 #kopaPaymentIcons {
   margin: 15px 0;
   padding: 15px;
@@ -67,12 +46,14 @@ input#kopa_cc_number {
   flex-wrap: wrap;
   background-color: #fff;
   border-radius: 5px;
+  gap: 10px;
 }
 
-.woocommerce-checkout #payment .payment_box.payment_method_kopa_payment div#kopaPaymentIcons img {
+.woocommerce-checkout #payment .payment_box.payment_method_kopa_payment div#kopaPaymentIcons img,
+#kopaPaymentIcons img 
+{
   max-height: 25px;
   width: auto;
-  margin: 10px;
 }
 
 .kopaPciDssIcon {
@@ -83,5 +64,5 @@ input#kopa_cc_number {
 
 .kopaPciDssIcon img {
   width: auto;
-  height: 90px !important;
+  max-height: 90px !important;
 }
