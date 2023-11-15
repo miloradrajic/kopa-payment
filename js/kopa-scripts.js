@@ -99,9 +99,7 @@ $(document).ready(async function() {
       $(element).siblings('.label').remove();
     },
     onkeyup: function(element, event) {
-      console.log('revalidate', element);
       this.element(element);
-      console.log(!this.valid());
       if (!this.valid()) {
         $(element).closest('p').addClass('woocommerce-invalid');
         $(element).addClass('error');
@@ -168,19 +166,29 @@ $(document).ready(async function() {
     }
     
   });
+
+  $(".woocommerce-checkout").submit(function () {
+    // Remove a class to the submit button
+    $('#place_order').removeClass('disabled');
+
+    // Proceed with form submission
+    return true;
+});
   /**
    * Starts payment process
    */
   $('body').on('click', '#place_order', async function(e){
     e.preventDefault();
+    $('#place_order').addClass('disabled');
     const form = $(this).closest('form');
-    // If incognito card and type == dina
+    // If incognito card and type == dina or amex
     if(
       (
         $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
         typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
       ) &&
-      $('input[name="kopa_cc_type"]:checked').val() == 'dina'
+      $('input[name="kopa_cc_type"]:checked').val() == 'dina' ||
+      $('input[name="kopa_cc_type"]:checked').val() == 'amex'
     ){
       // use API payment
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
@@ -188,14 +196,14 @@ $(document).ready(async function() {
       let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
       let secretKey = await getPiKey();
       let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-
-      form.append(' <input type="hidden" name="paymentType" value="api">'
-                  +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                  +'<input type="hidden" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                  +'<input type="hidden" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                  +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+      form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                  +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                  +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                  +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                  +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
                   );
       form.submit();
+      form.find('.additionalKopaInput').remove();
       return;
     }
     // If incognito card and type != dina
@@ -204,22 +212,24 @@ $(document).ready(async function() {
         $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
         typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
       ) &&
-      $('input[name="kopa_cc_type"]:checked').val() != 'dina'
+      $('input[name="kopa_cc_type"]:checked').val() != 'dina' &&
+      $('input[name="kopa_cc_type"]:checked').val() != 'amex'
     ){
       // use 3D incognito CC payment
-      form.append('<input type="hidden" name="paymentType" value="3d incognito"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
+      form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
       if($('#kopa_save_cc').is(':checked')){
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
         let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
         let secretKey = await getPiKey();
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-        form.append(' <input type="hidden" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                  +'<input type="hidden" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                  +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+        form.append('<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                   +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                   +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
                   );
       }
       form.submit();
+      form.find('.additionalKopaInput').remove();
       return;
     }
 
@@ -241,14 +251,15 @@ $(document).ready(async function() {
         const secretKey = await getPiKey();
         const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
 
-        form.append(' <input type="hidden" name="ccNumber" value="'+decodedData.ccDecoded+'">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
-                    +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" name="paymentType" value="3d">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="ccNumber" value="'+decodedData.ccDecoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
                     );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }else if(
         cardParsed.is3dAuth == true &&
@@ -256,12 +267,13 @@ $(document).ready(async function() {
         cardParsed.type !== 'amex'
       ){
         //use MOTO payment 
-        form.append(' <input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" name="paymentType" value="moto">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="moto">'
                   );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
         // use API payment
@@ -270,13 +282,15 @@ $(document).ready(async function() {
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
         let secretKey = await getPiKey();
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-
-        form.append(' <input type="hidden" name="paymentType" value="api">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                    +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
                     );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }
     } catch (error) {
@@ -290,15 +304,13 @@ $(document).ready(async function() {
   $(document).ajaxSuccess(function (event, xhr, settings) {
     if(
       settings.url.indexOf("?wc-ajax=checkout") >= 0 && 
-      typeof(xhr.responseJSON.socketUrl) != "undefined" && 
-      xhr.responseJSON.socketUrl !== null
+      typeof(xhr.responseJSON.htmlCode) != "undefined" && 
+      xhr.responseJSON.htmlCode !== null
     ){
       // Call the function to establish the initial socket connection
       $('body').append('<div id="overflowKopaLoader"><div id="kopaLoaderIcon"></div></div>')
-      const browser = window.open('', '_blank');
-      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.order_id, xhr.responseJSON.orderId, browser);
-      browser.document.write(xhr.responseJSON.htmlCode);
-      browser.document.forms[0].submit();
+      $('body').append(xhr.responseJSON.htmlCode);
+      $('body').find('#paymentform').submit();
     }
 
     if( settings.url.indexOf("?wc-ajax=update_order_review") >= 0 ){
@@ -347,7 +359,7 @@ function decodeCcDetails(secretKey, ccNumberEncoded, ccExpDateEncoded) {
     ccExpDateDecoded = JSON.parse(CryptoJS.AES.decrypt(ccExpDateEncoded, secretKey).toString(CryptoJS.enc.Utf8)).toString(); 
     return {ccDecoded, ccExpDateDecoded};
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return { ccDecoded: 'Decryption Error', ccExpDateDecoded: 'Decryption Error' };
   }
   

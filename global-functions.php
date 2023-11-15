@@ -92,3 +92,97 @@ function custom_radio_button_field($field, $key, $args, $value) {
   return $output;
 }
 add_filter('woocommerce_form_field_radio', 'custom_radio_button_field', 10, 4);
+
+
+// Register custom endpoint
+function registerKopaPaymentEndpoint() {
+  add_rewrite_rule('^kopa-payment-data/?', 'index.php?kopa_payment_data=1', 'top');
+  add_filter('query_vars', function ($vars) {
+    $vars[] = 'kopa_payment_data';
+    return $vars;
+  });
+  flush_rewrite_rules(); // Flush rewrite rules to make sure the changes take effect
+}
+add_action('init', 'registerKopaPaymentEndpoint');
+
+// Handle POST requests to the custom endpoint
+function handle_custom_endpoint() {
+  $custom_endpoint = get_query_var('kopa_payment_data');
+  if ($custom_endpoint) {
+    if (
+      $_SERVER['REQUEST_METHOD'] === 'POST' &&
+      !isset($_GET['authResult'])
+      ) {
+      // Retrieve JSON data from the request
+      $jsonData = file_get_contents('php://input');
+      $data = json_decode($jsonData, true);
+      if (json_last_error() === JSON_ERROR_NONE) {
+        // Check if the required keys are present
+        $requiredKeys = ['OrderId', 'TransStatus', 'TransDate', 'TansId', 'TansErrorMsg', 'TransErrorCode', 'TransNumCode'];
+        if (count(array_diff($requiredKeys, array_keys($data))) === 0) {
+          $orders = wc_get_orders( array( 'kopaIdReferenceId' => $data['OrderId'] ) );
+          if(!empty($orders)) {
+            $order = $orders[0];
+            update_post_meta($order, 'kopaOrderPaymentData', $jsonData);
+          }
+        } else {
+          wp_send_json_error(['message' => __('Data sent is not a valid structure', 'kopa-payment')]);
+          exit;
+        }
+      } 
+    }   
+    if (
+      $_SERVER['REQUEST_METHOD'] === 'GET' &&
+      isset($_GET['authResult']) &&
+      !empty(isset($_GET['authResult'])) &&
+      isset($_GET['orderId']) &&
+      !empty(isset($_GET['orderId']))
+    ){
+      $authResult = $_GET['authResult'];
+      $order = wc_get_order($_GET['orderId']);
+      if(!empty($order)) {
+        if($authResult == 'AUTHORISED'){
+
+          // Change the order status to 'completed'
+          $order->update_status('completed');
+
+          // Redirect the user to the thank you page
+          wp_redirect($order->get_checkout_order_received_url());
+          exit;
+        }
+        if($authResult == 'CANCELLED'){
+          // Add a notice
+          wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
+          
+          // Redirect to the checkout page
+          wp_redirect(wc_get_checkout_url());
+          exit;
+        }
+        if($authResult == 'REFUSED'){
+          // Add a notice
+          wc_add_notice(__('Your payment was refused. Check with your bank and try again', 'kopa-payment'), 'error');
+          
+          // Redirect to the checkout page
+          wp_redirect(wc_get_checkout_url());
+          exit;
+        }
+      }
+    }
+    wp_send_json_error(['message' => __('You are not allowed', 'kopa-payment')]);
+    exit;
+  }
+}
+add_action('template_redirect', 'handle_custom_endpoint');
+
+
+function handle_custom_query_var( $query, $query_vars ) {
+	if ( ! empty( $query_vars['kopaIdReferenceId'] ) ) {
+		$query['meta_query'][] = array(
+			'key' => 'kopaIdReferenceId',
+			'value' => esc_attr( $query_vars['kopaIdReferenceId'] ),
+		);
+	}
+
+	return $query;
+}
+add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', 'handle_custom_query_var', 10, 2 );

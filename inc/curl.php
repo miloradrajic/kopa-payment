@@ -431,7 +431,7 @@ class KopaCurl {
     $data = json_encode(
       [
         'alias'           => $card['alias'], 
-        'exparationDate'  => $card['exparationDate'], 
+        'expirationDate'  => $card['expirationDate'], 
         'type'            => $card['type'],
         'cardNo'          => $card['cardNo'], 
         'userId'          => $_SESSION['userId'],
@@ -442,9 +442,10 @@ class KopaCurl {
       ]
     );
     $returnData = $this->post($apiPaymentUrl, $data);
+    echo 'data<pre>' . print_r($data, true) . '</pre>';
+    echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
     $this->close();
     array_pop($this->headers);
-    
     $decodedReturn = json_decode($returnData, true);
     if($decodedReturn['response'] == 'Error'){
       $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
@@ -562,15 +563,10 @@ class KopaCurl {
 
   public function orderVoidLastFunction($orderId, $userId){
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
-    
     $returnData = $this->voidLastStepOnOrder($kopaOrderId, $userId);
-    
-    // echo '<pre>' . print_r($returnData, true) . '</pre>';
-    // die();
     if($returnData['response'] == 'Approved'){
       return ['success'=> true, 'response'=>'Approved'];
     }
-
     return ['success'=> false, 'response'=> $returnData['errMsg']];
   }
 
