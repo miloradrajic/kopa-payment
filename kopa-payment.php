@@ -70,6 +70,7 @@ function check_for_woocommerce() {
   require_once KOPA_PLUGIN_PATH . '/inc/enqueue-scripts.php';
   require_once KOPA_PLUGIN_PATH . '/inc/log-functions.php';
   require_once KOPA_PLUGIN_PATH . '/inc/kopa-reference-id.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/payment-endpoint.php';
 
   // Adding custom payment method
   function addKopaPaymentGateway($gateways) {

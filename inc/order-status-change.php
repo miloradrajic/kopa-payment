@@ -49,7 +49,16 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
   $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
   $note = '';
 
-	// Check if the custom metadata exists and if payment was done with MOTO or API payment
+  // If this is automatic status change, this check will be triggered
+  // If product vas virtual or downloadable, it would automatically get status COMPLETED
+  $physicalProduct = get_post_meta($order->ID, 'isPhysicalProducts', true);
+  if(!empty($physicalProduct) && $physicalProduct == 'false' ){
+    $order->delete_meta_data('isPhysicalProducts');
+    $order->save();
+    return;
+  }
+
+  // Check if the custom metadata exists and if payment was done with MOTO or API payment
   if (!empty($custom_metadata)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
@@ -82,7 +91,6 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
 	return;
 }
 add_action( 'woocommerce_order_status_completed', 'kopaPostAuthOnOrderCompleted' );
-
 
 // Calling VOID function on KOPA if order is in PreAuth state
 function kopaCancelFunction($order_id) {

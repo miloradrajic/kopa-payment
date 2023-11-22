@@ -442,8 +442,6 @@ class KopaCurl {
       ]
     );
     $returnData = $this->post($apiPaymentUrl, $data);
-    echo 'data<pre>' . print_r($data, true) . '</pre>';
-    echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
     $this->close();
     array_pop($this->headers);
     $decodedReturn = json_decode($returnData, true);
@@ -486,7 +484,7 @@ class KopaCurl {
   /**
    * Get order details from KOPA platform
    */
-  private function getOrderDetails($kopaOrderId, $userId){
+  public function getOrderDetails($kopaOrderId, $userId){
     $loginResult = $this->loginUserByAdmin($userId);
     $orderDetails = $this->serverUrl.'/api/orders/'.$kopaOrderId;
 

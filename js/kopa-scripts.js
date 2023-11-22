@@ -181,30 +181,31 @@ $(document).ready(async function() {
     e.preventDefault();
     $('#place_order').addClass('disabled');
     const form = $(this).closest('form');
-    // If incognito card and type == dina or amex
+    // If incognito card
     if(
-      (
-        $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
-        typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
-      ) &&
-      $('input[name="kopa_cc_type"]:checked').val() == 'dina' ||
-      $('input[name="kopa_cc_type"]:checked').val() == 'amex'
+      $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
+      typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
     ){
-      // use API payment
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
       let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
       let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-      let secretKey = await getPiKey();
-      let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-      form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
-                  +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                  +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                  +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                  +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                  );
-      form.submit();
-      form.find('.additionalKopaInput').remove();
-      return;
+      
+      const cardType = await getCardType(ccNumber, $('input[name="kopa_cc_type"]:checked').val());
+
+      // use API payment
+      if(cardType == 'dina' || cardType == 'amex'){
+        let secretKey = await getPiKey();
+        let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
+        form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                    );
+        form.submit();
+        form.find('.additionalKopaInput').remove();
+        return;
+      }
     }
     // If incognito card and type != dina
     if(
@@ -212,8 +213,7 @@ $(document).ready(async function() {
         $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
         typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
       ) &&
-      $('input[name="kopa_cc_type"]:checked').val() != 'dina' &&
-      $('input[name="kopa_cc_type"]:checked').val() != 'amex'
+      $('input[name="kopa_cc_type"]:checked').val() != 'dina'
     ){
       // use 3D incognito CC payment
       form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
@@ -393,6 +393,32 @@ async function getPiKey() {
   }
 }
 
+async function getCardType(ccNumber, ccType){
+  try {
+    const response = await $.ajax({
+      type: 'POST',
+      url: ajax_checkout_params.ajaxurl,
+      data: {
+        action: 'get_card_type',
+        security: ajax_checkout_params.security,
+        dataType: 'json',
+        ccNumber,
+        ccType
+      },
+    });
+    const decoded = $.parseJSON(response);
+    if(decoded.cardType) {
+      return decoded.cardType;
+    } else {
+      // Display error message
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.message + '</li></ul>');
+    }
+  } catch (error) {
+    // Handle AJAX or JSON parsing error
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+  }
+}
+
 /**
  * Getting encoded CC details from KOPA platform
  * @param {string} ccId 
@@ -453,65 +479,65 @@ async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
  * @param {string} roomId 
  * @param {number} orderId 
  */
-function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId, borwser) {
-  let socket = io(socketUrl); // Initialize the socket connection
-  socket.on('connect', () => {
-    socket.emit('joinRoom', roomId);
-  });
+// function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId, borwser) {
+//   let socket = io(socketUrl); // Initialize the socket connection
+//   socket.on('connect', () => {
+//     socket.emit('joinRoom', roomId);
+//   });
 
-  socket.on('notification', async (msg) => {
-    $('body').find('#overflowKopaLoader').remove();
+//   socket.on('notification', async (msg) => {
+//     $('body').find('#overflowKopaLoader').remove();
     
-    // If transaction was a success or it was already payed
-    if(
-      (msg.success == true && msg.response == 'Approved') ||
-      (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
-    ){
-      try {
-        const response = await $.ajax({
-          type: 'POST',
-          url: ajax_checkout_params.ajaxurl,
-          data: {
-            action: 'complete_3d_payment',
-            security: ajax_checkout_params.security,
-            dataType: 'json',
-            orderId,
-            kopaOrderId,
-          },
-        });
-        if (response.success) {
-          // Redirect to the thank you page
-          window.location.href = response.data.redirect;
-        } else {
-          // Display error message
-          $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.message + '</li></ul>');
-        }
-      } catch (error) {
-        // Handle AJAX or JSON parsing error
-        $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
-        logErrorOnOrderPayment(orderId, error, kopaOrderId);
-      }
-    }else{
-      // Payment was unsuccessfull
-      // Display error message
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + ajax_checkout_params.paymentErrorMessageFor3D + '<br>' + msg.errMsg + '</li></ul>');
-      logErrorOnOrderPayment(orderId, msg.errMsg, kopaOrderId);
-    }
-    borwser.close();
-  });
-  socket.on('disconnect', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-  socket.on('connect_error', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-  socket.on('reconnect_error', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-}
+//     // If transaction was a success or it was already payed
+//     if(
+//       (msg.success == true && msg.response == 'Approved') ||
+//       (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
+//     ){
+//       try {
+//         const response = await $.ajax({
+//           type: 'POST',
+//           url: ajax_checkout_params.ajaxurl,
+//           data: {
+//             action: 'complete_3d_payment',
+//             security: ajax_checkout_params.security,
+//             dataType: 'json',
+//             orderId,
+//             kopaOrderId,
+//           },
+//         });
+//         if (response.success) {
+//           // Redirect to the thank you page
+//           window.location.href = response.data.redirect;
+//         } else {
+//           // Display error message
+//           $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.message + '</li></ul>');
+//         }
+//       } catch (error) {
+//         // Handle AJAX or JSON parsing error
+//         $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+//         logErrorOnOrderPayment(orderId, error, kopaOrderId);
+//       }
+//     }else{
+//       // Payment was unsuccessfull
+//       // Display error message
+//       $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + ajax_checkout_params.paymentErrorMessageFor3D + '<br>' + msg.errMsg + '</li></ul>');
+//       logErrorOnOrderPayment(orderId, msg.errMsg, kopaOrderId);
+//     }
+//     borwser.close();
+//   });
+//   socket.on('disconnect', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+//   socket.on('connect_error', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+//   socket.on('reconnect_error', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+// }
 
 function updateOrderTotalForKopaPaymentDetails(){
   var orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();

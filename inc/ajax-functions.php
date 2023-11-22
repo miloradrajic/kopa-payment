@@ -43,6 +43,18 @@ function save_cc_ajax(){
 }
 add_action('wp_ajax_save_cc', 'save_cc_ajax');
 
+function detectCcType(){
+  // Check the nonce for security
+  check_ajax_referer('ajax-checkout-nonce', 'security');
+
+  $ccType = detectCreditCardType($_POST['ccNumber'], $_POST['ccType']);
+  if($ccType !== false)  echo json_encode(['cardType' => $ccType]);
+  if($ccType  == false)  echo json_encode(['cardType' => false, 'message'=> __('Please check CC number and selected CC type.', 'kopa-payment')]);
+  die();
+}
+
+add_action('wp_ajax_get_card_type', 'detectCcType');
+add_action('wp_ajax_nopriv_get_card_type', 'detectCcType');
 
 function deleteCc(){
   include_once KOPA_PLUGIN_PATH . '/inc/curl.php';

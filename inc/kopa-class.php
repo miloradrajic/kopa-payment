@@ -326,7 +326,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $order = wc_get_order($orderId);
     $_SESSION['orderId'] = $orderId;
     $_SESSION['kopaOrderId'] = $kopaOrderId;
-    $physicalProducts = $this->physicalProductsCheck($order);
+    $physicalProducts = $this->isPhysicalProducts($order);
 
     update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
     $errors = [];
@@ -360,7 +360,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     if (empty($kopa_ccv) && $savedCard['is3dAuth'] == false) {
       $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa-payment');
     }
-    $roomId = $orderId . '_' . rand(1000,9999);
+    // $roomId = $orderId . '_' . rand(1000,9999);
     if($kopaUseSavedCcId == false){
       if (empty($kopa_cc_number)) {
         $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
@@ -400,9 +400,19 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+          
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
           $order->save();
+          
           // Check if CC needs to be saved 
-
           if($kopaSaveCc){
             $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
             // if($savedCcResponce) 
@@ -458,6 +468,17 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
+
           $order->save();
           // Redirect to the thank you page
           return [
@@ -560,8 +581,8 @@ class KOPA_Payment extends WC_Payment_Gateway {
       <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="<?php echo substr($cardExpDate, -2); ?>" >
       <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="<?php echo substr($cardExpDate, 0, 2); ?>">
       <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
-      <input type="hidden" name="resURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data'); ?>">
-      <input type="hidden" name="redirectURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/?orderId='.$orderId); ?>">
+      <input type="hidden" name="resURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/'.$orderId); ?>">
+      <input type="hidden" name="redirectURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/'.$orderId); ?>">
     </form>
     <?php
     return ob_get_clean();
@@ -570,15 +591,15 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * Check if any of the products in cart is physical
    */
-  private function physicalProductsCheck($order){
+  public function isPhysicalProducts($order){
     foreach ($order->get_items() as $item) {
       $product = $item->get_product();
       // Check if the product is not virtual or not downloadable
       if (!$product->is_downloadable() && !$product->is_virtual()) {
-        return 'true';
+        return true;
       }
     }
-    return 'false';
+    return false;
   }
 
   /**
