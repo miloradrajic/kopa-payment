@@ -62,13 +62,17 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
   if (!empty($custom_metadata)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
+
+    // If PostAuth is successfully changed on KOPA system
     if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
       // Add an order note
       $note = __('Order has been completed on KOPA system.', 'kopa-payment');
       $order->add_order_note($note);
     }else{
+      // If there was a problem changing status to PostAuth
+
       // Get the previous order status
-      $previous_status = $order->get_status_before('completed');
+      $previous_status = get_post_meta($order_id, '_previous_order_status', true);
       if (!empty($previous_status)) {
         // Set the order status back to the previous status
         $order->set_status($previous_status);
@@ -130,3 +134,11 @@ function kopaCancelFunction($order_id) {
   }
 }
 add_action( 'woocommerce_order_status_cancelled', 'kopaCancelFunction' );
+
+
+// Add an order note with the previous status when the order status changes
+function savePreviousOrderStatus($order_id, $old_status, $new_status) {
+  // Save the previous status as an order note
+  update_post_meta($order_id, '_previous_order_status', $old_status);
+}
+add_action('woocommerce_order_status_changed', 'savePreviousOrderStatus', 10, 3);

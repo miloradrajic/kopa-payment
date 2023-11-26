@@ -507,6 +507,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         
         $paymentMethod = '3d';
         $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+        
         $order->save();
         return [
           'result'    => 'success',
@@ -533,6 +534,17 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
+
           $order->save();
           return [
             'result' => 'success',
