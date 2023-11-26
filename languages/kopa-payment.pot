@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-11-10T10:24:30+01:00\n"
+"POT-Creation-Date: 2023-11-15T23:37:30+01:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.8.1\n"
 "X-Domain: kopa-payment\n"
@@ -28,6 +28,22 @@ msgstr ""
 
 #. Author URI of the plugin
 msgid "kopa.rs"
+msgstr ""
+
+#: global-functions.php:129
+msgid "Data sent is not a valid structure"
+msgstr ""
+
+#: global-functions.php:155
+msgid "Your payment was canceled, please try again."
+msgstr ""
+
+#: global-functions.php:163
+msgid "Your payment was refused. Check with your bank and try again"
+msgstr ""
+
+#: global-functions.php:171
+msgid "You are not allowed"
 msgstr ""
 
 #: inc/ajax-functions.php:14
@@ -51,9 +67,9 @@ msgid "Error getting card details"
 msgstr ""
 
 #: inc/ajax-functions.php:99
-#: inc/kopa-class.php:405
-#: inc/kopa-class.php:465
-#: inc/kopa-class.php:515
+#: inc/kopa-class.php:401
+#: inc/kopa-class.php:459
+#: inc/kopa-class.php:513
 msgid "Order has been paid with KOPA system"
 msgstr ""
 
@@ -69,63 +85,63 @@ msgstr ""
 msgid "Error log has been updated"
 msgstr ""
 
-#: inc/curl.php:201
+#: inc/curl.php:178
 msgid "There was problem with Kopa Payment method"
 msgstr ""
 
-#: inc/curl.php:222
+#: inc/curl.php:199
 msgid "There was problem with Kopa Payment method."
 msgstr ""
 
-#: inc/curl.php:256
+#: inc/curl.php:233
 msgid "Credit card already saved"
 msgstr ""
 
-#: inc/curl.php:263
+#: inc/curl.php:240
 msgid "There was problem with Kopa Payment method. Saving CC"
 msgstr ""
 
-#: inc/curl.php:288
+#: inc/curl.php:265
 msgid "There was problem with Kopa Payment method. DELETE CC"
 msgstr ""
 
-#: inc/curl.php:562
+#: inc/curl.php:540
 msgid "Order was not paid with KOPA payment method."
 msgstr ""
 
-#: inc/curl.php:566
+#: inc/curl.php:544
 msgid "Transaction on this order was not completed with KOPA system"
 msgstr ""
 
-#: inc/curl.php:569
+#: inc/curl.php:547
 msgid "Status of the order is PreAuth"
 msgstr ""
 
-#: inc/curl.php:572
+#: inc/curl.php:550
 msgid "Order has been refunded"
 msgstr ""
 
-#: inc/curl.php:613
+#: inc/curl.php:586
 msgid "Order payment was not completed on KOPA"
 msgstr ""
 
-#: inc/curl.php:620
+#: inc/curl.php:593
 msgid "Canceled payment with KOPA system"
 msgstr ""
 
-#: inc/curl.php:627
+#: inc/curl.php:600
 msgid "Already refunded with KOPA"
 msgstr ""
 
-#: inc/curl.php:634
+#: inc/curl.php:607
 msgid "Refunded completed on KOPA system"
 msgstr ""
 
-#: inc/curl.php:637
+#: inc/curl.php:610
 msgid "Already refunded with KOPA system"
 msgstr ""
 
-#: inc/curl.php:640
+#: inc/curl.php:613
 msgid "There was a problem with KOPA refund process"
 msgstr ""
 
@@ -169,158 +185,158 @@ msgstr ""
 msgid "KOPA Payment Method description"
 msgstr ""
 
-#: inc/kopa-class.php:20
+#: inc/kopa-class.php:21
 msgid "Kopa server URL cannot be empty!"
 msgstr ""
 
-#: inc/kopa-class.php:106
+#: inc/kopa-class.php:104
 msgid "Enable/Disable"
 msgstr ""
 
-#: inc/kopa-class.php:108
+#: inc/kopa-class.php:106
 msgid "Enable KOPA Payment Method"
 msgstr ""
 
-#: inc/kopa-class.php:112
+#: inc/kopa-class.php:110
 msgid "Title"
 msgstr ""
 
-#: inc/kopa-class.php:114
+#: inc/kopa-class.php:112
 msgid "This is the title that the user sees during checkout."
 msgstr ""
 
-#: inc/kopa-class.php:119
+#: inc/kopa-class.php:117
 msgid "Merchant id"
 msgstr ""
 
-#: inc/kopa-class.php:121
+#: inc/kopa-class.php:119
 msgid "Merchant ID. Without this, KOPA payment will not be active"
 msgstr ""
 
-#: inc/kopa-class.php:126
+#: inc/kopa-class.php:124
 msgid "Server URL"
 msgstr ""
 
-#: inc/kopa-class.php:128
+#: inc/kopa-class.php:126
 msgid "Server URL to KOPA system"
 msgstr ""
 
-#: inc/kopa-class.php:133
+#: inc/kopa-class.php:131
 msgid "API Username"
 msgstr ""
 
-#: inc/kopa-class.php:135
+#: inc/kopa-class.php:133
 msgid "API username for banking system"
 msgstr ""
 
-#: inc/kopa-class.php:140
+#: inc/kopa-class.php:138
 msgid "API password"
 msgstr ""
 
-#: inc/kopa-class.php:142
+#: inc/kopa-class.php:140
 msgid "API password for banking system"
 msgstr ""
 
-#: inc/kopa-class.php:147
+#: inc/kopa-class.php:145
 msgid "API storekey"
 msgstr ""
 
-#: inc/kopa-class.php:149
+#: inc/kopa-class.php:147
 msgid "API storekey for banking system"
 msgstr ""
 
-#: inc/kopa-class.php:154
+#: inc/kopa-class.php:152
 msgid "Banking payment methods:"
 msgstr ""
 
-#: inc/kopa-class.php:161
+#: inc/kopa-class.php:159
 msgid "API & 3D Payment method for banking system"
 msgstr ""
 
-#: inc/kopa-class.php:169
+#: inc/kopa-class.php:167
 msgid "MOTO Payment method for banking system"
 msgstr ""
 
-#: inc/kopa-class.php:184
+#: inc/kopa-class.php:182
 msgid "Merchant ID needs to be entered for this option to be active"
 msgstr ""
 
-#: inc/kopa-class.php:191
+#: inc/kopa-class.php:189
 msgid "Server URL needs to be entered for this option to be active"
 msgstr ""
 
-#: inc/kopa-class.php:225
+#: inc/kopa-class.php:223
 msgid "New credit card"
 msgstr ""
 
-#: inc/kopa-class.php:233
+#: inc/kopa-class.php:231
 msgid "Use saved credit cards"
 msgstr ""
 
-#: inc/kopa-class.php:246
+#: inc/kopa-class.php:244
 msgid "CC Type"
 msgstr ""
 
-#: inc/kopa-class.php:259
+#: inc/kopa-class.php:257
 msgid "Credit card number"
 msgstr ""
 
-#: inc/kopa-class.php:270
+#: inc/kopa-class.php:268
 msgid "Exparation Date"
 msgstr ""
 
-#: inc/kopa-class.php:282
+#: inc/kopa-class.php:280
 msgid "CCV"
 msgstr ""
 
-#: inc/kopa-class.php:295
+#: inc/kopa-class.php:293
 msgid "Save credit card"
 msgstr ""
 
-#: inc/kopa-class.php:304
+#: inc/kopa-class.php:302
 msgid "CC Alias"
 msgstr ""
 
-#: inc/kopa-class.php:313
+#: inc/kopa-class.php:311
 msgid "Payment details"
 msgstr ""
 
-#: inc/kopa-class.php:314
+#: inc/kopa-class.php:312
 msgid "Payment total:"
 msgstr ""
 
-#: inc/kopa-class.php:315
+#: inc/kopa-class.php:313
 msgid "Payment description:"
 msgstr ""
 
-#: inc/kopa-class.php:357
+#: inc/kopa-class.php:355
 msgid "Please check CC number and selected CC type."
 msgstr ""
 
-#: inc/kopa-class.php:363
-#: inc/kopa-class.php:386
+#: inc/kopa-class.php:361
+#: inc/kopa-class.php:382
 msgid "Please fill in a valid credit card CCV number."
 msgstr ""
 
+#: inc/kopa-class.php:366
 #: inc/kopa-class.php:368
-#: inc/kopa-class.php:371
 msgid "Please fill in a valid credit card number."
 msgstr ""
 
-#: inc/kopa-class.php:374
-#: inc/kopa-class.php:382
+#: inc/kopa-class.php:371
+#: inc/kopa-class.php:378
 msgid "Please fill in a valid credit card exparation date."
 msgstr ""
 
-#: inc/kopa-class.php:389
+#: inc/kopa-class.php:385
 msgid "Please enter credit card alias."
 msgstr ""
 
-#: inc/kopa-class.php:440
+#: inc/kopa-class.php:436
 msgid "Starting 3D incognito payment"
 msgstr ""
 
-#: inc/kopa-class.php:476
+#: inc/kopa-class.php:470
 msgid "Error with API payment"
 msgstr ""
 
@@ -328,16 +344,16 @@ msgstr ""
 msgid "Starting 3D payment"
 msgstr ""
 
-#: inc/kopa-class.php:520
+#: inc/kopa-class.php:518
 msgid "Starting moto payment"
 msgstr ""
 
-#: inc/kopa-class.php:636
-#: inc/kopa-class.php:643
+#: inc/kopa-class.php:628
+#: inc/kopa-class.php:635
 msgid "API payment success"
 msgstr ""
 
-#: inc/kopa-class.php:649
+#: inc/kopa-class.php:641
 msgid "Error with starting API payment"
 msgstr ""
 

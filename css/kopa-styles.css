@@ -66,3 +66,8 @@
   width: auto;
   max-height: 90px !important;
 }
+
+#place_order.disabled {
+  cursor: no-drop;
+  pointer-events: none;
+}

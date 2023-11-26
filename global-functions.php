@@ -92,3 +92,9 @@ function custom_radio_button_field($field, $key, $args, $value) {
   return $output;
 }
 add_filter('woocommerce_form_field_radio', 'custom_radio_button_field', 10, 4);
+
+
+function clearSessionOnLogout() {
+  session_unset();
+}
+add_action( 'wp_logout', 'clearSessionOnLogout' );

@@ -5,436 +5,438 @@ msgstr ""
 "Project-Id-Version: KOPA Payment 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kopa-payment\n"
 "Last-Translator: \n"
+"Language-Team: Albanian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2023-11-09T18:59:23+01:00\n"
+"POT-Creation-Date: 2023-11-15T23:37:30+01:00\n"
+"PO-Revision-Date: 2023-11-22 08:02+0000\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Domain: kopa-payment\n"
-"PO-Revision-Date: 2023-11-15 22:45+0000\n"
-"Language-Team: English (United States)\n"
-"Language: en_US\n"
+"Language: sq\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Loco-Version: 2.6.6; wp-6.4.1"
 
 #. Description of the plugin
 msgid "Add a KOPA payment method with credit cards to WooCommerce."
-msgstr "Add a KOPA payment method with credit cards to WooCommerce."
+msgstr ""
 
 #: inc/my-account-functions.php:46
 msgid "Alias"
-msgstr "Alias"
+msgstr ""
 
 #: inc/curl.php:600
 msgid "Already refunded with KOPA"
-msgstr "Already refunded with KOPA"
+msgstr "Rimbursimi tashmë u bë përmes sistemit KOPA"
 
 #: inc/curl.php:610
 msgid "Already refunded with KOPA system"
-msgstr "Already refunded with KOPA system"
+msgstr "Tashmë u rimbursua përmes sistemit KOPA"
 
 #: inc/kopa-class.php:159
 msgid "API & 3D Payment method for banking system"
-msgstr "API & 3D Payment method for banking system"
+msgstr ""
 
 #: inc/kopa-class.php:138
 msgid "API password"
-msgstr "API password"
+msgstr ""
 
 #: inc/kopa-class.php:140
 msgid "API password for banking system"
-msgstr "API password for banking system"
+msgstr ""
 
 #: inc/kopa-class.php:628 inc/kopa-class.php:635
 msgid "API payment success"
-msgstr "API payment success"
+msgstr "Pagesa e suksesshme API"
 
 #: inc/kopa-class.php:145
 msgid "API storekey"
-msgstr "API storekey"
+msgstr ""
 
 #: inc/kopa-class.php:147
 msgid "API storekey for banking system"
-msgstr "API storekey for banking system"
+msgstr ""
 
 #: inc/kopa-class.php:131
 msgid "API Username"
-msgstr "API Username"
+msgstr ""
 
 #: inc/kopa-class.php:133
 msgid "API username for banking system"
-msgstr "API username for banking system"
+msgstr ""
 
 #: inc/enqueue-scripts.php:38
 msgid "Are you sure you want to remove saved credit card"
-msgstr "Are you sure you want to remove saved credit card"
+msgstr "Jeni të sigurt që dëshironi të hiqni kartën e kreditit të ruajtur"
 
 #: inc/kopa-class.php:152
 msgid "Banking payment methods:"
-msgstr "Banking payment methods:"
+msgstr ""
 
 #: inc/curl.php:593
 msgid "Canceled payment with KOPA system"
-msgstr "Canceled payment with KOPA system"
+msgstr "U anulua pagesa përmes sistemit KOPA"
 
 #: inc/kopa-class.php:302
 msgid "CC Alias"
-msgstr "CC Alias"
+msgstr "Numri i kartës së kredisë për një përdorim"
 
 #: inc/ajax-functions.php:55
 msgid "CC Deleted"
-msgstr "CC Deleted"
+msgstr "Kartë kredia u fshi"
 
 #: inc/ajax-functions.php:36
 msgid "CC Saved"
-msgstr "CC Saved"
+msgstr "Kartë kredia u ruajt"
 
 #: inc/kopa-class.php:244
 msgid "CC Type"
-msgstr "CC Type"
+msgstr "Lloji i kartës së kredisë"
 
 #: inc/kopa-class.php:280
 msgid "CCV"
-msgstr "CCV"
+msgstr "Numri CVV"
 
 #: inc/my-account-functions.php:49
 msgid "Created At"
-msgstr "Created At"
+msgstr "Krijuar në"
 
 #: inc/curl.php:233
 msgid "Credit card already saved"
-msgstr "Credit card already saved"
+msgstr "Karta e kredisë u ruajt tashmë"
 
 #: inc/kopa-class.php:257
 msgid "Credit card number"
-msgstr "Credit card number"
+msgstr "Numri i kartës së kredisë"
 
 #: global-functions.php:129
 msgid "Data sent is not a valid structure"
-msgstr "Data sent is not a valid structure"
+msgstr ""
 
 #: inc/my-account-functions.php:50 inc/my-account-functions.php:64
 msgid "Delete"
-msgstr "Delete"
+msgstr "Fshije"
 
 #: inc/kopa-class.php:106
 msgid "Enable KOPA Payment Method"
-msgstr "Enable KOPA Payment Method"
+msgstr ""
 
 #: inc/kopa-class.php:104
 msgid "Enable/Disable"
-msgstr "Enable/Disable"
+msgstr ""
 
 #: inc/ajax-functions.php:57
 msgid "Error deleting CC"
-msgstr "Error deleting CC"
+msgstr "Gabim gjatë fshirjes së kartës së kredisë"
 
 #: inc/ajax-functions.php:78
 msgid "Error getting card details"
-msgstr "Error getting card details"
+msgstr "Gabim gjatë marrjes së të dhënave për kartë kredinë"
 
 #: inc/ajax-functions.php:14
 msgid "Error getting pi key"
-msgstr "Error getting pi key"
+msgstr "Gabim gjatë marrjes së çelësit API"
 
 #: inc/ajax-functions.php:129
 msgid "Error log has been updated"
-msgstr "Error log has been updated"
+msgstr "Evidenta e  gabimeve u përditësua"
 
 #: inc/kopa-class.php:470
 msgid "Error with API payment"
-msgstr "Error with API payment"
+msgstr "Gabim me rastin e pagesës API"
 
 #: inc/kopa-class.php:641
 msgid "Error with starting API payment"
-msgstr "Error with starting API payment"
+msgstr "Gabim me rastin e nisjes së pagesës API"
 
 #: inc/kopa-class.php:268
-#| msgid "Expiration Date"
 msgid "Exparation Date"
-msgstr "Еxpiration date"
+msgstr "Data e skadimit"
 
 #: inc/log-functions.php:32
 msgid "Kopa Logs Preview"
-msgstr "Kopa Logs Preview"
+msgstr "Pasqyra e sistemit KOPA"
 
 #. Plugin Name of the plugin
 msgid "KOPA Payment"
-msgstr "KOPA Payment"
+msgstr "Pagesa KOPA"
 
 #: inc/kopa-class.php:7
 msgid "KOPA Payment Method"
-msgstr "KOPA Payment Method"
+msgstr "Mënyra e pagesës përmes sistemit KOPA"
 
 #: inc/kopa-class.php:8
 msgid "KOPA Payment Method description"
-msgstr "Credit cards payment with KOPA payment system"
+msgstr ""
 
 #: inc/kopa-reference-id.php:10 inc/kopa-reference-id.php:27
 #: inc/kopa-reference-id.php:51
 msgid "KOPA Reference ID:"
-msgstr "KOPA Reference ID:"
+msgstr "Numri i referencës së sistemit KOPA:"
 
 #: inc/kopa-class.php:21
 msgid "Kopa server URL cannot be empty!"
-msgstr "Kopa server URL cannot be empty!"
+msgstr ""
 
 #. Author URI of the plugin
 msgid "kopa.rs"
-msgstr "kopa.rs"
+msgstr ""
 
 #: inc/my-account-functions.php:48
 msgid "Last Four Digits"
-msgstr "Last Four Digits"
+msgstr "Katër Shifrat e fundit"
 
 #: inc/log-functions.php:33
 msgid "Log preview content"
-msgstr "Log preview content"
+msgstr "Pasqyra e përmbajtjes"
 
 #: inc/my-account-functions.php:26 inc/my-account-functions.php:39
 msgid "Manage Credit Cards"
-msgstr "Manage Credit Cards"
+msgstr "Menaxhimi  me kartë kred"
 
 #: inc/kopa-class.php:117
 msgid "Merchant id"
-msgstr "Merchant id"
+msgstr ""
 
 #: inc/kopa-class.php:182
 msgid "Merchant ID needs to be entered for this option to be active"
-msgstr "Merchant ID needs to be entered for this option to be active"
+msgstr ""
 
 #: inc/kopa-class.php:119
 msgid "Merchant ID. Without this, KOPA payment will not be active"
-msgstr "Merchant ID. Without this, KOPA payment will not be active"
+msgstr ""
 
 #: inc/kopa-class.php:167
 msgid "MOTO Payment method for banking system"
-msgstr "MOTO Payment method for banking system"
+msgstr ""
 
 #: inc/kopa-class.php:223
 msgid "New credit card"
-msgstr "New credit card"
+msgstr "Kartë e kredisë e re"
 
 #: inc/enqueue-scripts.php:23
 msgid "Only digits are allowed"
-msgstr "Only digits are allowed"
+msgstr "Lejohen vetëm shifrat"
 
 #: inc/ajax-functions.php:109
 msgid "Order could not be completed"
-msgstr "Order could not be completed"
+msgstr "Porosia nuk mundi të plotësohej"
 
 #: inc/order-status-change.php:74
 msgid ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Refund"
 msgstr ""
-"Order could not be completed on KOPA because order transaction was set to "
-"Refund"
+"Porosia nuk mundi të realizohej përmes sistemit KOPA sepse transaksioni i "
+"porosisë ishte vendosur si rimbursim"
 
 #: inc/order-status-change.php:71
 msgid ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Void"
 msgstr ""
-"Order could not be completed on KOPA because order transaction was set to "
-"Void"
+"Porosia nuk mundi të plotësohej përmes sistemit KOPA sepse transaksioni i "
+"porosisë ishte i pavlefshëm."
 
 #: inc/order-status-change.php:76
 msgid "Order could not be completed on KOPA because PostAuth has failed"
-msgstr "Order could not be completed on KOPA because PostAuth has failed"
+msgstr ""
+"Porosia nuk mundi të plotësohej përmes sistemit KOPA sepse dështoi "
+"pasautorizimi"
 
 #: inc/ajax-functions.php:105
 msgid "Order has been completed"
-msgstr "Order has been completed"
+msgstr "Porosia përfundoi"
 
 #: inc/order-status-change.php:58
 msgid "Order has been completed on KOPA system."
-msgstr "Order has been completed on KOPA system."
+msgstr "Porosia është kryer përmes sistemit KOPA."
 
 #: inc/ajax-functions.php:99 inc/kopa-class.php:401 inc/kopa-class.php:459
 #: inc/kopa-class.php:513
 msgid "Order has been paid with KOPA system"
-msgstr "Order has been paid with KOPA system"
+msgstr "Porosia u pagua përmes sistemit KOPA"
 
 #: inc/curl.php:550
 msgid "Order has been refunded"
-msgstr "Order has been refunded"
+msgstr "Porosia u rimbursua"
 
 #: inc/curl.php:586
 msgid "Order payment was not completed on KOPA"
-msgstr "Order payment was not completed on KOPA"
+msgstr "Pagesa e porosisë nuk u bë përmes sistemit KOPA."
 
 #: inc/order-status-change.php:116
 msgid "Order was already set to be refunded in KOPA system."
-msgstr "Order was already set to be refunded in KOPA system."
+msgstr "Porosia u vendos tashmë për rimbursim në sistemin KOPA."
 
 #: inc/curl.php:540
 msgid "Order was not paid with KOPA payment method."
-msgstr "Order was not paid with KOPA payment method."
+msgstr "Porosia nuk u pagua përmes sistemit KOPA."
 
 #: inc/order-status-change.php:104
 msgid "Order was set to be refunded in KOPA system."
-msgstr "Order was set to be refunded in KOPA system."
+msgstr "Porosia u vendos për rimbursim në sistemin KOPA."
 
 #: inc/kopa-class.php:313
 msgid "Payment description:"
-msgstr "Payment description:"
+msgstr "Përshkrimi i pagesës:"
 
 #: inc/kopa-class.php:311
 msgid "Payment details"
-msgstr "Payment details"
+msgstr "Detajet e pagesës"
 
 #: inc/kopa-class.php:312
 msgid "Payment total:"
-msgstr "Payment total:"
+msgstr "Pagesa e përgjithshme:"
 
 #: inc/kopa-class.php:355
 msgid "Please check CC number and selected CC type."
-msgstr "Please check CC number and selected CC type."
+msgstr ""
+"Ju lutemi verifikojeni numrin e kartës së kredisë dhe llojin e kartës së "
+"kredisë së zgjedhur."
 
 #: inc/enqueue-scripts.php:21
 msgid "Please enter a valid credit card number"
-msgstr "Please enter a valid credit card number"
+msgstr "Ju lutemi shkruani numrin e vlefshëm të kartë kredisë"
 
 #: inc/enqueue-scripts.php:20
-#| msgid "Please enter a valid expiration date (MM/YY)"
 msgid "Please enter a valid exparation date (MM/YY)"
-msgstr "Please enter a valid expiration date (MM/YY)"
+msgstr "Ju lutemi vendosni datën e vlefshme të  skadimit (MM/DD)"
 
 #: inc/enqueue-scripts.php:24
 msgid "Please enter credit card alias"
-msgstr "Please enter credit card alias"
+msgstr ""
+"Ju lutemi shkruani numrin e kartë kredisë suaj për përdorim të njëhershëm"
 
 #: inc/kopa-class.php:385
 msgid "Please enter credit card alias."
-msgstr "Please enter credit card alias."
+msgstr ""
+"Ju lutemi shkruajeni datën e vlefshme të skadimit të kartës së kredisë."
 
 #: inc/enqueue-scripts.php:22
 msgid "Please enter valid CCV number"
-msgstr "Please enter valid CCV number"
+msgstr "Ju lutemi shkruani  numrin e vlefshëm të CVV"
 
 #: inc/kopa-class.php:361 inc/kopa-class.php:382
 msgid "Please fill in a valid credit card CCV number."
-msgstr "Please fill in a valid credit card CCV number."
+msgstr "Ju lutemi vendosni numrin e  vlefshëm CVV të kartës së kredsë."
 
 #: inc/kopa-class.php:371 inc/kopa-class.php:378
-#| msgid "Please fill in a valid credit card expiration date."
 msgid "Please fill in a valid credit card exparation date."
-msgstr "Please fill in a valid credit card expiration date."
+msgstr "Ju lutemi vendosni datën e vlefshme të skadimit të kartës së kredisë."
 
 #: inc/kopa-class.php:366 inc/kopa-class.php:368
 msgid "Please fill in a valid credit card number."
-msgstr "Please fill in a valid credit card number."
+msgstr "Ju lutemi shkruajeni numrin e vlefshëm të kartës së kredisë."
 
 #: inc/curl.php:607
 msgid "Refunded completed on KOPA system"
-msgstr "Refunded completed on KOPA system"
+msgstr "Rimbursimi u krye përmes sistemit KOPA"
 
 #: inc/kopa-class.php:293
 msgid "Save credit card"
-msgstr "Save credit card"
+msgstr "Ruani kartën tuaj të kredisë"
 
 #: inc/kopa-class.php:124
 msgid "Server URL"
-msgstr "Server URL"
+msgstr ""
 
 #: inc/kopa-class.php:189
 msgid "Server URL needs to be entered for this option to be active"
-msgstr "Server URL needs to be entered for this payment option to be active"
+msgstr ""
 
 #: inc/kopa-class.php:126
 msgid "Server URL to KOPA system"
 msgstr ""
-"Server URL to KOPA system. Without this, KOPA payment will not be active"
 
 #: inc/kopa-class.php:436
 msgid "Starting 3D incognito payment"
-msgstr "Starting 3D incognito payment"
+msgstr "Fillimi i pagesave 3D në modin anonim"
 
 #: inc/kopa-class.php:492
 msgid "Starting 3D payment"
-msgstr "Starting 3D payment"
+msgstr "Nisja e pagesave 3D"
 
 #: inc/kopa-class.php:518
 msgid "Starting moto payment"
-msgstr "Starting moto payment"
+msgstr "Fillimi i transaksionit MOTO."
 
 #: inc/curl.php:547
 msgid "Status of the order is PreAuth"
-msgstr "Status of the order is PreAuth"
+msgstr "Statusi i porosisë është para-autorizimi"
 
 #. Author of the plugin
 msgid "Tehnološko Partnerstvo"
-msgstr "Tehnološko Partnerstvo"
+msgstr ""
 
 #: inc/my-account-functions.php:73
 msgid "There are no saved credit cards."
-msgstr "There are no saved credit cards."
+msgstr "Nuk ka kartë krediti të ruajtur."
 
 #: inc/enqueue-scripts.php:25
 msgid "There has been an error with payment"
-msgstr "There has been an error with payment"
+msgstr "Ndodhi një gabim gjatë pagesës"
 
 #: inc/enqueue-scripts.php:19
 msgid "There was a problem with connection with payment"
-msgstr "There was a problem with connection with payment"
+msgstr "Ndodhi një problem lidhur me lidhjen e pagesës"
 
 #: inc/curl.php:613
 msgid "There was a problem with KOPA refund process"
-msgstr "There was a problem with KOPA refund process"
+msgstr "Ndodhi një problem me procesin e rimbursimit përmes sistemit KOPA."
 
 #: inc/order-status-change.php:108
 msgid "There was an error canceling order in KOPA system."
-msgstr "There was an error canceling order in KOPA system."
+msgstr "Ndodhi një gabim gjatë anulimit të porosisë në sistemin KOPA."
 
 #: inc/curl.php:178
-#| msgid "There was a problem with Kopa Payment method"
 msgid "There was problem with Kopa Payment method"
-msgstr "There was a problem with Kopa Payment method"
+msgstr "Ndodhi një problem me mënyrën e pagesës përmes sistemit KOPA"
 
 #: inc/curl.php:199
-#| msgid "There was a problem with Kopa Payment method."
 msgid "There was problem with Kopa Payment method."
-msgstr "There was a problem with Kopa Payment method."
+msgstr "Ndodhi  një problem me mënyrën e pagesës përmes sistemit KOPA."
 
 #: inc/curl.php:265
-#| msgid "There was a problem with Kopa Payment method. DELETE CC"
 msgid "There was problem with Kopa Payment method. DELETE CC"
-msgstr "There was a problem with Kopa Payment method. Deleting CC"
+msgstr ""
+"Ndodhi një problem me mënyrën e pagesës përmes sistemit KOPA. FSHINI KARTËN "
+"E KREDISË"
 
 #: inc/curl.php:240
-#| msgid "There was a problem with Kopa Payment method. Saving CC"
 msgid "There was problem with Kopa Payment method. Saving CC"
-msgstr "There was a problem with Kopa Payment method. Saving CC"
+msgstr ""
+"Ndodhi një problem me mënyrën e pagesës përmes sistemit KOPA. Ruajtja e "
+"kartës së kredisë."
 
 #: inc/kopa-class.php:112
 msgid "This is the title that the user sees during checkout."
-msgstr "This is the title that the user sees during checkout."
+msgstr ""
 
 #: inc/kopa-class.php:110
 msgid "Title"
-msgstr "Title"
+msgstr "Drejtimi"
 
 #: inc/curl.php:544
 msgid "Transaction on this order was not completed with KOPA system"
-msgstr "Transaction on this order was not completed with KOPA system"
+msgstr "Transaksioni për këtë porosi nuk u krye përmes sistemit KOPA"
 
 #: inc/my-account-functions.php:47
 msgid "Type"
-msgstr "Type"
+msgstr "Lloji"
 
 #: inc/kopa-class.php:231
 msgid "Use saved credit cards"
-msgstr "Use saved credit cards"
+msgstr "Përdorni kartë kreditë e ruajtura"
 
 #: global-functions.php:171
 msgid "You are not allowed"
-msgstr "You are not allowed"
+msgstr ""
 
 #: global-functions.php:155
 msgid "Your payment was canceled, please try again."
-msgstr "Your payment was canceled, please try again."
+msgstr "Pagesa juaj u anulua, ju lutemi provoni përsëri."
 
 #: global-functions.php:163
 msgid "Your payment was refused. Check with your bank and try again"
-msgstr "Your payment was refused. Check with your bank and try again"
+msgstr "Pagesa juaj u refuzua. Kontrolloni me bankën tuaj dhe provoni përsëri"

@@ -219,7 +219,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     if ( is_user_logged_in() ) {
       $savedCC = $this->curl->getSavedCC();
       if(is_array($savedCC) && !empty($savedCC)){
-        $userHaveSavedCcClass = ' optionalNewCcInputs';
+        // $userHaveSavedCcClass = ' optionalNewCcInputs';
         $ccOptions = ['new' => __('New credit card', 'kopa-payment')];
         foreach($savedCC as $cc){
           $ccOptions[$cc['id']] = $cc['alias'];
@@ -230,7 +230,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'class'       => array('input-text'),
           'label'       => __('Use saved credit cards', 'kopa-payment'),
           'options'     => $ccOptions,
-          'default'     => $savedCC[0]['id'],
+          'default'     => 'new',
           'required' => true,
           ), 
         );
@@ -326,7 +326,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $order = wc_get_order($orderId);
     $_SESSION['orderId'] = $orderId;
     $_SESSION['kopaOrderId'] = $kopaOrderId;
-    $physicalProducts = $this->physicalProductsCheck($order);
+    $physicalProducts = $this->isPhysicalProducts($order);
 
     update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
     $errors = [];
@@ -360,18 +360,16 @@ class KOPA_Payment extends WC_Payment_Gateway {
     if (empty($kopa_ccv) && $savedCard['is3dAuth'] == false) {
       $errors[] = __('Please fill in a valid credit card CCV number.', 'kopa-payment');
     }
-    $roomId = $orderId . '_' . rand(1000,9999);
+    // $roomId = $orderId . '_' . rand(1000,9999);
     if($kopaUseSavedCcId == false){
       if (empty($kopa_cc_number)) {
         $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
       }else{
-        // echo 'validate cc <pre>' . print_r(validateCreditCard($kopa_cc_number), true) . '</pre>';
         if(validateCreditCard($kopa_cc_number) == false) $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
       }
       if (empty($kopa_cc_exparation_date)) {
         $errors[] = __('Please fill in a valid credit card exparation date.', 'kopa-payment');
       }else{
-        // echo '<pre>' . print_r($variable, true) . '</pre>';
         if (
           substr($kopa_cc_exparation_date, 0, 2) > 12 ||
           substr($kopa_cc_exparation_date, -2) < date('y') || 
@@ -402,9 +400,19 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+          
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
           $order->save();
+          
           // Check if CC needs to be saved 
-
           if($kopaSaveCc){
             $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
             // if($savedCcResponce) 
@@ -420,11 +428,11 @@ class KOPA_Payment extends WC_Payment_Gateway {
         $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
         $htmlCode = $this->generateHtmlFor3DPaymentForm(
           $bankDetails, 
-          $_POST['kopa_cc_number'], 
+          str_replace(' ', '', $_POST['kopa_cc_number']), 
           $_POST['kopa_cc_exparation_date'], 
           $kopaCcAlias, 
           $_POST['kopa_ccv'], 
-          $roomId
+          $orderId
         );
         $paymentMethod = '3d';
         $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
@@ -437,8 +445,6 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'result'    => 'success',
           'messages'  => __('Starting 3D incognito payment', 'kopa-payment'),
           'htmlCode'  => $htmlCode,
-          'socketUrl' => $this->serverUrl,
-          'roomId'    => $roomId,
           'orderId'   => $kopaOrderId,
         ];
       }
@@ -462,6 +468,17 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
+
           $order->save();
           // Redirect to the thank you page
           return [
@@ -480,17 +497,22 @@ class KOPA_Payment extends WC_Payment_Gateway {
         $decodedCCNumber = $_POST['ccNumber'];
         $decodedExpDate = $_POST['ccExpDate'];
         $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
-        $htmlCode = $this->generateHtmlFor3DPaymentForm($bankDetails, $decodedCCNumber, $decodedExpDate, $kopaCcAlias, $_POST['kopa_ccv'], $roomId);
+        $htmlCode = $this->generateHtmlFor3DPaymentForm(
+          $bankDetails, 
+          $decodedCCNumber, 
+          $decodedExpDate, 
+          $kopaCcAlias, 
+          $_POST['kopa_ccv'], 
+          $orderId);
         
         $paymentMethod = '3d';
         $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+        
         $order->save();
         return [
           'result'    => 'success',
           'messages'  => __('Starting 3D payment', 'kopa-payment'),
           'htmlCode'  => $htmlCode,
-          'socketUrl' => $this->serverUrl,
-          'roomId'    => $roomId,
           'orderId'   => $kopaOrderId,
         ];
       }else{
@@ -512,6 +534,17 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
+
+          if($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          }else{
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
+
           $order->save();
           return [
             'result' => 'success',
@@ -533,42 +566,36 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * Generating data for sending to 3D payment proccess
    */
-  private function generateHtmlFor3DPaymentForm($bankDetails, $cardNumber, $cardExpDate, $alias, $ccv, $roomId){
+  private function generateHtmlFor3DPaymentForm($bankDetails, $cardNumber, $cardExpDate, $alias, $ccv, $orderId){
     ob_start()
     ?>
-    <!DOCTYPE html>
-    <html>
-    <head><script> window.onload=function(){document.forms["paymentform"].submit();}</script></head>
-      <body>
-        <form method="post" action="<?php echo $bankDetails['bankUrl']; ?>" id="paymentform">
-          <input type="hidden" name="clientid" value="<?php echo $bankDetails['payload']['clientid']; ?>"/>
-          <input type="hidden" name="storetype" value="<?php echo $bankDetails['payload']['storetype']; ?>" />
-          <input type="hidden" name="hash" value="<?php echo $bankDetails['payload']['hash']; ?>" />
-          <input type="hidden" name="trantype" value="<?php echo $bankDetails['payload']['trantype']; ?>" />
-          <input type="hidden" name="amount" value="<?php echo $bankDetails['payload']['amount']; ?>" />
-          <input type="hidden" name="currency" value="<?php echo $bankDetails['payload']['currency']; ?>" />
-          <input type="hidden" name="oid" value="<?php echo $bankDetails['payload']['oid']; ?>" />
-          <input type="hidden" name="roomId" value="<?php echo $roomId; ?>" />
-          <input type="hidden" name="okUrl" value="<?php echo $bankDetails['payload']['okUrl']; ?>"/>
-          <input type="hidden" name="failUrl" value="<?php echo $bankDetails['payload']['failUrl']; ?>" />
-          <input type="hidden" name="lang" value="<?php echo $bankDetails['payload']['lang']; ?>" />
-          <input type="hidden" name="rnd" value="<?php echo $bankDetails['payload']['rnd']; ?>" />
-          <input type="hidden" name="encoding" value="<?php echo $bankDetails['payload']['encoding']; ?>">
-          <input type="hidden" name="hashAlgorithm" value="<?php echo $bankDetails['payload']['hashAlgorithm']; ?>">
-          <input type="hidden" name="bankMerchantId" value="<?php echo $bankDetails['payload']['bankMerchantId']; ?>">
-          <input type="hidden" name="appname" value="<?php echo $bankDetails['payload']['appname']; ?>">
-          <input type="hidden" name="kopaCycleId" value="<?php echo $bankDetails['payload']['kopaCycleId']; ?>">
-          <input type="hidden" name="physicalProduct" value="<?php echo $bankDetails['payload']['physicalProduct']; ?>">
-          <input type="hidden" name="userId" value="<?php echo $bankDetails['payload']['userId']; ?>">
-          <input type="hidden" name="cardAlias" value="<?php echo $alias; ?>">
-          <input type="hidden" name="pan" value="<?php echo $cardNumber; ?>">
-          <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="<?php echo substr($cardExpDate, -2); ?>" >
-          <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="<?php echo substr($cardExpDate, 0, 2); ?>">
-          <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
-        </form>
-      </body>
-    </html>
-
+    <form method="post" action="<?php echo $bankDetails['bankUrl']; ?>" id="paymentform" target="_self">
+      <input type="hidden" name="clientid" value="<?php echo $bankDetails['payload']['clientid']; ?>"/>
+      <input type="hidden" name="storetype" value="<?php echo $bankDetails['payload']['storetype']; ?>" />
+      <input type="hidden" name="hash" value="<?php echo $bankDetails['payload']['hash']; ?>" />
+      <input type="hidden" name="trantype" value="<?php echo $bankDetails['payload']['trantype']; ?>" />
+      <input type="hidden" name="amount" value="<?php echo $bankDetails['payload']['amount']; ?>" />
+      <input type="hidden" name="currency" value="<?php echo $bankDetails['payload']['currency']; ?>" />
+      <input type="hidden" name="oid" value="<?php echo $bankDetails['payload']['oid']; ?>" />
+      <input type="hidden" name="okUrl" value="<?php echo $bankDetails['payload']['okUrl']; ?>"/>
+      <input type="hidden" name="failUrl" value="<?php echo $bankDetails['payload']['failUrl']; ?>" />
+      <input type="hidden" name="lang" value="<?php echo $bankDetails['payload']['lang']; ?>" />
+      <input type="hidden" name="rnd" value="<?php echo $bankDetails['payload']['rnd']; ?>" />
+      <input type="hidden" name="encoding" value="<?php echo $bankDetails['payload']['encoding']; ?>">
+      <input type="hidden" name="hashAlgorithm" value="<?php echo $bankDetails['payload']['hashAlgorithm']; ?>">
+      <input type="hidden" name="bankMerchantId" value="<?php echo $bankDetails['payload']['bankMerchantId']; ?>">
+      <input type="hidden" name="appname" value="<?php echo $bankDetails['payload']['appname']; ?>">
+      <input type="hidden" name="kopaCycleId" value="<?php echo $bankDetails['payload']['kopaCycleId']; ?>">
+      <input type="hidden" name="cardAlias" value="<?php echo $alias; ?>">
+      <input type="hidden" name="physicalProduct" value="<?php echo $bankDetails['payload']['physicalProduct']; ?>">
+      <input type="hidden" name="userId" value="<?php echo $bankDetails['payload']['userId']; ?>">
+      <input type="hidden" name="pan" value="<?php echo $cardNumber; ?>">
+      <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="<?php echo substr($cardExpDate, -2); ?>" >
+      <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="<?php echo substr($cardExpDate, 0, 2); ?>">
+      <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
+      <input type="hidden" name="resURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/'.$orderId); ?>">
+      <input type="hidden" name="redirectURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/'.$orderId); ?>">
+    </form>
     <?php
     return ob_get_clean();
   }
@@ -576,15 +603,15 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * Check if any of the products in cart is physical
    */
-  private function physicalProductsCheck($order){
+  public function isPhysicalProducts($order){
     foreach ($order->get_items() as $item) {
       $product = $item->get_product();
       // Check if the product is not virtual or not downloadable
       if (!$product->is_downloadable() && !$product->is_virtual()) {
-        return 'true';
+        return true;
       }
     }
-    return 'false';
+    return false;
   }
 
   /**
@@ -610,12 +637,12 @@ class KOPA_Payment extends WC_Payment_Gateway {
       $apiEncodedExpDate = $post['encodedExpDate'];
     }else{
       $apiEncodedCcNumber = $card['cardNo'];
-      $apiEncodedExpDate = $card['exparationDate'];
+      $apiEncodedExpDate = $card['expirationDate'];
     }
     $apiEncodedCcv = $post['encodedCcv'];
     $data = [
       'alias' => $post['kopa_cc_alias'],
-      'exparationDate' =>$apiEncodedExpDate,
+      'expirationDate' =>$apiEncodedExpDate,
       'type' => $type,
       'cardNo' => $apiEncodedCcNumber, 
       'ccv' => $apiEncodedCcv,

@@ -49,17 +49,30 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
   $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
   $note = '';
 
-	// Check if the custom metadata exists and if payment was done with MOTO or API payment
+  // If this is automatic status change, this check will be triggered
+  // If product vas virtual or downloadable, it would automatically get status COMPLETED
+  $physicalProduct = get_post_meta($order->ID, 'isPhysicalProducts', true);
+  if(!empty($physicalProduct) && $physicalProduct == 'false' ){
+    $order->delete_meta_data('isPhysicalProducts');
+    $order->save();
+    return;
+  }
+
+  // Check if the custom metadata exists and if payment was done with MOTO or API payment
   if (!empty($custom_metadata)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
+
+    // If PostAuth is successfully changed on KOPA system
     if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
       // Add an order note
       $note = __('Order has been completed on KOPA system.', 'kopa-payment');
       $order->add_order_note($note);
     }else{
+      // If there was a problem changing status to PostAuth
+
       // Get the previous order status
-      $previous_status = $order->get_status_before('completed');
+      $previous_status = get_post_meta($order_id, '_previous_order_status', true);
       if (!empty($previous_status)) {
         // Set the order status back to the previous status
         $order->set_status($previous_status);
@@ -82,7 +95,6 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
 	return;
 }
 add_action( 'woocommerce_order_status_completed', 'kopaPostAuthOnOrderCompleted' );
-
 
 // Calling VOID function on KOPA if order is in PreAuth state
 function kopaCancelFunction($order_id) {
@@ -122,3 +134,11 @@ function kopaCancelFunction($order_id) {
   }
 }
 add_action( 'woocommerce_order_status_cancelled', 'kopaCancelFunction' );
+
+
+// Add an order note with the previous status when the order status changes
+function savePreviousOrderStatus($order_id, $old_status, $new_status) {
+  // Save the previous status as an order note
+  update_post_meta($order_id, '_previous_order_status', $old_status);
+}
+add_action('woocommerce_order_status_changed', 'savePreviousOrderStatus', 10, 3);
