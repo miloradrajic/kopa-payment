@@ -2,10 +2,11 @@ let $ = jQuery.noConflict();
 $(document).ready(async function() {
   $('body').on('click', '.kopaDeleteCC', async function(e){
     let ccId = $(this).data('cc-id');
-    let cardDeleteResponse = await deleteCard(ccId);
-    console.log(cardDeleteResponse);
-    if($.parseJSON(cardDeleteResponse).success == true) {
-      location.reload(true);
+    if (confirm(ajax_my_account_params.confirmCardDelete + '?')) {
+      let cardDeleteResponse = await deleteCard(ccId);
+      if($.parseJSON(cardDeleteResponse).success == true) {
+        location.reload(true);
+      }
     }
   });
 });

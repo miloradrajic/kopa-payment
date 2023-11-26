@@ -115,7 +115,7 @@ msgid "Credit card number"
 msgstr ""
 
 #: inc/kopa-class.php:157
-msgid "Expiration Date"
+msgid "exparation Date"
 msgstr ""
 
 #: inc/kopa-class.php:169
@@ -168,7 +168,7 @@ msgid "There was a problem with connection with payment"
 msgstr ""
 
 #: kopa-payment.php:82
-msgid "Please enter a valid expiration date (MM/YY)"
+msgid "Please enter a valid exparation date (MM/YY)"
 msgstr ""
 
 #: kopa-payment.php:83

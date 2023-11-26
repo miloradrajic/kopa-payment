@@ -20,7 +20,9 @@ $(document).ready(async function() {
   
   
   // Add a slash after the first two digits in the expiration date field
-  $('body').on('input', '#kopa_cc_exparation_date', function () {
+  $('body').on('keydown', '#kopa_cc_exparation_date', function (e) {
+    var key = e.keyCode || e.charCode;
+    if(key != 8 && key != 46){
       // Remove non numeric characters
       var value = $(this).val().replace(/\D/g, '');
       // Limit exparation date to 5 characters
@@ -33,10 +35,11 @@ $(document).ready(async function() {
         value = value.substr(0, 2) + '/' + value.substr(2);
       }
       $(this).val(value);
+    }
   });
 
   // Validate the expiration date using the jQuery Validation plugin
-  $('.checkout.woocommerce-checkout').validate({
+  $('form.checkout').validate({
     rules: {
       kopa_cc_exparation_date: {
         required: true,
@@ -74,11 +77,53 @@ $(document).ready(async function() {
         required: ajax_checkout_params.validationCcAlias,
       }
     },
+    highlight: function(element, errorClass, validClass) {
+      // Remove the 'woocommerce-invalid' class when an error is fixed
+      $(element).closest('p').removeClass('woocommerce-invalid');
+    },
+
+    unhighlight: function(element, errorClass, validClass) {
+      // Remove the 'woocommerce-invalid' class when the field is valid
+      $(element).closest('p').removeClass('woocommerce-invalid');
+    },
+
+    // errorPlacement: function(error, element) {
+    //   // Handle error placement if needed 
+    //   $(element).addClass('error');
+    //   $(element).parent().append(error);
+    // },
+
+    success: function (label, element) {
+      // hide the tooltip
+      $(element).removeClass('error');
+      $(element).siblings('.label').remove();
+    },
+    onkeyup: function(element, event) {
+      this.element(element);
+      if (!this.valid()) {
+        $(element).closest('p').addClass('woocommerce-invalid');
+        $(element).addClass('error');
+      } else {
+        $(element).closest('p').removeClass('woocommerce-invalid');
+        $(element).remove('error');
+      }
+    },
   });
 
   // Custom validation method for MM/YY format
   $.validator.addMethod('dateMMYY', function (value, element) {
-    return /^(0[1-9]|1[0-2])\/\d{2}$/.test(value);
+    const currMonth = parseInt(new Date().getMonth().toString()) +1;
+    const currYear = parseInt(new Date().getFullYear().toString().substr(-2));
+    const month = parseInt(value.substr(0, 2));
+    const year = parseInt(value.substr(-2)); 
+
+    if(/^(0[1-9]|1[0-2])\/\d{2}$/.test(value)){
+      if(month > 12) return false;
+      if(year < currYear) return false;
+      if( year == currYear && month < currMonth ) return false;
+      return true;
+    }
+    return false;
   }, ajax_checkout_params.validationCCDate);
 
 
@@ -98,12 +143,17 @@ $(document).ready(async function() {
   /**
    * Hiding input fields if user selects saved CC, and checking if card has is3dAuth == true
    */
-  $('body').on('change','input[name="kopa_use_saved_cc"]', async function(){
+  let startingCcValue = $('input[name="kopa_use_saved_cc"]:checked').val();
+  $('body').on('change','input[name="kopa_use_saved_cc"]', async function(e){
+    if($('input[name="kopa_use_saved_cc"]:checked').val() == startingCcValue ) return;
+    startingCcValue = $('input[name="kopa_use_saved_cc"]:checked').val();
     if($('input[name="kopa_use_saved_cc"]:checked').val() == 'new'){
       $('.kopaCcPaymentInput.optionalNewCcInputs').removeClass('optionalNewCcInputs');
       $('#kopa_ccv_field').show();
-    }else if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
-      $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
+    }else{
+      if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
+        $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
+      }
       let cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
       let cardDetails = await getCardDetails(cardId);
       let is3dAuth = $.parseJSON(cardDetails).card.is3dAuth;
@@ -116,35 +166,46 @@ $(document).ready(async function() {
     }
     
   });
+
+  $(".woocommerce-checkout").submit(function () {
+    // Remove a class to the submit button
+    $('#place_order').removeClass('disabled');
+
+    // Proceed with form submission
+    return true;
+});
   /**
    * Starts payment process
    */
   $('body').on('click', '#place_order', async function(e){
     e.preventDefault();
+    $('#place_order').addClass('disabled');
     const form = $(this).closest('form');
-    // If incognito card and type == dina
+    // If incognito card
     if(
-      (
-        $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
-        typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
-      ) &&
-      $('input[name="kopa_cc_type"]:checked').val() == 'dina'
+      $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
+      typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
     ){
-      // use API payment
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
       let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
       let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-      let secretKey = await getPiKey();
-      let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
+      
+      const cardType = await getCardType(ccNumber, $('input[name="kopa_cc_type"]:checked').val());
 
-      form.append(' <input type="hidden" name="paymentType" value="api">'
-                  +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                  +'<input type="hidden" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                  +'<input type="hidden" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                  +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                  );
-      form.submit();
-      return;
+      // use API payment
+      if(cardType == 'dina' || cardType == 'amex'){
+        let secretKey = await getPiKey();
+        let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
+        form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                    );
+        form.submit();
+        form.find('.additionalKopaInput').remove();
+        return;
+      }
     }
     // If incognito card and type != dina
     if(
@@ -155,19 +216,20 @@ $(document).ready(async function() {
       $('input[name="kopa_cc_type"]:checked').val() != 'dina'
     ){
       // use 3D incognito CC payment
-      form.append('<input type="hidden" name="paymentType" value="3d incognito"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
+      form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
       if($('#kopa_save_cc').is(':checked')){
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
         let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
         let secretKey = await getPiKey();
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-        form.append(' <input type="hidden" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                  +'<input type="hidden" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                  +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+        form.append('<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                   +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                   +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
                   );
       }
       form.submit();
+      form.find('.additionalKopaInput').remove();
       return;
     }
 
@@ -189,14 +251,15 @@ $(document).ready(async function() {
         const secretKey = await getPiKey();
         const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
 
-        form.append(' <input type="hidden" name="ccNumber" value="'+decodedData.ccDecoded+'">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
-                    +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" name="paymentType" value="3d">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="ccNumber" value="'+decodedData.ccDecoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
                     );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }else if(
         cardParsed.is3dAuth == true &&
@@ -204,12 +267,13 @@ $(document).ready(async function() {
         cardParsed.type !== 'amex'
       ){
         //use MOTO payment 
-        form.append(' <input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" name="paymentType" value="moto">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="moto">'
                   );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
         // use API payment
@@ -218,13 +282,15 @@ $(document).ready(async function() {
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
         let secretKey = await getPiKey();
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-
-        form.append(' <input type="hidden" name="paymentType" value="api">'
-                    +'<input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                    +'<input type="hidden" name="kopa_cc_alias" value="'+cardAlias+'">'
+        form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
                     );
         form.submit();
+        form.find('.additionalKopaInput').remove();
         return;
       }
     } catch (error) {
@@ -238,20 +304,19 @@ $(document).ready(async function() {
   $(document).ajaxSuccess(function (event, xhr, settings) {
     if(
       settings.url.indexOf("?wc-ajax=checkout") >= 0 && 
-      typeof(xhr.responseJSON.socketUrl) != "undefined" && 
-      xhr.responseJSON.socketUrl !== null
+      typeof(xhr.responseJSON.htmlCode) != "undefined" && 
+      xhr.responseJSON.htmlCode !== null
     ){
       // Call the function to establish the initial socket connection
       $('body').append('<div id="overflowKopaLoader"><div id="kopaLoaderIcon"></div></div>')
-      establishSocketConnection(xhr.responseJSON.socketUrl, xhr.responseJSON.roomId, xhr.responseJSON.order_id, xhr.responseJSON.orderId);
-      const browser = window.open('', '_blank');
-      browser.document.write(xhr.responseJSON.htmlCode);
-      browser.document.forms[0].submit();
+      $('body').append(xhr.responseJSON.htmlCode);
+      $('body').find('#paymentform').submit();
     }
 
     if( settings.url.indexOf("?wc-ajax=update_order_review") >= 0 ){
       updateOrderTotalForKopaPaymentDetails();
       $('body').find('#kopaPaymentDetailsReferenceId').text(kopaIdReferenceId);
+      $('form.checkout').find('.payment_method_kopa-payment p').removeClass('woocommerce-invalid');
     }
   });
 
@@ -294,7 +359,7 @@ function decodeCcDetails(secretKey, ccNumberEncoded, ccExpDateEncoded) {
     ccExpDateDecoded = JSON.parse(CryptoJS.AES.decrypt(ccExpDateEncoded, secretKey).toString(CryptoJS.enc.Utf8)).toString(); 
     return {ccDecoded, ccExpDateDecoded};
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return { ccDecoded: 'Decryption Error', ccExpDateDecoded: 'Decryption Error' };
   }
   
@@ -318,6 +383,32 @@ async function getPiKey() {
     const decoded = $.parseJSON(response);
     if (decoded.success) {
       return decoded.key;
+    } else {
+      // Display error message
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.message + '</li></ul>');
+    }
+  } catch (error) {
+    // Handle AJAX or JSON parsing error
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+  }
+}
+
+async function getCardType(ccNumber, ccType){
+  try {
+    const response = await $.ajax({
+      type: 'POST',
+      url: ajax_checkout_params.ajaxurl,
+      data: {
+        action: 'get_card_type',
+        security: ajax_checkout_params.security,
+        dataType: 'json',
+        ccNumber,
+        ccType
+      },
+    });
+    const decoded = $.parseJSON(response);
+    if(decoded.cardType) {
+      return decoded.cardType;
     } else {
       // Display error message
       $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.message + '</li></ul>');
@@ -359,7 +450,7 @@ async function getCardDetails(ccId){
  * @param {number} orderId 
  * @param {string} errorMessage 
  */
-async function logErrorOnOrderPayment(orderId, errorMessage){
+async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
   try {
     const response = await $.ajax({
       type: 'POST',
@@ -370,6 +461,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
         dataType: 'json',
         orderId,
         errorMessage,
+        kopaOrderId,
       },
     });
     if (response.success) {
@@ -387,61 +479,65 @@ async function logErrorOnOrderPayment(orderId, errorMessage){
  * @param {string} roomId 
  * @param {number} orderId 
  */
-function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId) {
-  let socket = io(socketUrl); // Initialize the socket connection
-  socket.on('connect', () => {
-    socket.emit('joinRoom', roomId);
-  });
+// function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId, borwser) {
+//   let socket = io(socketUrl); // Initialize the socket connection
+//   socket.on('connect', () => {
+//     socket.emit('joinRoom', roomId);
+//   });
 
-  socket.on('notification', async (msg) => {
-    $('body').find('#overflowKopaLoader').remove();
-    if(
-      (msg.success == true && msg.response == 'Approved') ||
-      (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
-    ){
-      try {
-        const response = await $.ajax({
-          type: 'POST',
-          url: ajax_checkout_params.ajaxurl,
-          data: {
-            action: 'complete_3d_payment',
-            security: ajax_checkout_params.security,
-            dataType: 'json',
-            orderId,
-            kopaOrderId,
-          },
-        });
-        if (response.success) {
-          // Redirect to the thank you page
-          window.location.href = response.data.redirect;
-        } else {
-          // Display error message
-          $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.message + '</li></ul>');
-        }
-      } catch (error) {
-        // Handle AJAX or JSON parsing error
-        $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
-        logErrorOnOrderPayment(orderId, error);
-      }
-    }else{
-      // Display error message
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + msg.errMsg + '</li></ul>');
-      logErrorOnOrderPayment(orderId, msg.errMsg);
-    }
-  });
-  socket.on('disconnect', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-  socket.on('connect_error', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-  socket.on('reconnect_error', function(){
-    $('body').find('#overflowKopaLoader').remove();
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-  } );
-}
+//   socket.on('notification', async (msg) => {
+//     $('body').find('#overflowKopaLoader').remove();
+    
+//     // If transaction was a success or it was already payed
+//     if(
+//       (msg.success == true && msg.response == 'Approved') ||
+//       (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
+//     ){
+//       try {
+//         const response = await $.ajax({
+//           type: 'POST',
+//           url: ajax_checkout_params.ajaxurl,
+//           data: {
+//             action: 'complete_3d_payment',
+//             security: ajax_checkout_params.security,
+//             dataType: 'json',
+//             orderId,
+//             kopaOrderId,
+//           },
+//         });
+//         if (response.success) {
+//           // Redirect to the thank you page
+//           window.location.href = response.data.redirect;
+//         } else {
+//           // Display error message
+//           $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.message + '</li></ul>');
+//         }
+//       } catch (error) {
+//         // Handle AJAX or JSON parsing error
+//         $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+//         logErrorOnOrderPayment(orderId, error, kopaOrderId);
+//       }
+//     }else{
+//       // Payment was unsuccessfull
+//       // Display error message
+//       $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + ajax_checkout_params.paymentErrorMessageFor3D + '<br>' + msg.errMsg + '</li></ul>');
+//       logErrorOnOrderPayment(orderId, msg.errMsg, kopaOrderId);
+//     }
+//     borwser.close();
+//   });
+//   socket.on('disconnect', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+//   socket.on('connect_error', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+//   socket.on('reconnect_error', function(){
+//     $('body').find('#overflowKopaLoader').remove();
+//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
+//   } );
+// }
 
 function updateOrderTotalForKopaPaymentDetails(){
   var orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();

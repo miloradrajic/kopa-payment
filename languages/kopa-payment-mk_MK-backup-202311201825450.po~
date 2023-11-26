@@ -1,0 +1,299 @@
+# Copyright (C) 2023 Tehnološko Partnerstvo
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: KOPA Payment 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kopa-payment\n"
+"Last-Translator: \n"
+"Language-Team: Macedonian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-11-15T23:37:30+01:00\n"
+"PO-Revision-Date: 2023-11-20 18:15+0000\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Domain: kopa-payment\n"
+"Language: mk_MK\n"
+"Plural-Forms: nplurals=2; plural=( n % 10 == 1 && n % 100 != 11 ) ? 0 : 1;\n"
+"X-Loco-Version: 2.6.6; wp-6.4.1"
+
+#. Plugin Name of the plugin
+msgid "KOPA Payment Method"
+msgstr "Метод на плаќање KOPA"
+
+#. Description of the plugin
+msgid "Add a KOPA payment method to WooCommerce."
+msgstr "Додадете метод на плаќање KOPA во WooCommerce."
+
+#. Author of the plugin
+msgid "MR"
+msgstr "MR"
+
+#: inc/ajax-functions.php:14
+msgid "Error getting pi key"
+msgstr "Грешка при земање на клучот за плаќање"
+
+#: inc/ajax-functions.php:36
+msgid "CC Saved"
+msgstr "Кредитната картичка е зачувана"
+
+#: inc/ajax-functions.php:55
+msgid "CC Deleted"
+msgstr "Кредитната картичка е избришана"
+
+#: inc/ajax-functions.php:57
+msgid "Error deleting CC"
+msgstr "Грешка при бришење на кредитната картичка"
+
+#: inc/ajax-functions.php:78
+msgid "Error getting card details"
+msgstr "Грешка при земање на деталите за картичката"
+
+#: inc/ajax-functions.php:99
+#: inc/kopa-class.php:348
+#: inc/kopa-class.php:408
+#: inc/kopa-class.php:458
+msgid "Order has been paid with KOPA system"
+msgstr "Нарачката е платена со системот KOPA"
+
+#: inc/ajax-functions.php:105
+msgid "Order has been completed"
+msgstr "Нарачката е завршена"
+
+#: inc/ajax-functions.php:109
+msgid "Order could not be completed"
+msgstr "Нарачката не можеше да биде завршена"
+
+#: inc/ajax-functions.php:129
+msgid "Error log has been updated"
+msgstr "Евиденцијата на грешки е ажурирана"
+
+#: inc/curl.php:201
+msgid "There was problem with Kopa Payment method"
+msgstr "Настана проблем со методот на плаќање Kopa"
+
+#: inc/curl.php:222
+msgid "There was problem with Kopa Payment method."
+msgstr "Настана проблем со методот на плаќање Kopa."
+
+#: inc/curl.php:256
+msgid "Credit card already saved"
+msgstr "Кредитната картичка веќе е зачувана"
+
+#: inc/curl.php:263
+msgid "There was problem with Kopa Payment method. Saving CC"
+msgstr "Настана проблем со методот на плаќање Kopa. Зачувување на кредитната картичка"
+
+#: inc/curl.php:288
+msgid "There was problem with Kopa Payment method. DELETE CC"
+msgstr "Настана проблем со методот на плаќање Kopa. Бришење на кредитната картичка"
+
+#: inc/curl.php:562
+msgid "Order was not paid with KOPA payment method."
+msgstr "Нарачката не е платена со методот на плаќање KOPA."
+
+#: inc/curl.php:566
+msgid "Transaction on this order was not completed with KOPA system"
+msgstr "Трансакцијата за оваа нарачка не е завршена со системот KOPA"
+
+#: inc/curl.php:569
+msgid "Status of the order is PreAuth"
+msgstr "Статусот на нарачката е предавторизација"
+
+#: inc/curl.php:572
+msgid "Order has been refunded"
+msgstr "Нарачката е рефундирана"
+
+#: inc/curl.php:613
+msgid "Order payment was not completed on KOPA"
+msgstr "Плаќањето на нарачката не е завршено со системот KOPA"
+
+#: inc/curl.php:620
+msgid "Canceled payment with KOPA system"
+msgstr "Откажано плаќање со системот KOPA"
+
+#: inc/curl.php:627
+msgid "Already refunded with KOPA"
+msgstr "Веќе е рефундирано со системот KOPA"
+
+#: inc/curl.php:634
+msgid "Refunded completed on KOPA system"
+msgstr "Рефундирањето е завршено со системот KOPA"
+
+#: inc/curl.php:637
+msgid "Already refunded with KOPA system"
+msgstr "Веќе е рефундирано со системот KOPA"
+
+#: inc/curl.php:640
+msgid "There was a problem with KOPA refund process"
+msgstr "Настана проблем со процесот на рефундирање со системот KOPA"
+
+#: inc/kopa-class.php:168
+msgid "New credit card"
+msgstr "Нова кредитна картичка"
+
+#: inc/kopa-class.php:176
+msgid "Use saved credit cards"
+msgstr "Користете ги зачуваните кредитни картички"
+
+#: inc/kopa-class.php:189
+msgid "CC Type"
+msgstr "Вид на кредитна картичка"
+
+#: inc/kopa-class.php:202
+msgid "Credit card number"
+msgstr "Број на кредитна картичка"
+
+#: inc/kopa-class.php:213
+msgid "Exparation Date"
+msgstr "Датум на истек"
+
+#: inc/kopa-class.php:225
+msgid "CCV"
+msgstr "CCV"
+
+#: inc/kopa-class.php:238
+msgid "Save credit card"
+msgstr "Зачувајте ја кредитната картичка"
+
+#: inc/kopa-class.php:247
+msgid "CC Alias"
+msgstr "Бран на кредитната картичка"
+
+#: inc/kopa-class.php:256
+msgid "Payment details"
+msgstr "Детали за плаќање"
+
+#: inc/kopa-class.php:257
+msgid "Payment total:"
+msgstr "Вкупно плаќање:"
+
+#: inc/kopa-class.php:258
+msgid "Payment description:"
+msgstr "Опис на плаќањето:"
+
+#: inc/kopa-class.php:300
+msgid "Please check CC number and selected CC type."
+msgstr "Ве молиме проверете ги бројот на кредитната картичка и избраниот вид на кредитната картичка."
+
+#: inc/kopa-class.php:306
+#: inc/kopa-class.php:329
+msgid "Please fill in a valid credit card CCV number."
+msgstr "Ве молиме внесете го важечкиот CCV број на кредитната картичка."
+
+#: inc/kopa-class.php:311
+#: inc/kopa-class.php:314
+msgid "Please fill in a valid credit card number."
+msgstr "Ве молиме внесете го важечкиот број на кредитната картичка."
+
+#: inc/kopa-class.php:317
+#: inc/kopa-class.php:325
+msgid "Please fill in a valid credit card exparation date."
+msgstr "Ве молиме внесете важечки датум пред истек на кредитната картичка."
+
+#: inc/kopa-class.php:332
+msgid "Please enter credit card alias."
+msgstr "Ве молиме внесете го бранот на кредитната картичка."
+
+#: inc/kopa-class.php:383
+msgid "Starting 3D incognito payment"
+msgstr "Стартување на 3D анонимно плаќање"
+
+#: inc/kopa-class.php:419
+msgid "Error with API payment"
+msgstr "Грешка при API плаќање"
+
+#: inc/kopa-class.php:435
+msgid "Starting 3D payment"
+msgstr "Стартување на 3D плаќање"
+
+#: inc/kopa-class.php:463
+msgid "Starting moto payment"
+msgstr "Стартување на MOTO плаќање"
+
+#: inc/kopa-class.php:579
+#: inc/kopa-class.php:586
+msgid "API payment success"
+msgstr "Успешно API плаќање"
+
+#: inc/kopa-class.php:592
+msgid "Error with starting API payment"
+msgstr "Грешка при стартување на API плаќање"
+
+#: inc/order-status-change.php:58
+msgid "Order has been completed on KOPA system."
+msgstr "Нарачката е завршена со системот KOPA."
+
+#: inc/order-status-change.php:71
+msgid "Order could not be completed on KOPA because order transaction was set to Void"
+msgstr "Нарачката не можеше да биде завршена со системот KOPA бидејќи трансакцијата на нарачката беше поставена на Void"
+
+#: inc/order-status-change.php:74
+msgid "Order could not be completed on KOPA because order transaction was set to Refund"
+msgstr "Нарачката не можеше да биде завршена со системот KOPA бидејќи трансакцијата на нарачката беше поставена на Refund"
+
+#: inc/order-status-change.php:76
+msgid "Order could not be completed on KOPA because PostAuth has failed"
+msgstr "Нарачката не можеше да биде завршена со системот KOPA бидејќи PostAuth беше неуспешен"
+
+#: inc/order-status-change.php:104
+msgid "Order was set to be refunded in KOPA system."
+msgstr "Нарачката беше поставена за рефундација во системот KOPA."
+
+#: inc/order-status-change.php:108
+msgid "There was an error canceling order in KOPA system."
+msgstr "Настана грешка при откажувањето на нарачката во системот KOPA."
+
+#: inc/order-status-change.php:116
+msgid "Order was already set to be refunded in KOPA system."
+msgstr "Нарачката веќе беше поставена за рефундација во системот KOPA."
+
+#: kopa-payment.php:83
+msgid "There was a problem with connection with payment"
+msgstr "Настана проблем со конекцијата со плаќањето"
+
+#: kopa-payment.php:84
+msgid "Please enter a valid exparation date (MM/YY)"
+msgstr "Ве молиме внесете важечки датум на истек (ММ/ГГ)"
+
+#: kopa-payment.php:85
+msgid "Please enter a valid credit card number"
+msgstr "Ве молиме внесете важечки број на кредитната картичка"
+
+#: kopa-payment.php:86
+msgid "Please enter valid CCV number"
+msgstr "Ве молиме внесете важечки CCV број"
+
+#: kopa-payment.php:87
+msgid "Only digits are allowed"
+msgstr "Се дозволени само цифри"
+
+#: kopa-payment.php:88
+msgid "Please enter credit card alias"
+msgstr "Ве молиме внесете го бранот на кредитната картичка"
+
+#: kopa-payment.php:89
+msgid "There has been an error with payment"
+msgstr "Настана грешка при плаќањето"
+
+#: kopa-payment.php:199
+msgid "Manage Credit Cards"
+msgstr "Управување со кредитните картички"
+
+#: kopa-payment.php:246
+msgid "There are no saved credit cards."
+msgstr "Нема зачувани кредитни картички."
+
+#: kopa-payment.php:282
+msgid "Kopa Logs Preview"
+msgstr "Преглед на Kopa евиденции"
+
+#: kopa-payment.php:283
+msgid "Log preview content"
+msgstr "Преглед на содржината на евиденциите"
+
+#: kopa-payment.php:448
+#: kopa-payment.php:462
+#: kopa-payment.php:479
+msgid "KOPA Reference ID:"
+msgstr "KOPA референтен ID:"
