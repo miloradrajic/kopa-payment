@@ -3,6 +3,12 @@ class KopaCurl {
   private $ch, $headers, $serverUrl, $merchantId, $errors; // cURL handle
 
   public function __construct() {
+    if(
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
+    ) return;
     $this->ch = curl_init();
     $this->headers = array(
       'Content-Type: application/json'
@@ -126,6 +132,7 @@ class KopaCurl {
         $this->register($username, $userId);
         update_user_meta( $userId, 'kopa_user_registered', true );
         $this->login();
+        return;
       }
     }else{
       // If user is not logged in woocommerce, use anonymus credentials for KOPA platform
@@ -175,7 +182,7 @@ class KopaCurl {
       error_log('[KOPA ERROR]: Register error for user with ID '. $userId);
       // Log event
       kopaMessageLog(__METHOD__, '', $userId, '', $returnData);
-      wc_add_notice(__('There was problem with Kopa Payment method', 'kopa-payment') .' - ' . $returnData['message'], 'error');
+      // wc_add_notice(__('There was problem with Kopa Payment method', 'kopa-payment') .' - ' . $returnData['message'], 'error');
       return;
     }
     return; 
