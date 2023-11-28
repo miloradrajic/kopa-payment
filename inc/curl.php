@@ -88,7 +88,8 @@ class KopaCurl {
       $password = 'anonymous';
     }else{
       $user = get_user_by('ID', $userId);
-      $username = $user->user_login;
+      $registerCode = get_user_meta($userId, 'kopa_user_registered');
+      $username = $user->user_login.'_'.$userId.'_'.$registerCode;
       $password = base64_encode($username.$userId);
     }
     $loginUrl = $this->serverUrl.'/api/auth/login';
@@ -118,19 +119,21 @@ class KopaCurl {
       $current_user = wp_get_current_user();
       $userId = $current_user->ID;
       $username = $current_user->user_login;
+      $registerCode = get_user_meta($userId, 'kopa_user_registered');
       // Check user metafield if user is already registered on KOPA 
-      if(get_user_meta($userId, 'kopa_user_registered', true) ){
+      if(!empty($registerCode)){
         // if user is registered on KOPA, login user and get access_token
         $data = json_encode([
-          'username' => $username, 
+          'username' => $username.'_'.$userId.'_'.$registerCode, 
           'password' => base64_encode($username.$userId), 
           'socialMedia' => null, 
           'merchantId' => $merchantID
         ]);
       }else{
         // Register user to KOPA and save user meta that user is registered
-        $this->register($username, $userId);
-        update_user_meta( $userId, 'kopa_user_registered', true );
+        $registerCode = rand ( 10000 , 99999 );
+        $this->register($username, $userId, $registerCode);
+        update_user_meta( $userId, 'kopa_user_registered', $registerCode );
         $this->login();
         return;
       }
@@ -154,9 +157,9 @@ class KopaCurl {
     }
 
     // Save KOPA user datails in SESSION
-    $_SESSION['userId'] = $returnData['userId'];
-    $_SESSION['access_token'] = $returnData['access_token'];
-    $_SESSION['refresh_token'] = $returnData['refresh_token'];
+    $_SESSION['kopaUserId'] = $returnData['userId'];
+    $_SESSION['kopaAccessToken'] = $returnData['access_token'];
+    $_SESSION['kopaRefreshToken'] = $returnData['refresh_token'];
 
     return $returnData; 
   }
@@ -164,12 +167,12 @@ class KopaCurl {
   /**
    * Register function on KOPA platform
    */
-  public function register($username, $userId) {
+  public function register($username, $userId, $registerCode) {
     $registerUrl = $this->serverUrl.'/api/auth/register';
     $merchantID = $this->merchantId;
 
     $data = json_encode([
-      'username' => $username, 
+      'username' => $username.'_'.$userId.'_'.$registerCode, 
       'password' => base64_encode($username.$userId), 
       'socialMedia' => null, 
       'merchantId' => $merchantID
@@ -194,7 +197,7 @@ class KopaCurl {
   public function getPiKey(){
     $encodingKeyUrl = $this->serverUrl.'/api/pikey';
     // Add authorization header
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($encodingKeyUrl);
     $this->close();
     array_pop($this->headers);
@@ -216,11 +219,11 @@ class KopaCurl {
     $data = json_encode([
       'alias' => $ccAlias, 
       'type' => $ccType, 
-      'userId' => $_SESSION['userId'], 
+      'userId' => $_SESSION['kopaUserId'], 
       'cardNo' => $encCcNumber, 
       'expirationDate' => $encCcExpDate
     ]);
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->post($saveCcUrl, $data);
     $decodedReturn = json_decode($returnData, true);
 
@@ -253,7 +256,7 @@ class KopaCurl {
    */
   function deleteCc($ccId){
     $deleteCcUrl = $this->serverUrl.'/api/cards/'.$ccId;
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->delete($deleteCcUrl);
     $this->close();
     // Remove the last added header, which is the "Authorization" header
@@ -277,8 +280,9 @@ class KopaCurl {
    * Getting all user saved CCs from KOPA platform
    */
   public function getSavedCC(){
-    $saveCcUrl = $this->serverUrl.'/api/cards?userId='.$_SESSION['userId'];
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    if(!isset($_SESSION['kopaUserId']))return;
+    $saveCcUrl = $this->serverUrl.'/api/cards?userId='.$_SESSION['kopaUserId'];
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($saveCcUrl);
     $decodedReturn = json_decode($returnData, true);
     $this->close();
@@ -295,8 +299,9 @@ class KopaCurl {
    * Getting CC details by ID
    */
   public function getSavedCcDetails($ccCardId) {
+    if(!isset($_SESSION['kopaUserId']))return;
     $cardDetailsUrl = $this->serverUrl.'/api/cards/'.$ccCardId;
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($cardDetailsUrl);
     $decodedReturn = json_decode($returnData, true);
     $this->close();
@@ -316,16 +321,16 @@ class KopaCurl {
    */
   private function resetAuthToken(){
     $successTokenRefresh = true;
-    if(isset($_SESSION['refresh_token']) && !empty($_SESSION['refresh_token'])){
+    if(isset($_SESSION['kopaRefreshToken']) && !empty($_SESSION['kopaRefreshToken'])){
       $refreshTokenUrl = $this->serverUrl.'/api/auth/refresh_token';
       $data = json_encode([
-        'refresh' => $_SESSION['refresh_token']
+        'refresh' => $_SESSION['kopaRefreshToken']
       ]);
       $returnData = $this->post($refreshTokenUrl, $data);
       $this->close();
       $httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       if(in_array($httpcode, [200, 201])){
-        $_SESSION['access_token'] = json_decode($returnData, true)['access_token'];
+        $_SESSION['kopaAccessToken'] = json_decode($returnData, true)['access_token'];
       }else{
         $successTokenRefresh = false;
       }
@@ -346,7 +351,7 @@ class KopaCurl {
       json_decode($returnData, true)['message'] == 'Invalid JWT token' &&
       is_callable($callbackFunction)
     ) {
-      if(isset($_SESSION['refresh_token']) && !empty($_SESSION['refresh_token'])){
+      if(isset($_SESSION['kopaRefreshToken']) && !empty($_SESSION['kopaRefreshToken'])){
         $this->resetAuthToken();
       }else{
         $this->login();
@@ -358,9 +363,9 @@ class KopaCurl {
     $userId = $current_user->ID;
     // Log event
     if(isset(json_decode($returnData, true)['message'])){
-      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userId'], $returnData, json_decode($returnData, true)['message'], $_SESSION['kopaOrderId']);
+      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['kopaUserId'], $returnData, json_decode($returnData, true)['message'], $_SESSION['kopaOrderId']);
     }else{
-      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['userId'], $returnData, 'ERROR - '.$httpCode, $_SESSION['kopaOrderId']);
+      kopaMessageLog($callbackFunction[1], $_SESSION['orderId'], $userId, $_SESSION['kopaUserId'], $returnData, 'ERROR - '.$httpCode, $_SESSION['kopaOrderId']);
     }
   }
 
@@ -369,13 +374,13 @@ class KopaCurl {
    */
   public function getBankDetails($orderId, $amount, $physicalProduct){
     $bankDetailsUrl = $this->serverUrl.'/api/payment/bank_details';
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     
     $data = json_encode([
       'oid' => $orderId, 
       'amount' => $amount, 
       'physicalProduct' => $physicalProduct,
-      'userId' => $_SESSION['userId']]
+      'userId' => $_SESSION['kopaUserId']]
     );
 
     $returnData = $this->post($bankDetailsUrl, $data);
@@ -399,7 +404,7 @@ class KopaCurl {
    */
   public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId){
     $motoPaymentUrl = $this->serverUrl.'/api/payment/moto';
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $data = json_encode(
       [
         'alias'           => $card['alias'], 
@@ -407,7 +412,7 @@ class KopaCurl {
         'type'            => $card['type'],
         'cardNo'          => $card['cardNo'], 
         'cardId'          => $cardId, 
-        'userId'          => $_SESSION['userId'],
+        'userId'          => $_SESSION['kopaUserId'],
         'amount'          => $amount, 
         'physicalProduct' => $physicalProduct,
         'oid'             => $kopaOrderId,
@@ -434,14 +439,14 @@ class KopaCurl {
    */
   public function apiPayment($card, $amount, $physicalProduct, $kopaOrderId){
     $apiPaymentUrl = $this->serverUrl.'/api/payment/api';
-    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['access_token']; 
+    $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $data = json_encode(
       [
         'alias'           => $card['alias'], 
         'expirationDate'  => $card['expirationDate'], 
         'type'            => $card['type'],
         'cardNo'          => $card['cardNo'], 
-        'userId'          => $_SESSION['userId'],
+        'userId'          => $_SESSION['kopaUserId'],
         'ccv'             => $card['ccv'],
         'amount'          => $amount, 
         'physicalProduct' => $physicalProduct,

@@ -136,7 +136,7 @@ function log3dPaymentError(){
   // Save changes
   $order->save();
 
-  kopaMessageLog('3D Payment', $orderId, get_current_user_id(), $_SESSION['userId'], $errorMessage, $kopaOrderId);
+  kopaMessageLog('3D Payment', $orderId, get_current_user_id(), $_SESSION['kopaUserId'], $errorMessage, $kopaOrderId);
 
   echo json_encode(['success' => false, 'message' => __('Error log has been updated', 'kopa-payment')]);
   die();
