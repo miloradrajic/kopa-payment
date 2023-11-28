@@ -88,7 +88,7 @@ class KopaCurl {
       $password = 'anonymous';
     }else{
       $user = get_user_by('ID', $userId);
-      $registerCode = get_user_meta($userId, 'kopa_user_registered');
+      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
       $username = $user->user_login.'_'.$userId.'_'.$registerCode;
       $password = base64_encode($username.$userId);
     }
@@ -119,7 +119,7 @@ class KopaCurl {
       $current_user = wp_get_current_user();
       $userId = $current_user->ID;
       $username = $current_user->user_login;
-      $registerCode = get_user_meta($userId, 'kopa_user_registered');
+      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
       // Check user metafield if user is already registered on KOPA 
       if(!empty($registerCode)){
         // if user is registered on KOPA, login user and get access_token
