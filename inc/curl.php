@@ -88,7 +88,7 @@ class KopaCurl {
       $password = 'anonymous';
     }else{
       $user = get_user_by('ID', $userId);
-      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
+      $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       $username = $user->user_login.'_'.$userId.'_'.$registerCode;
       $password = base64_encode($username.$userId);
     }
@@ -119,7 +119,7 @@ class KopaCurl {
       $current_user = wp_get_current_user();
       $userId = $current_user->ID;
       $username = $current_user->user_login;
-      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
+      $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       // Check user metafield if user is already registered on KOPA 
       if(!empty($registerCode) && $registerCode !== 1){
         // if user is registered on KOPA, login user and get access_token
@@ -133,7 +133,7 @@ class KopaCurl {
         // Register user to KOPA and save user meta that user is registered
         $registerCode = rand ( 10000 , 99999 );
         $this->register($username, $userId, $registerCode);
-        update_user_meta( $userId, 'kopa_user_registered', $registerCode );
+        update_user_meta( $userId, 'kopa_user_registered_code', $registerCode );
         $this->login();
         return;
       }
@@ -177,8 +177,6 @@ class KopaCurl {
       'merchantId' => $merchantID
     ]);
 
-    echo '<pre>' . print_r($data, true) . '</pre>';
-    die;
     $returnData = json_decode($this->post($registerUrl, $data), true);
     $httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
