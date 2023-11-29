@@ -11,7 +11,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $this->init_settings();
     $this->title = $this->get_option('title');
     $this->curl = new KopaCurl();
-    $this->userLoginKopa();
+    add_action( 'woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     $this->errors = [];
     if(
@@ -89,7 +89,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * Login user to KOPA platform and save credentials in $_SESSION variable
    */
-  private function userLoginKopa(){
+  public function userLoginKopa(){
     // Check if user is logged in woocommerce
     if(!empty($this->curl))$this->curl->login();
   }
@@ -187,6 +187,10 @@ class KOPA_Payment extends WC_Payment_Gateway {
       empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
     ){
       _e('Server URL needs to be entered for this option to be active', 'kopa-payment');
+      return;
+    }
+    if(!isset($_SESSION['kopaAccessToken']) || empty($_SESSION['kopaAccessToken'])){
+      _e('There was problem with Kopa Payment method', 'kopa-payment');
       return;
     }
     ?>
