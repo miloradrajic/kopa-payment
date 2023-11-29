@@ -100,12 +100,6 @@ class KOPA_Payment extends WC_Payment_Gateway {
   public function init_form_fields() {
     $this->form_fields = 
     [
-      'enabled' => [
-        'title' => __('Enable/Disable', 'kopa-payment'),
-        'type' => 'checkbox',
-        'label' => __('Enable KOPA Payment Method', 'kopa-payment'),
-        'default' => 'no',
-      ],
       'title' => [
         'title' => __('Title', 'kopa-payment'),
         'type' => 'text',
@@ -167,6 +161,11 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'description' => __('MOTO Payment method for banking system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
+      ],
+      'kopa_debug' => [
+        'type' => 'checkbox',
+        'css' => 'display:none;',
+        'default' => 'no',
       ],
     ];
   }
@@ -444,7 +443,10 @@ class KOPA_Payment extends WC_Payment_Gateway {
         if($kopaSaveCc){
           $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
         }
-
+        if (isDebugActive()) {
+          echo '<pre>' . print_r($htmlCode, true) . '</pre>';
+          return;
+        }
         return [
           'result'    => 'success',
           'messages'  => __('Starting 3D incognito payment', 'kopa-payment'),

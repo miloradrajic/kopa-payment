@@ -1,5 +1,6 @@
 let $ = jQuery.noConflict();
 $(document).ready(async function() {
+  // Function to delete CC from KOPA system
   $('body').on('click', '.kopaDeleteCC', async function(e){
     let ccId = $(this).data('cc-id');
     if (confirm(ajax_my_account_params.confirmCardDelete + '?')) {
