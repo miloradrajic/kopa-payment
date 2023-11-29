@@ -88,7 +88,7 @@ class KopaCurl {
       $password = 'anonymous';
     }else{
       $user = get_user_by('ID', $userId);
-      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
+      $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       $username = $user->user_login.'_'.$userId.'_'.$registerCode;
       $password = base64_encode($username.$userId);
     }
@@ -119,9 +119,9 @@ class KopaCurl {
       $current_user = wp_get_current_user();
       $userId = $current_user->ID;
       $username = $current_user->user_login;
-      $registerCode = get_user_meta($userId, 'kopa_user_registered', true);
+      $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       // Check user metafield if user is already registered on KOPA 
-      if(!empty($registerCode)){
+      if(!empty($registerCode) && $registerCode !== 1){
         // if user is registered on KOPA, login user and get access_token
         $data = json_encode([
           'username' => $username.'_'.$userId.'_'.$registerCode, 
@@ -132,9 +132,11 @@ class KopaCurl {
       }else{
         // Register user to KOPA and save user meta that user is registered
         $registerCode = rand ( 10000 , 99999 );
-        $this->register($username, $userId, $registerCode);
-        update_user_meta( $userId, 'kopa_user_registered', $registerCode );
-        $this->login();
+        $registrationResult = $this->register($username, $userId, $registerCode);
+        if($registrationResult != false){
+          update_user_meta( $userId, 'kopa_user_registered_code', $registerCode );
+          $this->login();
+        }
         return;
       }
     }else{
@@ -147,7 +149,12 @@ class KopaCurl {
       ]);
     }
     $returnData = json_decode($this->post($loginUrl, $data), true);
-
+    if (isDebugActive()) {
+      echo 'LOGIN';
+      echo 'data<pre>' . print_r($data, true) . '</pre>';
+      echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
+      echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';
+    }
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
 
@@ -161,6 +168,9 @@ class KopaCurl {
     $_SESSION['kopaAccessToken'] = $returnData['access_token'];
     $_SESSION['kopaRefreshToken'] = $returnData['refresh_token'];
 
+    if (isDebugActive()) {
+      echo 'SESSION<pre>' . print_r($_SESSION, true) . '</pre>';
+    }
     return $returnData; 
   }
 
@@ -179,6 +189,12 @@ class KopaCurl {
     ]);
 
     $returnData = json_decode($this->post($registerUrl, $data), true);
+    if (isDebugActive()) {
+      echo 'REGISTER';
+      echo 'data<pre>' . print_r($data, true) . '</pre>';
+      echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
+      echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';
+    }
     $httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     if(!in_array($httpcode, [200, 201])) {
@@ -186,9 +202,9 @@ class KopaCurl {
       // Log event
       kopaMessageLog(__METHOD__, '', $userId, '', $returnData);
       // wc_add_notice(__('There was problem with Kopa Payment method', 'kopa-payment') .' - ' . $returnData['message'], 'error');
-      return;
+      return false;
     }
-    return; 
+    return true; 
   }
 
   /**
@@ -199,11 +215,17 @@ class KopaCurl {
     // Add authorization header
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($encodingKeyUrl);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     array_pop($this->headers);
     
-    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-    if(!in_array($httpCode, [200, 201])) {
+    if (isDebugActive()) {
+      echo 'GetPiKey';
+      echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
+      echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';
+      echo 'http Code<pre>' . print_r($httpCode, true) . '</pre>';
+    }
+    if(!in_array($httpCode, [200, 201]) && !empty(curl_error($this->ch))) {
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getPiKey'));
       error_log('[KOPA ERROR]: Error getting pikey');
       wc_add_notice(__('There was problem with Kopa Payment method.', 'kopa-payment'), 'error');
@@ -226,6 +248,7 @@ class KopaCurl {
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->post($saveCcUrl, $data);
     $decodedReturn = json_decode($returnData, true);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
     $this->close();
 
@@ -233,7 +256,6 @@ class KopaCurl {
     array_pop($this->headers);
 
     if($decodedReturn['response'] == 'Error'){
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'saveCC'), $encCcNumber, $encCcExpDate, $ccType, $ccAlias);
     }
     if(
@@ -258,6 +280,7 @@ class KopaCurl {
     $deleteCcUrl = $this->serverUrl.'/api/cards/'.$ccId;
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->delete($deleteCcUrl);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     // Remove the last added header, which is the "Authorization" header
     array_pop($this->headers);
@@ -265,7 +288,6 @@ class KopaCurl {
     $decodedReturn = json_decode($returnData, true);
 
     if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'deleteCc'), $ccId);
     }
 
@@ -285,11 +307,11 @@ class KopaCurl {
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($saveCcUrl);
     $decodedReturn = json_decode($returnData, true);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     
     array_pop($this->headers);
     if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getSavedCC'));
     }
     return $decodedReturn;
@@ -304,13 +326,13 @@ class KopaCurl {
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->get($cardDetailsUrl);
     $decodedReturn = json_decode($returnData, true);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     
     array_pop($this->headers);
     
     // Retry function if invalid JWT
     if(!isset($decodedReturn['resultCode']) || $decodedReturn['resultCode'] !== 'ok'){
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getSavedCcDetails'), $ccCardId);
     }
     return $decodedReturn;
@@ -327,8 +349,8 @@ class KopaCurl {
         'refresh' => $_SESSION['kopaRefreshToken']
       ]);
       $returnData = $this->post($refreshTokenUrl, $data);
-      $this->close();
       $httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+      $this->close();
       if(in_array($httpcode, [200, 201])){
         $_SESSION['kopaAccessToken'] = json_decode($returnData, true)['access_token'];
       }else{
@@ -385,13 +407,13 @@ class KopaCurl {
 
     $returnData = $this->post($bankDetailsUrl, $data);
     $decodedReturn = json_decode($returnData, true);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
 
     array_pop($this->headers);
 
     if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
       // Retry function if invalid JWT
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getBankDetails'), $orderId, $amount, $physicalProduct);
     }
 
@@ -420,13 +442,13 @@ class KopaCurl {
       ]
     );
     $returnData = $this->post($motoPaymentUrl, $data);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     array_pop($this->headers);
     
     $decodedReturn = json_decode($returnData, true);
     if($decodedReturn['response'] == 'Error'){
       // Retry function if invalid JWT
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'motoPayment'), $card, $cardId, $amount, $physicalProduct, $kopaOrderId);
     }
 
@@ -454,11 +476,11 @@ class KopaCurl {
       ]
     );
     $returnData = $this->post($apiPaymentUrl, $data);
+    $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     array_pop($this->headers);
     $decodedReturn = json_decode($returnData, true);
     if($decodedReturn['response'] == 'Error'){
-      $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'apiPayment'), $card, $amount, $physicalProduct, $kopaOrderId);
     }
     return $decodedReturn;

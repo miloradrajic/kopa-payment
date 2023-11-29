@@ -81,18 +81,10 @@ $(document).ready(async function() {
       // Remove the 'woocommerce-invalid' class when an error is fixed
       $(element).closest('p').removeClass('woocommerce-invalid');
     },
-
     unhighlight: function(element, errorClass, validClass) {
       // Remove the 'woocommerce-invalid' class when the field is valid
       $(element).closest('p').removeClass('woocommerce-invalid');
     },
-
-    // errorPlacement: function(error, element) {
-    //   // Handle error placement if needed 
-    //   $(element).addClass('error');
-    //   $(element).parent().append(error);
-    // },
-
     success: function (label, element) {
       // hide the tooltip
       $(element).removeClass('error');
@@ -393,6 +385,12 @@ async function getPiKey() {
   }
 }
 
+/**
+ * Check for confirming CC type
+ * @param {number} ccNumber 
+ * @param {string} ccType 
+ * @returns 
+ */
 async function getCardType(ccNumber, ccType){
   try {
     const response = await $.ajax({
@@ -473,72 +471,6 @@ async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
   }
 }
 
-/**
- * Establish socket connection for 3D payment
- * @param {string} socketUrl 
- * @param {string} roomId 
- * @param {number} orderId 
- */
-// function establishSocketConnection(socketUrl, roomId, orderId, kopaOrderId, borwser) {
-//   let socket = io(socketUrl); // Initialize the socket connection
-//   socket.on('connect', () => {
-//     socket.emit('joinRoom', roomId);
-//   });
-
-//   socket.on('notification', async (msg) => {
-//     $('body').find('#overflowKopaLoader').remove();
-    
-//     // If transaction was a success or it was already payed
-//     if(
-//       (msg.success == true && msg.response == 'Approved') ||
-//       (msg.success == true && msg.response == 'Error' && msg.transaction.errorCode == 'CORE-2507')
-//     ){
-//       try {
-//         const response = await $.ajax({
-//           type: 'POST',
-//           url: ajax_checkout_params.ajaxurl,
-//           data: {
-//             action: 'complete_3d_payment',
-//             security: ajax_checkout_params.security,
-//             dataType: 'json',
-//             orderId,
-//             kopaOrderId,
-//           },
-//         });
-//         if (response.success) {
-//           // Redirect to the thank you page
-//           window.location.href = response.data.redirect;
-//         } else {
-//           // Display error message
-//           $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.message + '</li></ul>');
-//         }
-//       } catch (error) {
-//         // Handle AJAX or JSON parsing error
-//         $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
-//         logErrorOnOrderPayment(orderId, error, kopaOrderId);
-//       }
-//     }else{
-//       // Payment was unsuccessfull
-//       // Display error message
-//       $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + ajax_checkout_params.paymentErrorMessageFor3D + '<br>' + msg.errMsg + '</li></ul>');
-//       logErrorOnOrderPayment(orderId, msg.errMsg, kopaOrderId);
-//     }
-//     borwser.close();
-//   });
-//   socket.on('disconnect', function(){
-//     $('body').find('#overflowKopaLoader').remove();
-//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-//   } );
-//   socket.on('connect_error', function(){
-//     $('body').find('#overflowKopaLoader').remove();
-//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-//   } );
-//   socket.on('reconnect_error', function(){
-//     $('body').find('#overflowKopaLoader').remove();
-//     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>'+ajax_checkout_params.paymentError+'</li></ul>');
-//   } );
-// }
-
 function updateOrderTotalForKopaPaymentDetails(){
   var orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();
   $('body').find('#kopaPaymentDetailsTotal').html(orderTotal);
@@ -548,14 +480,14 @@ function generateUUID() { // Public Domain/MIT
   var d = new Date().getTime();//Timestamp
   var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16;//random number between 0 and 16
-      if(d > 0){//Use timestamp until depleted
-          r = (d + r)%16 | 0;
-          d = Math.floor(d/16);
-      } else {//Use microseconds since page-load if supported
-          r = (d2 + r)%16 | 0;
-          d2 = Math.floor(d2/16);
-      }
-      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    var r = Math.random() * 16;//random number between 0 and 16
+    if(d > 0){//Use timestamp until depleted
+      r = (d + r)%16 | 0;
+      d = Math.floor(d/16);
+    } else {//Use microseconds since page-load if supported
+      r = (d2 + r)%16 | 0;
+      d2 = Math.floor(d2/16);
+    }
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
 }

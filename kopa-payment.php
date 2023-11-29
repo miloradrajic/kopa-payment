@@ -43,7 +43,7 @@ require_once ABSPATH . 'wp-admin/includes/plugin.php';
 // function custom_plugin_uninstall() {
   // $meta_type  = 'user';
   // $user_id    = 0; // This will be ignored, since we are deleting for all users.
-  // $meta_key   = 'kopa_user_registered';
+  // $meta_key   = 'kopa_user_registered_code';
   // $meta_value = ''; // Also ignored. The meta will be deleted regardless of value.
   // $delete_all = true;
   

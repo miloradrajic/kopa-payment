@@ -27,6 +27,7 @@ function detectCreditCardType($cardNumber, $sentType = '') {
   return false;
 }
 
+// Function to validate CC number
 function validateCreditCard($creditCardNumber) {
   if (empty($creditCardNumber)) {
     return false;
@@ -93,8 +94,26 @@ function custom_radio_button_field($field, $key, $args, $value) {
 }
 add_filter('woocommerce_form_field_radio', 'custom_radio_button_field', 10, 4);
 
-
+// On logout clear session
 function clearSessionOnLogout() {
-  session_unset();
+  unset($_SESSION['kopaUserId']);
+  unset($_SESSION['kopaAccessToken']);
+  unset($_SESSION['kopaRefreshToken']);
+  unset($_SESSION['kopaOrderId']);
 }
 add_action( 'wp_logout', 'clearSessionOnLogout' );
+
+// Add custom fields to user profile to preview admin kopa registration code
+function custom_user_profile_fields($contactmethods) {
+  if (isDebugActive()) {
+    $contactmethods['kopa_user_registered_code'] = 'Kopa Registration code';
+  }
+  return $contactmethods;
+}
+add_filter('user_contactmethods', 'custom_user_profile_fields');
+
+// Check if debug is active and current user ia admin
+function isDebugActive(){
+  if(current_user_can('administrator') && get_option('woocommerce_kopa-payment_settings')['kopa_debug'] == 'yes') return true;
+  return false;
+}
