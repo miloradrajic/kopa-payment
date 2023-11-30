@@ -4,8 +4,8 @@
 function custom_endpoint() {
   add_rewrite_rule('^kopa-payment-data/accept-order/([^/]+)/?', 'index.php?accept_order_id=$matches[1]', 'top');
   add_filter('query_vars', function ($vars) {
-      $vars[] = 'accept_order_id';
-      return $vars;
+    $vars[] = 'accept_order_id';
+    return $vars;
   });
 }
 add_action('init', 'custom_endpoint');
@@ -52,11 +52,16 @@ function handle_custom_endpoint($wp) {
             $kopaClass = new KOPA_Payment();
             $kopaCurl = new KopaCurl();
             $physicalProducts = $kopaClass->isPhysicalProducts($order);
-            $user_id = $order->get_user_id();
+            $userId = $order->get_user_id();
             
             $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
-            $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $user_id);
+            $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             
+            if(isDebugActive(Debug::AFTER_PAYMENT)){
+              echo 'userId<pre>' . print_r($userId, true) . '</pre>';
+              echo 'kopaOrderId<pre>' . print_r($kopaOrderId, true) . '</pre>';
+              echo 'order details kopa<pre>' . print_r($orderDetailsKopa, true) . '</pre>';
+            }
             // Check on KOPA system if order was actually paid and has no errors
             if(
               isset($orderDetailsKopa['response']) && $orderDetailsKopa['response'] == 'Approved' &&
@@ -74,8 +79,10 @@ function handle_custom_endpoint($wp) {
                 $order->update_status('completed');
               }
               $order->save();
-              // Redirect the user to the thank you page
-              wp_redirect($order->get_checkout_order_received_url());
+              if(!isDebugActive(Debug::AFTER_PAYMENT)){
+                // Redirect the user to the thank you page
+                wp_redirect($order->get_checkout_order_received_url());
+              }
               exit;
             }
           }
@@ -96,6 +103,10 @@ function handle_custom_endpoint($wp) {
             exit;
           }
         }
+      }
+      if(isDebugActive(Debug::AFTER_PAYMENT)){
+        echo 'REQUEST_METHOD<pre>' . print_r($_SERVER['REQUEST_METHOD'], true) . '</pre>';
+        echo 'authResult<pre>' . print_r($_GET['authResult'], true) . '</pre>';
       }
       wp_send_json_error(['message' => __('You are not allowed', 'kopa-payment')]);
       exit;

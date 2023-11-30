@@ -162,12 +162,20 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'default' => '',
         'desc_tip' => false,
       ],
-      'kopa_debug' => [
-        'type' => 'checkbox',
-        'css' => 'display:none;',
-        'default' => 'no',
-      ],
+      
     ];
+    if(current_user_can('administrator')){
+      $this->form_fields['kopa_debug'] = [
+        'title'=> 'Debug KOPA',
+        'type' => 'multiselect',
+        'description' => __('Debug KOPA', 'kopa-payment'),
+        'options' => array(
+          'no' => __('Inactive', 'kopa-payment'),
+          'after_payment' => __('After payment (3D)', 'kopa-payment'),
+          'before_payment' => __('Global (payment will not work, it will only return sent values)', 'kopa-payment'),
+        ),
+      ];
+    };
   }
 
   /**
@@ -443,7 +451,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         if($kopaSaveCc){
           $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
         }
-        if (isDebugActive()) {
+        if (isDebugActive(Debug::BEFORE_PAYMENT)) {
           echo '<pre>' . print_r($htmlCode, true) . '</pre>';
           return;
         }
