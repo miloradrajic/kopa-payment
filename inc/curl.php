@@ -81,7 +81,6 @@ class KopaCurl {
    * Used when admin initialize PostAuth, GetOrderDetails or Refund functions
    */
   private function loginUserByAdmin($userId){
-    if(empty($userId) && !is_admin()) return;
     // If not logged in user use anonymous user
     if ($userId == 0){
       $username = 'anonymous';
@@ -102,7 +101,6 @@ class KopaCurl {
       'merchantId' => $merchantID
     ]);
     $returnData = json_decode($this->post($loginUrl, $data), true);
-    
     return $returnData;
   }
 
@@ -149,7 +147,7 @@ class KopaCurl {
       ]);
     }
     $returnData = json_decode($this->post($loginUrl, $data), true);
-    if (isDebugActive()) {
+    if (isDebugActive(Debug::BEFORE_PAYMENT)) {
       echo 'LOGIN';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
@@ -168,7 +166,7 @@ class KopaCurl {
     $_SESSION['kopaAccessToken'] = $returnData['access_token'];
     $_SESSION['kopaRefreshToken'] = $returnData['refresh_token'];
 
-    if (isDebugActive()) {
+    if (isDebugActive(Debug::BEFORE_PAYMENT)) {
       echo 'SESSION<pre>' . print_r($_SESSION, true) . '</pre>';
     }
     return $returnData; 
@@ -189,7 +187,7 @@ class KopaCurl {
     ]);
 
     $returnData = json_decode($this->post($registerUrl, $data), true);
-    if (isDebugActive()) {
+    if (isDebugActive(Debug::BEFORE_PAYMENT)) {
       echo 'REGISTER';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
@@ -219,7 +217,7 @@ class KopaCurl {
     $this->close();
     array_pop($this->headers);
     
-    if (isDebugActive()) {
+    if (isDebugActive(Debug::BEFORE_PAYMENT)) {
       echo 'GetPiKey';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
       echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';

@@ -162,12 +162,20 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'default' => '',
         'desc_tip' => false,
       ],
-      'kopa_debug' => [
-        'type' => 'checkbox',
-        'css' => 'display:none;',
-        'default' => 'no',
-      ],
+      
     ];
+    if(current_user_can('administrator')){
+      $this->form_fields['kopa_debug'] = [
+        'title'=> 'Test',
+        'type' => 'multiselect',
+        'description' => __('Debug KOPA', 'kopa-payment'),
+        'options' => array(
+          'no' => __('Inactive', 'kopa-payment'),
+          'after_payment' => __('After payment (3D)', 'kopa-payment'),
+          'before_payment' => __('Global (payment will not work, it will only return sent values)', 'kopa-payment'),
+        ),
+      ];
+    };
   }
 
   /**

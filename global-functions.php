@@ -105,15 +105,24 @@ add_action( 'wp_logout', 'clearSessionOnLogout' );
 
 // Add custom fields to user profile to preview admin kopa registration code
 function custom_user_profile_fields($contactmethods) {
-  if (isDebugActive()) {
+  if (isDebugActive(Debug::BEFORE_PAYMENT)) {
     $contactmethods['kopa_user_registered_code'] = 'Kopa Registration code';
   }
   return $contactmethods;
 }
 add_filter('user_contactmethods', 'custom_user_profile_fields');
 
+
+enum Debug: string {
+  case BEFORE_PAYMENT = 'before_payment';
+  case AFTER_PAYMENT = 'after_payment';
+  case NO = 'no';
+}
 // Check if debug is active and current user ia admin
-function isDebugActive(){
-  if(current_user_can('administrator') && get_option('woocommerce_kopa-payment_settings')['kopa_debug'] == 'yes') return true;
+function isDebugActive(Debug $debug){
+  if(
+    current_user_can('administrator') && 
+    in_array($debug, get_option('woocommerce_kopa-payment_settings')['kopa_debug'])
+  ) return true;
   return false;
 }
