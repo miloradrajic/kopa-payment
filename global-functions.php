@@ -113,13 +113,14 @@ function custom_user_profile_fields($contactmethods) {
 add_filter('user_contactmethods', 'custom_user_profile_fields');
 
 
-enum Debug: string {
-  case BEFORE_PAYMENT = 'before_payment';
-  case AFTER_PAYMENT = 'after_payment';
-  case NO = 'no';
+class Debug {
+  const BEFORE_PAYMENT = 'before_payment';
+  const AFTER_PAYMENT  = 'after_payment';
+  const NO             = 'no';
 }
+
 // Check if debug is active and current user ia admin
-function isDebugActive(Debug $debug){
+function isDebugActive(string $debug){
   if(
     current_user_can('administrator') && 
     in_array($debug, get_option('woocommerce_kopa-payment_settings')['kopa_debug'])
