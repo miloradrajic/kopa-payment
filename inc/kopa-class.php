@@ -166,7 +166,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     ];
     if(current_user_can('administrator')){
       $this->form_fields['kopa_debug'] = [
-        'title'=> 'Test',
+        'title'=> 'Debug KOPA',
         'type' => 'multiselect',
         'description' => __('Debug KOPA', 'kopa-payment'),
         'options' => array(
@@ -451,7 +451,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         if($kopaSaveCc){
           $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
         }
-        if (isDebugActive()) {
+        if (isDebugActive(Debug::BEFORE_PAYMENT)) {
           echo '<pre>' . print_r($htmlCode, true) . '</pre>';
           return;
         }

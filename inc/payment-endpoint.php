@@ -79,8 +79,10 @@ function handle_custom_endpoint($wp) {
                 $order->update_status('completed');
               }
               $order->save();
-              // Redirect the user to the thank you page
-              wp_redirect($order->get_checkout_order_received_url());
+              if(!isDebugActive(Debug::AFTER_PAYMENT)){
+                // Redirect the user to the thank you page
+                wp_redirect($order->get_checkout_order_received_url());
+              }
               exit;
             }
           }

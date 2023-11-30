@@ -89,7 +89,7 @@ class KopaCurl {
       $user = get_user_by('ID', $userId);
       $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       $username = $user->user_login.'_'.$userId.'_'.$registerCode;
-      $password = base64_encode($username.$userId);
+      $password = base64_encode($user->user_login.$userId);
     }
     $loginUrl = $this->serverUrl.'/api/auth/login';
     $merchantID = $this->merchantId;
@@ -101,6 +101,11 @@ class KopaCurl {
       'merchantId' => $merchantID
     ]);
     $returnData = json_decode($this->post($loginUrl, $data), true);
+    if(isDebugActive(Debug::AFTER_PAYMENT)){
+      echo 'LOGIN ADMIN userId<pre>' . print_r($userId, true) . '</pre>';
+      echo 'data<pre>' . print_r($data, true) . '</pre>';
+      echo 'returnData<pre>' . print_r($returnData, true) . '</pre>';
+    }
     return $returnData;
   }
 
