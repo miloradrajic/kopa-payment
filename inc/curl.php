@@ -1,6 +1,6 @@
 <?php 
 class KopaCurl {
-  private $ch, $headers, $serverUrl, $merchantId, $errors; // cURL handle
+  private $ch, $headers, $serverUrl, $merchantId, $errors, $initialized; // cURL handle
 
   public function __construct() {
     if(
@@ -9,6 +9,12 @@ class KopaCurl {
       !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
       empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
     ) return;
+    $this->curlInit();
+    $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
+    $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
+  }
+
+  private function curlInit(){
     $this->ch = curl_init();
     $this->headers = array(
       'Content-Type: application/json'
@@ -21,8 +27,8 @@ class KopaCurl {
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     ));
-    $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
-    $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
+
+    $this->initialized = true;
   }
   /**
    * cURL GET function
@@ -69,11 +75,18 @@ class KopaCurl {
     return $response;
   }
 
+  public function isInitialized() {
+    return $this->initialized;
+  }
+
   /**
    * Closing cURL 
    */
   public function close() {
-    curl_close($this->ch);
+    if ($this->initialized) {
+      curl_close($this->ch);
+      $this->initialized = false; // Set the flag to indicate cURL is closed
+    }
   }
 
   /**
@@ -115,6 +128,10 @@ class KopaCurl {
   public function login() {
     if(empty($this->serverUrl)){return;}
     if(empty($this->merchantId)){return;}
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
+    
     $loginUrl = $this->serverUrl.'/api/auth/login';
     $merchantID = $this->merchantId;
     
@@ -184,6 +201,10 @@ class KopaCurl {
     $registerUrl = $this->serverUrl.'/api/auth/register';
     $merchantID = $this->merchantId;
 
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
+
     $data = json_encode([
       'username' => $username.'_'.$userId.'_'.$registerCode, 
       'password' => base64_encode($username.$userId), 
@@ -214,6 +235,9 @@ class KopaCurl {
    * Getting secret key for encoding
    */
   public function getPiKey(){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $encodingKeyUrl = $this->serverUrl.'/api/pikey';
     // Add authorization header
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
@@ -239,7 +263,10 @@ class KopaCurl {
   /**
    * Function to save CC on KOPA platform
    */
-  public function saveCC($encCcNumber, $encCcExpDate, $ccType, $ccAlias) {   
+  public function saveCC($encCcNumber, $encCcExpDate, $ccType, $ccAlias) {
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $saveCcUrl = $this->serverUrl.'/api/cards';
     $data = json_encode([
       'alias' => $ccAlias, 
@@ -252,25 +279,32 @@ class KopaCurl {
     $returnData = $this->post($saveCcUrl, $data);
     $decodedReturn = json_decode($returnData, true);
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-
     $this->close();
 
+
+    if (isDebugActive(Debug::SAVE_CC)) {
+      echo 'SAVE CC data<pre>' . print_r($data, true) . '</pre>';
+      echo 'cc URL<pre>' . print_r($saveCcUrl, true) . '</pre>';
+      echo 'Return data<pre>' . print_r($returnData, true) . '</pre>';
+      echo 'headers<pre>' . print_r($this->headers, true) . '</pre>';
+      die;
+    }
+    
     // Remove the last added header, which is the "Authorization" header
     array_pop($this->headers);
 
-    if($decodedReturn['response'] == 'Error'){
+    if(isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error'){
       $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'saveCC'), $encCcNumber, $encCcExpDate, $ccType, $ccAlias);
     }
     if(
       $httpCode == 409 && 
       $returnData == 'Card with this alias already exists'
     ){
-      wc_add_notice(__('Credit card already saved', 'kopa-payment'), 'notice');
-      return true;
+      wc_add_notice(__('Card with this alias already exists', 'kopa-payment'), 'notice');
+      return false;
     }
 
-    if($decodedReturn['resultCode'] == 'ok') return true;
-
+    if(isset($decodedReturn['resultCode']) && $decodedReturn['resultCode'] == 'ok') return true;
     error_log('[KOPA ERROR]: Error saving CC ');
     wc_add_notice(__('There was problem with Kopa Payment method. Saving CC', 'kopa-payment'), 'error');
     return false;
@@ -280,6 +314,9 @@ class KopaCurl {
    * Deleting CC from KOPA platform
    */
   function deleteCc($ccId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $deleteCcUrl = $this->serverUrl.'/api/cards/'.$ccId;
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $returnData = $this->delete($deleteCcUrl);
@@ -305,6 +342,9 @@ class KopaCurl {
    * Getting all user saved CCs from KOPA platform
    */
   public function getSavedCC(){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     if(!isset($_SESSION['kopaUserId']))return;
     $saveCcUrl = $this->serverUrl.'/api/cards?userId='.$_SESSION['kopaUserId'];
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
@@ -324,6 +364,9 @@ class KopaCurl {
    * Getting CC details by ID
    */
   public function getSavedCcDetails($ccCardId) {
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     if(!isset($_SESSION['kopaUserId']))return;
     $cardDetailsUrl = $this->serverUrl.'/api/cards/'.$ccCardId;
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
@@ -345,6 +388,9 @@ class KopaCurl {
    * When JWT expires, reset it with refresh token
    */
   private function resetAuthToken(){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $successTokenRefresh = true;
     if(isset($_SESSION['kopaRefreshToken']) && !empty($_SESSION['kopaRefreshToken'])){
       $refreshTokenUrl = $this->serverUrl.'/api/auth/refresh_token';
@@ -398,6 +444,9 @@ class KopaCurl {
    * Get bank details for payment
    */
   public function getBankDetails($orderId, $amount, $physicalProduct){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $bankDetailsUrl = $this->serverUrl.'/api/payment/bank_details';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     
@@ -428,6 +477,9 @@ class KopaCurl {
    * MOTO payment
    */
   public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $motoPaymentUrl = $this->serverUrl.'/api/payment/moto';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $data = json_encode(
@@ -463,6 +515,9 @@ class KopaCurl {
    * API Payment
    */
   public function apiPayment($card, $amount, $physicalProduct, $kopaOrderId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $apiPaymentUrl = $this->serverUrl.'/api/payment/api';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken']; 
     $data = json_encode(
@@ -494,6 +549,10 @@ class KopaCurl {
    * It is triggered on changing order status to "Completed"
    */
   public function postAuth($orderId, $userId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
+
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
 
     $loginResult = $this->loginUserByAdmin($userId);
@@ -522,6 +581,9 @@ class KopaCurl {
    * Get order details from KOPA platform
    */
   public function getOrderDetails($kopaOrderId, $userId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $loginResult = $this->loginUserByAdmin($userId);
     $orderDetails = $this->serverUrl.'/api/orders/'.$kopaOrderId;
 
@@ -544,6 +606,9 @@ class KopaCurl {
    * Get Void last step on order KOPA platform
    */
   private function voidLastStepOnOrder($orderId, $userId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
 
     $loginResult = $this->loginUserByAdmin($userId);
@@ -568,6 +633,9 @@ class KopaCurl {
    * Checking if refund can be done on order and adding order notes if refunded
    */
   public function refundCheck($orderId, $userId){
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $custom_meta_field = get_post_meta($orderId, '_kopa_payment_method', true);
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
     // Check if order payment was done with KOPA system
@@ -655,6 +723,9 @@ class KopaCurl {
    */
   private function refund($kopaOrderId, $userId, $orderId){
     $loginResult = $this->loginUserByAdmin($userId);
+    if($this->isInitialized() == false){
+      $this->curlInit();
+    }
     $refundUrl = $this->serverUrl.'/api/payment/refund';
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
     $data = json_encode(
