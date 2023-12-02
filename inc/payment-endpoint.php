@@ -85,6 +85,18 @@ function handle_custom_endpoint($wp) {
               }
               exit;
             }
+            if(
+              !isset($orderDetailsKopa['transaction']) || 
+              empty($orderDetailsKopa['transaction']) ||
+              isset($orderDetailsKopa['transaction']['errorCode']) || 
+              !empty($orderDetailsKopa['transaction']['errorCode']) ){
+                // Add a notice
+                wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
+                
+                // Redirect to the checkout page
+                wp_redirect(wc_get_checkout_url());
+                exit;
+              }
           }
           if($authResult == 'CANCELLED'){
             // Add a notice

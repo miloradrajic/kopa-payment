@@ -91,7 +91,12 @@ class KOPA_Payment extends WC_Payment_Gateway {
    */
   public function userLoginKopa(){
     // Check if user is logged in woocommerce
-    if(!empty($this->curl))$this->curl->login();
+    if(
+      !isset($_SESSION['kopaAccessToken']) || 
+      empty($_SESSION['kopaAccessToken'])
+      ){
+      $this->curl->login();
+    }
   }
 
   /**
@@ -173,6 +178,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'no' => __('Inactive', 'kopa-payment'),
           'after_payment' => __('After payment (3D)', 'kopa-payment'),
           'before_payment' => __('Global (payment will not work, it will only return sent values)', 'kopa-payment'),
+          'save_cc' => __('Saving CC', 'kopa-payment'),
         ),
       ];
     };
@@ -242,8 +248,8 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'label'       => __('Use saved credit cards', 'kopa-payment'),
           'options'     => $ccOptions,
           'default'     => 'new',
-          'required' => true,
-          ), 
+          'required'    => true
+          ),
         );
       }
     }
@@ -449,6 +455,9 @@ class KOPA_Payment extends WC_Payment_Gateway {
         $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
         $order->save();
         if($kopaSaveCc){
+          if (isDebugActive(Debug::SAVE_CC)) {
+            echo 'SAVING CC function incognito 3d payment';
+          }
           $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
         }
         if (isDebugActive(Debug::BEFORE_PAYMENT)) {
