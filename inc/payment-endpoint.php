@@ -17,10 +17,10 @@ function handle_custom_endpoint($wp) {
   if (array_key_exists('accept_order_id', $wp->query_vars) && !empty($wp->query_vars['accept_order_id'])) {
     $orderId = absint($wp->query_vars['accept_order_id']);
     if ($orderId) {
-      if (
-        $_SERVER['REQUEST_METHOD'] === 'POST' &&
-        !isset($_GET['authResult'])
-        ) {
+
+      // Bank sending details of the transaction 
+      // Saving transaction details
+      if ($_SERVER['REQUEST_METHOD'] === 'POST' ) {
         // Retrieve JSON data from the request
         $jsonData = file_get_contents('php://input');
         $data = json_decode($jsonData, true);
@@ -28,17 +28,15 @@ function handle_custom_endpoint($wp) {
           // Check if the required keys are present
           $requiredKeys = ['OrderId', 'TransStatus', 'TransDate', 'TansId', 'TansErrorMsg', 'TransErrorCode', 'TransNumCode'];
           if (count(array_diff($requiredKeys, array_keys($data))) === 0) {
-            $orders = wc_get_orders( array( 'kopaIdReferenceId' => $data['OrderId'] ) );
-            if(!empty($orders)) {
-              $order = $orders[0];
-              update_post_meta($order, 'kopaOrderPaymentData', $jsonData);
-            }
+            update_post_meta($orderId, 'kopaOrderPaymentData', $jsonData);
           } else {
             wp_send_json_error(['message' => __('Data sent is not a valid structure', 'kopa-payment')]);
             exit;
           }
         } 
       }   
+
+      // Bank redirection for order finalizing
       if (
         $_SERVER['REQUEST_METHOD'] === 'GET' &&
         isset($_GET['authResult']) &&
@@ -55,6 +53,7 @@ function handle_custom_endpoint($wp) {
             $userId = $order->get_user_id();
             
             $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+            $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             
             if(isDebugActive(Debug::AFTER_PAYMENT)){
@@ -62,41 +61,39 @@ function handle_custom_endpoint($wp) {
               echo 'kopaOrderId<pre>' . print_r($kopaOrderId, true) . '</pre>';
               echo 'order details kopa<pre>' . print_r($orderDetailsKopa, true) . '</pre>';
             }
-            // Check on KOPA system if order was actually paid and has no errors
+            // Check for payment transaction details on KOPA
+            paymentCheckup($order, $orderDetailsKopa, $physicalProducts);
+            
+
+            // There might be some delay when checking with KOPA transaction details
+            // No transaction details on KOPA but bank sent transaction details prior to redirect URL
             if(
-              isset($orderDetailsKopa['response']) && $orderDetailsKopa['response'] == 'Approved' &&
-              isset($orderDetailsKopa['trantype']) && in_array($orderDetailsKopa['trantype'], ['Auth', 'PreAuth', 'PostAuth']) &&
-              isset($orderDetailsKopa['transaction']) && !empty($orderDetailsKopa['transaction']) &&
-              isset($orderDetailsKopa['transaction']['errorCode']) && empty($orderDetailsKopa['transaction']['errorCode']) 
-            ) {
-              if($physicalProducts == true) {
-                // Change the order status to 'processing'
-                $order->update_meta_data('isPhysicalProducts', 'true');
-                $order->update_status('processing');
-              }else{
-                // Change the order status to 'completed'
-                $order->update_meta_data('isPhysicalProducts', 'false');
-                $order->update_status('completed');
-              }
-              $order->save();
-              if(!isDebugActive(Debug::AFTER_PAYMENT)){
-                // Redirect the user to the thank you page
-                wp_redirect($order->get_checkout_order_received_url());
-              }
-              exit;
+              (
+                !isset($orderDetailsKopa['transaction']) || 
+                empty($orderDetailsKopa['transaction']) ||
+                isset($orderDetailsKopa['transaction']['errorCode']) || 
+                !empty($orderDetailsKopa['transaction']['errorCode'])
+              ) &&
+              !empty($kopaTransactionDetails)
+            ){
+              // Recheck transaction detail on KOPA if bank already sent details to the website 
+              paymentCheckup($order, $orderDetailsKopa, $physicalProducts, true);
             }
+
+            // Transaction details on KOPA is empty, meaning that transaction was probably canceled
             if(
               !isset($orderDetailsKopa['transaction']) || 
               empty($orderDetailsKopa['transaction']) ||
               isset($orderDetailsKopa['transaction']['errorCode']) || 
-              !empty($orderDetailsKopa['transaction']['errorCode']) ){
-                // Add a notice
-                wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
-                
-                // Redirect to the checkout page
-                wp_redirect(wc_get_checkout_url());
-                exit;
-              }
+              !empty($orderDetailsKopa['transaction']['errorCode'])
+            ){
+              // Add a notice
+              wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
+              
+              // Redirect to the checkout page
+              wp_redirect(wc_get_checkout_url());
+              exit;
+            }
           }
           if($authResult == 'CANCELLED'){
             // Add a notice
@@ -126,3 +123,32 @@ function handle_custom_endpoint($wp) {
   }
 }
 add_action('parse_request', 'handle_custom_endpoint');
+
+function paymentCheckup($order, $orderDetailsKopa, $physicalProducts, $delay = false){
+  if($delay == true){
+    sleep(5);
+  }
+  // Check on KOPA system if order was actually paid and has no errors
+  if(
+    isset($orderDetailsKopa['response']) && $orderDetailsKopa['response'] == 'Approved' &&
+    isset($orderDetailsKopa['trantype']) && in_array($orderDetailsKopa['trantype'], ['Auth', 'PreAuth', 'PostAuth']) &&
+    isset($orderDetailsKopa['transaction']) && !empty($orderDetailsKopa['transaction']) &&
+    isset($orderDetailsKopa['transaction']['errorCode']) && empty($orderDetailsKopa['transaction']['errorCode']) 
+  ) {
+    if($physicalProducts == true) {
+      // Change the order status to 'processing'
+      $order->update_meta_data('isPhysicalProducts', 'true');
+      $order->update_status('processing');
+    }else{
+      // Change the order status to 'completed'
+      $order->update_meta_data('isPhysicalProducts', 'false');
+      $order->update_status('completed');
+    }
+    $order->save();
+    if(!isDebugActive(Debug::AFTER_PAYMENT)){
+      // Redirect the user to the thank you page
+      wp_redirect($order->get_checkout_order_received_url());
+    }
+    exit;
+  }
+}
