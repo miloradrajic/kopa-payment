@@ -431,8 +431,13 @@ class KOPA_Payment extends WC_Payment_Gateway {
           
           // Check if CC needs to be saved 
           if($kopaSaveCc){
+            if (isDebugActive(Debug::SAVE_CC)) {
+              echo 'SAVING CC function API payment';
+            }
             $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
-            // if($savedCcResponce) 
+            if($savedCcResponce != true){
+              return false;
+            }
           }
           // Redirect to the thank you page
           return [
@@ -456,9 +461,12 @@ class KOPA_Payment extends WC_Payment_Gateway {
         $order->save();
         if($kopaSaveCc){
           if (isDebugActive(Debug::SAVE_CC)) {
-            echo 'SAVING CC function incognito 3d payment';
+            echo 'SAVING CC function 3d payment';
           }
           $savedCcResponce = $this->curl->saveCC($_POST['encodedCcNumber'], $_POST['encodedExpDate'], $kopa_cc_type, $kopaCcAlias);
+          if($savedCcResponce != true){
+            return false;
+          }
         }
         if (isDebugActive(Debug::BEFORE_PAYMENT)) {
           echo '<pre>' . print_r($htmlCode, true) . '</pre>';

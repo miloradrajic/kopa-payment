@@ -301,7 +301,7 @@ class KopaCurl {
       $returnData == 'Card with this alias already exists'
     ){
       wc_add_notice(__('Card with this alias already exists', 'kopa-payment'), 'notice');
-      return true;
+      return false;
     }
 
     if(isset($decodedReturn['resultCode']) && $decodedReturn['resultCode'] == 'ok') return true;
