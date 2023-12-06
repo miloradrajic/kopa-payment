@@ -125,7 +125,7 @@ class KopaCurl {
   /**
    * Login/Register user and add user meta that user is using KOPA platform
    */
-  public function login() {
+  public function login($retry = false) {
     if(empty($this->serverUrl)){return;}
     if(empty($this->merchantId)){return;}
     if($this->isInitialized() == false){
@@ -178,9 +178,13 @@ class KopaCurl {
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
 
-    if(!in_array($httpCode, [200, 201])) {
+    if(!in_array($httpCode, [200, 201]) && $retry == true) {
       error_log('[KOPA ERROR]: Login error for user with ID '. $userId);
       return;
+    }else if(!in_array($httpCode, [200, 201])){
+      // Fallback if some data (ex. merchant_id) was changed and session is not valid anymore
+      clearSessionOnLogout();
+      $this->login(true);
     }
 
     // Save KOPA user datails in SESSION

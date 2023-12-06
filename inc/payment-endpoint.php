@@ -29,8 +29,6 @@ function handle_custom_endpoint($wp) {
           $requiredKeys = ['OrderId', 'TransStatus', 'TransDate', 'TansId', 'TansErrorMsg', 'TransErrorCode', 'TransNumCode'];
           if (count(array_diff($requiredKeys, array_keys($data))) === 0) {
             update_post_meta($orderId, 'kopaOrderPaymentData', $jsonData);
-          } else {
-            wp_send_json_error(['message' => __('Data sent is not a valid structure', 'kopa-payment')]);
             exit;
           }
         } 
@@ -77,7 +75,7 @@ function handle_custom_endpoint($wp) {
               !empty($kopaTransactionDetails)
             ){
               // Recheck transaction detail on KOPA if bank already sent details to the website 
-              paymentCheckup($order, $orderDetailsKopa, $physicalProducts, true);
+              paymentCheckup($order, $orderDetailsKopa, $physicalProducts, true); // Payment checkup with delay
             }
 
             // Transaction details on KOPA is empty, meaning that transaction was probably canceled
@@ -116,8 +114,26 @@ function handle_custom_endpoint($wp) {
       if(isDebugActive(Debug::AFTER_PAYMENT)){
         echo 'REQUEST_METHOD<pre>' . print_r($_SERVER['REQUEST_METHOD'], true) . '</pre>';
         echo 'authResult<pre>' . print_r($_GET['authResult'], true) . '</pre>';
+        exit;
       }
-      wp_send_json_error(['message' => __('You are not allowed', 'kopa-payment')]);
+      if (
+        $_SERVER['REQUEST_METHOD'] === 'POST' &&
+        isset($_POST['ErrMsg']) && 
+        !empty($_POST['ErrMsg'])
+      ){
+        // Add a notice
+        wc_add_notice(__('There was a problem with a payment - '. $_POST['ErrMsg'], 'kopa-payment'), 'error');
+
+        // Redirect to the checkout page
+        wp_redirect(wc_get_checkout_url());
+        exit;
+      }
+      
+      // Add a notice
+      wc_add_notice(__('There was a problem with a payment. Please contant shop administrator.', 'kopa-payment'), 'error');
+
+      // Redirect to the checkout page
+      wp_redirect(wc_get_checkout_url());
       exit;
     }
   }
