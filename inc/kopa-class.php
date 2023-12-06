@@ -209,7 +209,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     ?>
     <div id="kopaPaymentIcons">
       <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/maestro.png" alt="maestro">
-      <a href="http://www.mastercard.com/rs/consumer/credit-cards.html" target="_blank" rel="noopener noreferrer">
+      <a href="https://www.mastercard.rs/sr-rs/korisnici/pronadite-karticu.html" target="_blank" rel="noopener noreferrer">
         <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/master.png" alt="master">
       </a>
       <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/dina.png" alt="dina">
@@ -226,7 +226,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
       <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer">
         <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/visa-secure.png" alt="visa-secure">
       </a>
-      <a href="http://www.mastercard.com/rs/consumer/credit-cards.html" target="_blank" rel="noopener noreferrer">
+      <a href="https://www.mastercard.rs/sr-rs/korisnici/pronadite-karticu.html" target="_blank" rel="noopener noreferrer">
         <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/id-check.png" alt="id-check">
       </a>
     </div>
