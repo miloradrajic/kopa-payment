@@ -90,13 +90,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
    * Login user to KOPA platform and save credentials in $_SESSION variable
    */
   public function userLoginKopa(){
-    // Check if user is logged in woocommerce
-    if(
-      !isset($_SESSION['kopaAccessToken']) || 
-      empty($_SESSION['kopaAccessToken'])
-      ){
-      $this->curl->login();
-    }
+    $this->curl->login();
   }
 
   /**
@@ -109,7 +103,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'title' => __('Title', 'kopa-payment'),
         'type' => 'text',
         'description' => __('This is the title that the user sees during checkout.', 'kopa-payment'),
-        'default' => 'KOPA Payment',
+        'default' => 'Credit Card',
         'desc_tip' => true,
       ],
       'kopa_merchant_id' => [
