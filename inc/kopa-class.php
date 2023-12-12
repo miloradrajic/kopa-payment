@@ -163,7 +163,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
       ],
       
     ];
-    if(current_user_can('administrator')){
+    if(current_user_can('administrator') && isset($_GET['debug']) && $_GET['debug'] == true){
       $this->form_fields['kopa_debug'] = [
         'title'=> 'Debug KOPA',
         'type' => 'multiselect',
