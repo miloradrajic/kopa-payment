@@ -124,6 +124,8 @@ class Debug {
 function isDebugActive(string $debug){
   if(
     current_user_can('administrator') && 
+    !empty($debug) &&
+    is_array(get_option('woocommerce_kopa-payment_settings')['kopa_debug']) &&
     in_array($debug, get_option('woocommerce_kopa-payment_settings')['kopa_debug'])
   ) return true;
   return false;
