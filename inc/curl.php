@@ -141,7 +141,7 @@ class KopaCurl {
       $username = $current_user->user_login;
       $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
       // Check user metafield if user is already registered on KOPA 
-      if(!empty($registerCode) && $registerCode !== 1){
+      if(!empty($registerCode)){
         // if user is registered on KOPA, login user and get access_token
         $data = json_encode([
           'username' => $username.'_'.$userId.'_'.$registerCode, 
@@ -168,7 +168,10 @@ class KopaCurl {
         'merchantId' => $merchantID
       ]);
     }
+    
+    // POST login data to KOPA
     $returnData = json_decode($this->post($loginUrl, $data), true);
+
     if (isDebugActive(Debug::BEFORE_PAYMENT)) {
       echo 'LOGIN';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
@@ -181,10 +184,20 @@ class KopaCurl {
     if(!in_array($httpCode, [200, 201]) && $retry == true) {
       error_log('[KOPA ERROR]: Login error for user with ID '. $userId);
       return;
-    }else if(!in_array($httpCode, [200, 201])){
+    }else if($httpCode == 401){
       // Fallback if some data (ex. merchant_id) was changed and session is not valid anymore
       clearSessionOnLogout();
-      $this->login(true);
+      $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
+      // Check user metafield if user is already registered on KOPA 
+      if(empty($registerCode)){
+        $registerCode = rand ( 10000 , 99999 );
+        update_user_meta( $userId, 'kopa_user_registered_code', $registerCode );
+      }
+      $registrationResult = $this->register($username, $userId, $registerCode);
+      if($registrationResult != false){
+        $this->login(true);
+        exit;
+      }
     }
 
     // Save KOPA user datails in SESSION
