@@ -32,8 +32,18 @@ class KOPA_Payment extends WC_Payment_Gateway {
       add_action( 'admin_notices', array($this,'admin_warnings'));
     }
     add_action('after_setup_theme', array($this, 'load_textdomain'));
+
   }
 
+  public function get_all_active_payment_methods() {
+    $active_gateways = array();
+    foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
+      if ($gateway->settings['enabled'] == 'yes') {
+          $active_gateways[] = $gateway->id;
+      }
+    }
+    return $active_gateways;
+  }
    /*
 	 * Function that will load translations from the language files in the /languages folder in the root folder of the plugin.
 	 */
@@ -80,10 +90,13 @@ class KOPA_Payment extends WC_Payment_Gateway {
   }
   
   function admin_warnings($message) {
-    foreach($this->errors as $error){
-      echo '<div class="notice notice-error">
-              <p>'.$error.' <a href="'.get_admin_url().'admin.php?page=wc-settings&tab=checkout&section=kopa_payment">Check here</a></p>
-            </div>';
+    $active_gateways = $this->get_all_active_payment_methods();
+    if(in_array($this->id, $active_gateways)){
+      foreach($this->errors as $error){
+        echo '<div class="notice notice-error">
+                <p>'.$error.' <a href="'.get_admin_url().'admin.php?page=wc-settings&tab=checkout&section=kopa_payment">Check here</a></p>
+              </div>';
+      }
     }
   }
   /**
