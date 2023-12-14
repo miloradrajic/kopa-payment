@@ -5,7 +5,7 @@ function kopaRefundActionCallback($order_id) {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
   // $order_id = $order->get_id();
-  $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
+  $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
   // Check if the custom metadata exists and if payment was done with MOTO or API payment
   if (!empty($custom_metadata)) {
     // Refund function
@@ -19,21 +19,22 @@ function kopaRefundActionCallback($order_id) {
       ){
       // Set the order status back to the previous status
       $order->set_status('refunded');
+      $note = $refundResult['response'];
+      $order->add_order_note($note);
     }
 
     // Recheck refund proccess and add note 
     // $refundCheck = $kopaCurl->refundCheck($order_id, $user_id);
 
-    $note = $refundResult['response'];
-    $order->add_order_note($note);
-    $order_notes = $order->get_customer_order_notes();
-    $note_to_remove = 'Order status set to refunded. To return funds to the customer you will need to issue a refund through your payment gateway.';
-    foreach ($order_notes as $note_id => $note) {
-      if (strpos($note->comment_content, $note_to_remove) !== false) {
-        // Remove the order note
-        wc_delete_order_note($note_id);
-      }
-    }
+    
+    // $order_notes = $order->get_customer_order_notes();
+    // $note_to_remove = 'Order status set to refunded. To return funds to the customer you will need to issue a refund through your payment gateway.';
+    // foreach ($order_notes as $note_id => $note) {
+    //   if (strpos($note->comment_content, $note_to_remove) !== false) {
+    //     // Remove the order note
+    //     wc_delete_order_note($note_id);
+    //   }
+    // }
     // Save changes
     $order->save();
   }
@@ -46,7 +47,7 @@ add_action( 'woocommerce_order_status_refunded', 'kopaRefundActionCallback', 999
 function kopaPostAuthOnOrderCompleted( $order_id ) {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
+  $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
   $note = '';
 
   // If this is automatic status change, this check will be triggered
@@ -100,7 +101,7 @@ add_action( 'woocommerce_order_status_completed', 'kopaPostAuthOnOrderCompleted'
 function kopaCancelFunction($order_id) {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  $custom_metadata = get_post_meta($order_id, '_kopa_payment_method', true);
+  $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
   // Check if the custom metadata exists and if payment was done with KOPA
   if (!empty($custom_metadata)) {
     $kopaCurl = new KopaCurl();

@@ -21,19 +21,19 @@ function handle_custom_endpoint($wp) {
       // Bank sending details of the transaction 
       // Saving transaction details
       if ($_SERVER['REQUEST_METHOD'] === 'POST' ) {
-        update_post_meta($orderId, 'kopaOrderPaymentPOST', true);
-
         // Retrieve JSON data from the request
         $jsonData = file_get_contents('php://input');
         $data = json_decode($jsonData, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-          // Check if the required keys are present
-          // $requiredKeys = ['OrderId', 'TransStatus', 'TransDate', 'TansId', 'TansErrorMsg', 'TransErrorCode', 'TransNumCode'];
-          // if (count(array_diff($requiredKeys, array_keys($data))) === 0) {
-            update_post_meta($orderId, 'kopaOrderPaymentData', $jsonData);
-            exit;
-          // }
+        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        // Check if OrderId and kopa reference id match
+        if($data['OrderId'] == $kopaOrderId) {
+          // Update transaction meta data
+          update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          echo 'OK';
+          exit;
         } 
+        echo 'ERROR';
+        exit;
       }   
 
       // Bank redirection for order finalizing
@@ -44,7 +44,6 @@ function handle_custom_endpoint($wp) {
       ){
         $authResult = $_GET['authResult'];
         $order = wc_get_order($orderId);
-        update_post_meta($orderId, 'kopaOrderPaymentGETAuthResult', $authResult);
         if(!empty($order)) {
           if($authResult == 'AUTHORISED'){
             $kopaClass = new KOPA_Payment();

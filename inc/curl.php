@@ -4,14 +4,29 @@ class KopaCurl {
 
   public function __construct() {
     if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
-    ) return;
-    $this->curlInit();
-    $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
-    $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) &&
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'yes' &&
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) &&
+      !empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) &&
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id']) &&
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id'])
+    ) {
+      $this->curlInit();
+      $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']);
+      $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id'];
+    }else{
+      if(
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
+      ) return;
+      
+      $this->curlInit();
+      $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
+      $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
+    }
+    
   }
 
   private function curlInit(){
@@ -653,7 +668,7 @@ class KopaCurl {
     if($this->isInitialized() == false){
       $this->curlInit();
     }
-    $custom_meta_field = get_post_meta($orderId, '_kopa_payment_method', true);
+    $custom_meta_field = get_post_meta($orderId, 'kopa_payment_method', true);
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
     // Check if order payment was done with KOPA system
     if (empty($custom_meta_field)) {

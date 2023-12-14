@@ -4,15 +4,39 @@
  * Adding KOPA payment reference ID to My Account/Orders preview
  */
 function addKopaOrderIdToMyOrdersPage($order) {
-  $custom_meta_field = $order->get_meta('kopaIdReferenceId');
-  if(!empty($custom_meta_field)){ ?>
-    <tr>
-      <th><?php echo __('KOPA Reference ID:', 'kopa-payment'); ?></th>
-      <td><?php echo esc_html($custom_meta_field); ?></td>
-    </tr>
-    <?php }
+  $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
+  $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+  if(!empty($kopaIdReferenceId) || !empty($paymentDataSerialized)){
+    ?>
+    <section class="woocommerce-transaction-details">
+	    <h2 class="woocommerce-transaction-details__title"><?php _e('Transaction details','kopa-payment');?></h2>
+	    <table class="woocommerce-table woocommerce-table--order-details shop_table order_details">
+		    <tbody>
+            <?php
+          if(!empty($kopaReferenceId)){ ?>
+            <tr>
+              <th><?php echo __('KOPA Reference ID:', 'kopa-payment'); ?></th>
+              <td><?php echo esc_html($kopaReferenceId); ?></td>
+            </tr>
+            <?php }
+
+          if(is_array($paymentDataSerialized)) {
+            foreach($paymentDataSerialized as $key => $tranData){
+              ?>
+                <tr>
+                  <th><?php echo $key; ?></th>
+                  <td><?php echo $tranData; ?></td>
+                </tr>
+              <?php
+            }
+          } ?>
+          </tbody>
+      </table>
+    </section>
+    <?php
+  }
 }
-add_action('woocommerce_order_details_after_order_table_items', 'addKopaOrderIdToMyOrdersPage');
+add_action('woocommerce_order_details_after_order_table', 'addKopaOrderIdToMyOrdersPage');
 
 
 
@@ -20,13 +44,28 @@ add_action('woocommerce_order_details_after_order_table_items', 'addKopaOrderIdT
  * Adding kopa payment reference ID to email notifications to Admin and User
  */
 function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $email) {
-  if (in_array($email->id, ['new_order','customer_processing_order'])) {
-    $custom_meta_field = $order->get_meta('kopaIdReferenceId');
-    if ($custom_meta_field) {
-      echo '<p>
-              <strong>' . __('KOPA Reference ID:', 'kopa-payment') . ' </strong>
-              <span>' . esc_html($custom_meta_field) . '</span>
-            </p>';
+  if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order'])) {
+    $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
+    $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+    if (!empty($paymentDataSerialized) && !empty($kopaReferenceId)) {
+      ?>
+      <h2 style="color:#7f54b3;display:block;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif;font-size:18px;font-weight:bold;line-height:130%;margin:0 0 18px;text-align:left"><?php __('Transaction details', 'kopa-payment') ?></h2>
+      <table cellspacing="0" cellpadding="6" border="1" style="margin-bottom:20px;color:#636363;border:1px solid #e5e5e5;vertical-align:middle;width:100%;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif" width="100%">
+        <tr>
+          <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left"><?php _e('KOPA Reference ID:', 'kopa-payment') ?></td>
+          <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left"><?php echo esc_html($kopaReferenceId); ?></td>
+        </tr>
+      <?php
+        foreach($paymentDataSerialized as $key => $tranData){
+          ?>
+            <tr>
+              <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left"><?php echo $key; ?></td>
+              <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left"><?php echo $tranData; ?></td>
+            </tr>
+          <?php
+        } ?>
+      </table>
+      <?
     }
   }
 }
@@ -39,23 +78,6 @@ function extendOrdersSearchWithKopaReferenceId($search_fields) {
   return $search_fields;
 }
 add_filter('woocommerce_shop_order_search_fields', 'extendOrdersSearchWithKopaReferenceId');
-
-
-/**
- * Adding KOPA reference ID to Thank You Page
- */
-function addKopaOrderIdOnThankYouPage($orderId) {
-  $custom_meta_field = get_post_meta($orderId, 'kopaIdReferenceId', true);
-  if(!empty($custom_meta_field)){ ?>
-    <tr>
-      <th><?php echo __('KOPA Reference ID:', 'kopa-payment'); ?></th>
-      <td><?php echo esc_html($custom_meta_field); ?></td>
-    </tr>
-    <?php }
-}
-add_action('woocommerce_thankyou', 'addKopaOrderIdOnThankYouPage');
-
-
 
 /**
  * ADMIN PANEL
@@ -106,3 +128,34 @@ function custom_column_sorting($query) {
   }
 }
 add_action('pre_get_posts', 'custom_column_sorting');
+
+
+function serializeTransactionDetails($paymentData){
+  $serializedData = [];
+  if(!empty($paymentData) && is_array($paymentData)){
+    if(isset($paymentData['transaction'])){
+      $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['response'];
+      $serializedData[__('Transaction Error Code', 'kopa-payment')] = $paymentData['errMsg'];
+      foreach($paymentData['transaction'] as $key => $value){
+        switch ($key) {
+          case 'date':
+            $serializedData[__('Transaction Date', 'kopa-payment')] = gmdate("d/m/Y - H:i:s", $value);
+            break;
+          case 'transId':
+            $serializedData[__('Transaction Id', 'kopa-payment')] = $value;
+            break;
+          case 'numCode':
+            $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
+            break;
+        }
+      }
+    }else{
+      $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['TransStatus'];
+      $serializedData[__('Transaction Date', 'kopa-payment')] = $paymentData['TransDate'];
+      $serializedData[__('Transaction Id', 'kopa-payment')] = $paymentData['TansId'];
+      $serializedData[__('Transaction Code', 'kopa-payment')] = $paymentData['TransNumCode'];
+      $serializedData[__('Transaction Error Code', 'kopa-payment')] = $paymentData['TransErrorCode'];
+    }
+  }
+  return $serializedData;
+}
