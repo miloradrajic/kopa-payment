@@ -1,6 +1,6 @@
 <?php
 class KOPA_Payment extends WC_Payment_Gateway {
-  private $curl, $serverUrl; // Declare the $curl property
+  private $curl; // Declare the $curl property
   public $errors;
   public function __construct() {
     $this->id = 'kopa-payment';
@@ -14,28 +14,18 @@ class KOPA_Payment extends WC_Payment_Gateway {
     add_action( 'woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     $this->errors = [];
-    if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) || 
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
-    ){
-      $this->errors[] = __('Kopa server URL cannot be empty!', 'kopa-payment');
-    }else{
-      $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
-    }
-    if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
-    ){
-      $this->errors[] = 'Kopa merchant ID cannot be empty!';      
-    }
+    $this->getErrorsIfSettingsFieldsEmpty();
     if(!empty($this->errors)){
-      add_action( 'admin_notices', array($this,'admin_warnings'));
+      add_action( 'admin_notices', array($this,'warningsPrint'));
     }
     add_action('after_setup_theme', array($this, 'load_textdomain'));
 
   }
 
-  public function get_all_active_payment_methods() {
+  /**
+   * Check if KOPA payment method is active
+   */
+  private function isPaymentMethodActive() {
     $active_gateways = array();
     foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
       if ($gateway->settings['enabled'] == 'yes') {
@@ -89,8 +79,8 @@ class KOPA_Payment extends WC_Payment_Gateway {
     }
   }
   
-  function admin_warnings($message) {
-    $active_gateways = $this->get_all_active_payment_methods();
+  function warningsPrint() {
+    $active_gateways = $this->isPaymentMethodActive();
     if(in_array($this->id, $active_gateways)){
       foreach($this->errors as $error){
         echo '<div class="notice notice-error">
@@ -130,6 +120,28 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'title' => __('Server URL', 'kopa-payment'),
         'type' => 'text',
         'description' => __('Server URL to KOPA system', 'kopa-payment'),
+        'default' => '',
+        'desc_tip' => false,
+      ],
+      'kopa_enable_test_mode' => [
+        'title' => '',
+        'type' => 'checkbox',
+        'label' => __('Enable test mode', 'kopa-payment'),
+        'description' => __('Enable test mode', 'kopa-payment'),
+        'default' => '',
+        'desc_tip' => false,
+      ],
+      'kopa_test_merchant_id' => [
+        'title' => __('Test Merchant id', 'kopa-payment'),
+        'type' => 'text',
+        'description' => __('Test Merchant ID. Without this, KOPA payment will not be active', 'kopa-payment'),
+        'default' => '',
+        'desc_tip' => false,
+      ],
+      'kopa_server_test_url' => [
+        'title' => __('Test Server URL', 'kopa-payment'),
+        'type' => 'text',
+        'description' => __('Server URL for testing on KOPA system', 'kopa-payment'),
         'default' => '',
         'desc_tip' => false,
       ],
@@ -195,24 +207,25 @@ class KOPA_Payment extends WC_Payment_Gateway {
    * Adding additional fileds on checkout page
    */
   public function payment_fields() {
+    $this->warningsPrint();
     if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) && 
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'yes'
     ){
-      _e('Merchant ID needs to be entered for this option to be active', 'kopa-payment');
-      return;
-    }
-    if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) ||
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
-    ){
-      _e('Server URL needs to be entered for this option to be active', 'kopa-payment');
-      return;
-    }
-    if(!isset($_SESSION['kopaAccessToken']) || empty($_SESSION['kopaAccessToken'])){
-      _e('There was problem with Kopa Payment method', 'kopa-payment');
-      return;
-    }
+      ?>
+      <div class="wc-block-components-notice-banner is-error" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+          <path d="M12 3.2c-4.8 0-8.8 3.9-8.8 8.8 0 4.8 3.9 8.8 8.8 8.8 4.8 0 8.8-3.9 8.8-8.8 0-4.8-4-8.8-8.8-8.8zm0 16c-4 0-7.2-3.3-7.2-7.2C4.8 8 8 4.8 12 4.8s7.2 3.3 7.2 7.2c0 4-3.2 7.2-7.2 7.2zM11 17h2v-6h-2v6zm0-8h2V7h-2v2z"></path>
+        </svg>
+        <p></p>
+        <div class="wc-block-components-notice-banner__content">
+          Test mode is active
+        </div>
+        <p></p>
+      </div>
+      <?php
+
+}
     ?>
     <div id="kopaPaymentIcons">
       <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/maestro.png" alt="maestro">
@@ -420,7 +433,9 @@ class KOPA_Payment extends WC_Payment_Gateway {
         if($apiPaymentStatus['result'] == 'success'){
           // API PAYMENT SUCCESS
           $order->payment_complete();
-          $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentStatus['transaction'] );
+
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
@@ -464,7 +479,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           $orderId
         );
         $paymentMethod = '3d';
-        $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+        $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
         $order->save();
         if($kopaSaveCc){
           if (isDebugActive(Debug::SAVE_CC)) {
@@ -502,7 +517,9 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // API PAYMENT SUCCESS
           $order->payment_complete();
           $paymentMethod = 'api';
-          $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentStatus['transaction'] );
+
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
@@ -544,7 +561,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           $orderId);
         
         $paymentMethod = '3d';
-        $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+        $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
         
         $order->save();
         return [
@@ -568,7 +585,9 @@ class KOPA_Payment extends WC_Payment_Gateway {
           // MOTO PAYMENT SUCCESS
           $order->payment_complete();
           $paymentMethod = 'moto';
-          $order->update_meta_data( '_kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
+          $order->update_meta_data( 'kopaOrderPaymentData', $motoPaymentResult );
+
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
           $order->add_order_note($note);
@@ -697,6 +716,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
       return [
         'result' => 'success',
         'messages' => __('API payment success', 'kopa-payment'),
+        'transaction' => $apiPaymentResult,
       ];
     }else{
       if($apiPaymentResult['transaction']['errorCode'] == 'CORE-2507'){
@@ -704,13 +724,56 @@ class KOPA_Payment extends WC_Payment_Gateway {
         return [
           'result' => 'success',
           'messages' => __('API payment success', 'kopa-payment'),
+          'transaction' => $apiPaymentResult,
         ]; 
       }
       wc_add_notice($apiPaymentResult['errMsg'], 'error');
       return [
         'result' => 'failure',
         'message' => __('Error with starting API payment', 'kopa-payment'),
+        'transaction' => $apiPaymentResult,
       ];  
+    }
+  }
+
+  /**
+   * Empty settings fields checkup
+   */
+  private function getErrorsIfSettingsFieldsEmpty() {
+    // Check if test mode is active
+    if(
+      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) || 
+      empty(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+    ){
+      if(
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']) || 
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_url'])
+      ){
+        $this->errors[] = __('Kopa server URL cannot be empty!', 'kopa-payment');
+      }
+      if(
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id']) ||
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'])
+      ){
+        $this->errors[] = 'Kopa merchant ID cannot be empty!';      
+      }
+    }else if(
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) &&
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'yes'
+    ){
+      if(
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) || 
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url'])
+      ){
+        $this->errors[] = __('Kopa test server URL cannot be empty!', 'kopa-payment');
+      }
+      if(
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id']) ||
+        empty(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id'])
+      ){
+        $this->errors[] = 'Kopa test merchant ID cannot be empty!';      
+      }
     }
   }
 }
