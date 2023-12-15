@@ -4,19 +4,40 @@ $(document).ready(async function() {
   const kopaIdReferenceId = generateUUID();
   // Format CC number 
   $("body").on("input", "#kopa_cc_number", function() {
+    // Continue with the rest of the input handling logic
     if ($(this).val().length >= 19) {
-      $(this).val($(this).val().substring(0, 19))
+      $(this).val($(this).val().substring(0, 19));
       return;
     }
+  
     // Remove any non-digit characters
     var creditCardValue = $(this).val().replace(/\D/g, '');
-
-    // Add a minus sign every 4 digits
+  
+    // Add a space every 4 digits
     var formattedValue = creditCardValue.replace(/(\d{4})/g, '$1 ');
-
+  
     // Update the input field with the formatted value
     $(this).val(formattedValue);
   });
+  
+  // Handle the keydown event to capture the backspace key
+  $("body").on("keydown", "#kopa_cc_number", function(e) {
+    console.log(e)
+    if (e.key === 'Backspace') {
+      // Remove the last character and the preceding space, if any
+      var currentValue = $(this).val();
+      var trimmedValue = currentValue.replace(/(\d)(\s)?$/, '');
+  
+      // Update the input field with the modified value
+      $(this).val(trimmedValue);
+  
+      // Prevent the default backspace behavior (navigating back in the browser)
+      e.preventDefault();
+  
+      return false;
+    }
+  });
+  
   
   
   // Add a slash after the first two digits in the expiration date field
@@ -171,21 +192,43 @@ $(document).ready(async function() {
    */
   $('body').on('click', '#place_order', async function(e){
     e.preventDefault();
+    // Disable checkout button
     $('#place_order').addClass('disabled');
+    // Remove all previous displayed errors 
+    $('.customKopaError').remove();
+
     const form = $(this).closest('form');
+    const usingSavedOrNew = $('input[name="kopa_use_saved_cc"]:checked').val();
+    const cardTypeSelected = $('input[name="kopa_cc_type"]:checked').val();
+    const $noticesMessageWrapper = $('.woocommerce-notices-wrapper').first();
     // If incognito card
-    if(
-      $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
-      typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
-    ){
+    if(usingSavedOrNew == 'new'){
+
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
       let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
       let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-      
       const cardType = await getCardType(ccNumber, $('input[name="kopa_cc_type"]:checked').val());
 
+      if(cardType.success == false){
+        // Display error message
+        $noticesMessageWrapper.html('<div class="woocommerce-error wc-block-components-notice-banner is-error customKopaError">'
+        +'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">'
+          +'<path d="M12 3.2c-4.8 0-8.8 3.9-8.8 8.8 0 4.8 3.9 8.8 8.8 8.8 4.8 0 8.8-3.9 8.8-8.8 0-4.8-4-8.8-8.8-8.8zm0 16c-4 0-7.2-3.3-7.2-7.2C4.8 8 8 4.8 12 4.8s7.2 3.3 7.2 7.2c0 4-3.2 7.2-7.2 7.2zM11 17h2v-6h-2v6zm0-8h2V7h-2v2z"></path>'
+        +'</svg>'
+        +'<p></p>'
+        +'<span>' + cardType.message + '</span></div>');
+        $('#place_order').addClass('disabled');
+        $('html, body').animate({
+          scrollTop: $('.woocommerce-notices-wrapper').offset().top - 50
+        }, 500);
+
+        // Enable order button
+        $('#place_order').removeClass('disabled');
+        return;
+      }
+
       // use API payment
-      if(cardType == 'dina' || cardType == 'amex'){
+      if(cardType.cardType == 'dina' || cardType.cardType == 'amex'){
         let secretKey = await getPiKey();
         let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
         form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
@@ -198,95 +241,93 @@ $(document).ready(async function() {
         form.find('.additionalKopaInput').remove();
         return;
       }
-    }
-    // If incognito card and type != dina
-    if(
-      (
-        $('input[name="kopa_use_saved_cc"]:checked').val() == 'new' ||
-        typeof $('input[name="kopa_use_saved_cc"]:checked').val() == 'undefined'
-      ) &&
-      $('input[name="kopa_cc_type"]:checked').val() != 'dina'
-    ){
-      // use 3D incognito CC payment
-      form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
-      if($('#kopa_save_cc').is(':checked')){
-        let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
-        let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
-        let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-        let secretKey = await getPiKey();
-        let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-        form.append('<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
-                   +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
-                   +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                  );
-      }
-      form.submit();
-      form.find('.additionalKopaInput').remove();
-      return;
-    }
-
-    try {
-      const cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
-      const cardDetailsResponse = await getCardDetails(cardId);
-      const cardParsed = $.parseJSON(cardDetailsResponse).card;
-
-      const cardAlias = $('label[for="kopa_use_saved_cc_'+cardId+'"]').text();
-      const cardNo = cardParsed.cardNo;
-      const expirationDate = cardParsed.expirationDate;
-
-      if(
-        cardParsed.is3dAuth == false &&
-        cardParsed.type !== 'dina'&&
-        cardParsed.type !== 'amex'
-      ){
-        // use 3D payment
-        const secretKey = await getPiKey();
-        const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
-
-        form.append(' <input type="hidden" class="additionalKopaInput" name="ccNumber" value="'+decodedData.ccDecoded+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
-                    );
-        form.submit();
-        form.find('.additionalKopaInput').remove();
-        return;
-      }else if(
-        cardParsed.is3dAuth == true &&
-        cardParsed.type !== 'dina' &&
-        cardParsed.type !== 'amex'
-      ){
-        //use MOTO payment 
-        form.append(' <input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="moto">'
-                  );
-        form.submit();
-        form.find('.additionalKopaInput').remove();
-        return;
-      }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
-        // use API payment
-        let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
-        let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
-        let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-        let secretKey = await getPiKey();
-        let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
-        form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
-                    +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+      // If incognito card and type != dina
+      if(cardTypeSelected != 'dina') {
+        // use 3D incognito CC payment
+        form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
+        if($('#kopa_save_cc').is(':checked')){
+          let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
+          let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
+          let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
+          let secretKey = await getPiKey();
+          let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
+          form.append('<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
                     +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
                     +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
-                    +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
                     );
+        }
         form.submit();
         form.find('.additionalKopaInput').remove();
         return;
       }
-    } catch (error) {
-      console.error('An error occurred:', error);
+
+    }else{
+      // Payment with saved card
+      try {
+        const cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
+        const cardDetailsResponse = await getCardDetails(cardId);
+        const cardParsed = $.parseJSON(cardDetailsResponse).card;
+
+        const cardAlias = $('label[for="kopa_use_saved_cc_'+cardId+'"]').text();
+        const cardNo = cardParsed.cardNo;
+        const expirationDate = cardParsed.expirationDate;
+
+        if(
+          cardParsed.is3dAuth == false &&
+          cardParsed.type !== 'dina'&&
+          cardParsed.type !== 'amex'
+        ){
+          // use 3D payment
+          const secretKey = await getPiKey();
+          const decodedData = decodeCcDetails(secretKey, cardNo, expirationDate);
+
+          form.append(' <input type="hidden" class="additionalKopaInput" name="ccNumber" value="'+decodedData.ccDecoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="ccExpDate" value="'+decodedData.ccExpDateDecoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
+                      );
+          form.submit();
+          form.find('.additionalKopaInput').remove();
+          return;
+        }else if(
+          cardParsed.is3dAuth == true &&
+          cardParsed.type !== 'dina' &&
+          cardParsed.type !== 'amex'
+        ){
+          //use MOTO payment 
+          form.append(' <input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="moto">'
+                    );
+          form.submit();
+          form.find('.additionalKopaInput').remove();
+          return;
+        }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
+          // use API payment
+          let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
+          let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
+          let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
+          let secretKey = await getPiKey();
+          let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
+          form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                      );
+          form.submit();
+          form.find('.additionalKopaInput').remove();
+          return;
+        }
+      } catch (error) {
+        console.error('An error occurred:', error);
+        // Enable order button
+        $('#place_order').removeClass('disabled');
+      }
     }
   });
 
@@ -405,15 +446,15 @@ async function getCardType(ccNumber, ccType){
       },
     });
     const decoded = $.parseJSON(response);
+
     if(decoded.cardType) {
-      return decoded.cardType;
+      return { 'success': true, 'cardType': decoded.cardType };
     } else {
-      // Display error message
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.message + '</li></ul>');
+      return { 'success': false, 'message': decoded.message };
     }
   } catch (error) {
-    // Handle AJAX or JSON parsing error
-    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+    // Handle AJAX or JSON parsing error.message
+    return { 'success': false, 'message': error.message };
   }
 }
 

@@ -1,8 +1,8 @@
 <?php
 /**
- * Detecting CC type
+ * Detecting CC type. Sent type can be 'dynamic' or 'dina'
  */
-function detectCreditCardType($cardNumber, $sentType = '') {
+function detectCreditCardType($cardNumber, $sentType = 'dynamic') {
   // Define regular expressions for different card types
   $patterns = array(
     'visa'       => '/^4\d{12}(\d{3})?$/',
@@ -14,17 +14,35 @@ function detectCreditCardType($cardNumber, $sentType = '') {
   );
 
   // Check the card number against each pattern
+  $foundTypeMatch = '';
   foreach ($patterns as $type => $pattern) {
-    if (preg_match($pattern, $cardNumber)) {
-      return $type;
+    if (preg_match($pattern, $cardNumber) ) {
+      $foundTypeMatch = $type;
     }
   }
-  if($sentType == 'dina'){
+
+  // If dynamic CC number check, but no match was found, returning error
+  if( $sentType == 'dynamic' && empty($foundTypeMatch) ) {
+    return false;
+  }
+
+  // If there were no matches and sent type is 'dina', returning 'dina'
+  if(
+    $sentType == 'dina' &&
+    empty($foundTypeMatch)
+  ){
     return 'dina';
   }
 
-  // If no match is found, return error
-  return false;
+  if(
+    $sentType == 'dina' &&
+    !empty($foundTypeMatch) &&
+    $foundTypeMatch !== 'dina'
+  ){
+    return false;
+  }
+
+  return $foundTypeMatch;
 }
 
 // Function to validate CC number
