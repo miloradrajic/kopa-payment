@@ -201,8 +201,8 @@ $(document).ready(async function() {
     const usingSavedOrNew = $('input[name="kopa_use_saved_cc"]:checked').val();
     const cardTypeSelected = $('input[name="kopa_cc_type"]:checked').val();
     const $noticesMessageWrapper = $('.woocommerce-notices-wrapper').first();
-    // If incognito card
-    if(usingSavedOrNew == 'new'){
+    // If there are saved cards and "NEW" card is selected, or there are no saved cards
+    if(usingSavedOrNew == 'new' || typeof usingSavedOrNew == "undefined"){
 
       let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
       let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
