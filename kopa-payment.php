@@ -80,3 +80,23 @@ function check_for_woocommerce() {
   // Add a custom payment gateway
   add_filter('woocommerce_payment_gateways', 'addKopaPaymentGateway');
 }
+
+
+// Safe redirect users to checkout when trying to pay orders from my account
+function redirect_unpaid_order_to_checkout() {
+  // Check if the 'pay_for_order' and 'key' parameters are set in the URL
+  if (isset($_GET['pay_for_order']) && $_GET['pay_for_order'] === 'true' && isset($_GET['key'])) {
+      $order_key = $_GET['key'];
+
+      // Retrieve the order ID using the order key
+      $order_id = wc_get_order_id_by_order_key($order_key);
+
+      // Check if the order ID is valid
+      if ($order_id) {
+          // Redirect users to the checkout page with the specified order
+          wp_safe_redirect(wc_get_checkout_url() . '?pay_for_order=true&order_id=' . $order_id);
+          exit;
+      }
+  }
+}
+add_action('template_redirect', 'redirect_unpaid_order_to_checkout');
