@@ -65,7 +65,7 @@ function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $ema
           <?php
         } ?>
       </table>
-      <?
+      <?php
     }
   }
 }
