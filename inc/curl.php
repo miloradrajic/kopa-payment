@@ -4,12 +4,12 @@ class KopaCurl {
 
   public function __construct() {
     if(
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) &&
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) &&
       get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'yes' &&
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) &&
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) &&
       !empty(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']) &&
-      !isset(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id']) &&
-      empty(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id'])
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id']) &&
+      !empty(get_option('woocommerce_kopa-payment_settings')['kopa_test_merchant_id'])
     ) {
       $this->curlInit();
       $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_test_url']);
@@ -26,7 +26,6 @@ class KopaCurl {
       $this->serverUrl = trim(get_option('woocommerce_kopa-payment_settings')['kopa_server_url']);
       $this->merchantId = get_option('woocommerce_kopa-payment_settings')['kopa_merchant_id'];
     }
-    
   }
 
   private function curlInit(){
