@@ -41,7 +41,7 @@ add_action('woocommerce_order_details_after_order_table', 'addKopaOrderIdToMyOrd
 
 
 /**
- * Adding kopa payment reference ID to email notifications to Admin and User
+ * Adding kopa payment details to email notifications to Admin and User
  */
 function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $email) {
   if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order'])) {
