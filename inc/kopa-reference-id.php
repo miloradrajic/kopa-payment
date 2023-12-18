@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Adding KOPA payment reference ID to My Account/Orders preview
+ * Adding KOPA payment data to My Account/Orders preview
  */
 function addKopaOrderIdToMyOrdersPage($order) {
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
