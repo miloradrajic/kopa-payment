@@ -40,7 +40,8 @@ function handle_custom_endpoint($wp) {
       if (
         $_SERVER['REQUEST_METHOD'] === 'GET' &&
         isset($_GET['authResult']) &&
-        !empty(isset($_GET['authResult'])) 
+        !empty(isset($_GET['authResult'])) &&
+        !isDebugActive(Debug::AFTER_PAYMENT)
       ){
         $authResult = $_GET['authResult'];
         $order = wc_get_order($orderId);
@@ -58,6 +59,7 @@ function handle_custom_endpoint($wp) {
             if(isDebugActive(Debug::AFTER_PAYMENT)){
               echo 'userId<pre>' . print_r($userId, true) . '</pre>';
               echo 'kopaOrderId<pre>' . print_r($kopaOrderId, true) . '</pre>';
+              echo 'saved transaction details<pre>' . print_r($kopaTransactionDetails, true) . '</pre>';
               echo 'order details kopa<pre>' . print_r($orderDetailsKopa, true) . '</pre>';
             }
             // Check for payment transaction details on KOPA
@@ -97,17 +99,27 @@ function handle_custom_endpoint($wp) {
           if($authResult == 'CANCELLED'){
             // Add a notice
             wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
-            
+            $order->update_status('cancelled');
+            $order->add_order_note(
+              __('Order has failed CC transaction', 'kopa-payment'),
+              true
+            );
+            $order->save();
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url());
+            wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($order,'_order_key', true));
             exit;
           }
           if($authResult == 'REFUSED'){
             // Add a notice
             wc_add_notice(__('Your payment was refused. Check with your bank and try again', 'kopa-payment'), 'error');
-            
+            $order->update_status('cancelled');
+            $order->add_order_note(
+              __('Order has failed CC transaction', 'kopa-payment'),
+              true
+            );
+            $order->save();
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url());
+            wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($order,'_order_key', true));
             exit;
           }
         }
@@ -161,7 +173,10 @@ function paymentCheckup($order, $orderDetailsKopa, $physicalProducts, $delay = f
       $order->update_meta_data('isPhysicalProducts', 'false');
       $order->update_status('completed');
     }
+    // Save details about transaction from KOPA
+    $order->update_meta_data('paymentCheckup', $orderDetailsKopa);
     $order->save();
+    
     if(!isDebugActive(Debug::AFTER_PAYMENT)){
       // Redirect the user to the thank you page
       wp_redirect($order->get_checkout_order_received_url());
