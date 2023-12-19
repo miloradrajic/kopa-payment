@@ -355,12 +355,13 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $paymentMethod = '';
 
     $kopaOrderId = $_POST['kopaIdReferenceId'];
+    update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
+
     $order = wc_get_order($orderId);
     $_SESSION['orderId'] = $orderId;
     $_SESSION['kopaOrderId'] = $kopaOrderId;
     $physicalProducts = $this->isPhysicalProducts($order);
 
-    update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
     $errors = [];
 
     // Get the custom payment fields value
@@ -423,13 +424,10 @@ class KOPA_Payment extends WC_Payment_Gateway {
       if(in_array($kopa_cc_type, ['dina', 'amex'])){
         // Start API incognito cc payment
         $paymentMethod = 'api';
-        $apiPaymentStatus = $this->startApiPayment($_POST, [], $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId);
-    
+        $apiPaymentStatus = $this->startApiPayment($_POST, [], $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
         if($apiPaymentStatus['result'] == 'success'){
           // API PAYMENT SUCCESS
           $order->payment_complete();
-          $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
-          $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentStatus['transaction'] );
 
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
@@ -506,14 +504,11 @@ class KOPA_Payment extends WC_Payment_Gateway {
       // Check for CC Type, if amex or dina use API payment
       if(in_array($kopa_cc_type, ['dina', 'amex'])){
         // Start API payment
-        $apiPaymentStatus =  $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId);
-    
+        $apiPaymentStatus =  $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
+        
         if($apiPaymentStatus['result'] == 'success'){
           // API PAYMENT SUCCESS
           $order->payment_complete();
-          $paymentMethod = 'api';
-          $order->update_meta_data( 'kopa_payment_method', $paymentMethod );
-          $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentStatus['transaction'] );
 
           // Add an order note
           $note = __('Order has been paid with KOPA system', 'kopa-payment');
@@ -569,13 +564,14 @@ class KOPA_Payment extends WC_Payment_Gateway {
         // Init Moto payment
         $motoPaymentResult = $this->curl->motoPayment(
           $savedCard, 
-          
           $kopaUseSavedCcId,
           $orderTotalAmount,
           $physicalProducts,
           $kopaOrderId,
         );
         
+        update_post_meta($order->ID, 'kopaOrderPaymentData', $motoPaymentResult );
+
         if($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved'){
           // MOTO PAYMENT SUCCESS
           $order->payment_complete();
@@ -604,7 +600,13 @@ class KOPA_Payment extends WC_Payment_Gateway {
             'redirect' => $this->get_return_url($order),
           ];
         }else{
+          // MOTO PAYMENT FAILED
           wc_add_notice($motoPaymentResult['errMsg'], 'error');
+          
+          $order->add_order_note(
+            __('Order has failed CC transaction', 'kopa-payment'),
+            true
+          );
           return false;  
         }
       }
@@ -683,7 +685,8 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * API Payment proccess 
    */
-  private function startApiPayment($post, $card, $type, $orderTotalAmount, $physicalProducts, $orderId){
+  private function startApiPayment($post, $card, $type, $orderTotalAmount, $physicalProducts, $orderId, $order){
+    $order->update_meta_data( 'kopa_payment_method', 'api' );
     if(empty($card)){
       $apiEncodedCcNumber = $post['encodedCcNumber'];
       $apiEncodedExpDate = $post['encodedExpDate'];
@@ -707,6 +710,8 @@ class KOPA_Payment extends WC_Payment_Gateway {
       $orderId,
     );
 
+    $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentResult );
+    $order->save();
     if($apiPaymentResult['success'] == true && $apiPaymentResult['response'] == 'Approved'){
       return [
         'result' => 'success',
@@ -722,7 +727,14 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'transaction' => $apiPaymentResult,
         ]; 
       }
+
+      // API PAYMENT FAILED
       wc_add_notice($apiPaymentResult['errMsg'], 'error');
+
+      $order->add_order_note(
+        __('Order has failed CC transaction', 'kopa-payment'),
+        true
+      );
       return [
         'result' => 'failure',
         'message' => __('Error with starting API payment', 'kopa-payment'),

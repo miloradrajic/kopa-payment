@@ -6,6 +6,13 @@
 function addKopaOrderIdToMyOrdersPage($order) {
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
   $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+  $paymentCheckup = $order->get_meta('paymentCheckup');
+
+  if(isDebugActive(Debug::AFTER_PAYMENT)){
+    echo 'kopaReferenceId<pre>' . print_r($kopaReferenceId, true) . '</pre>';
+    echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
+    echo 'paymentCheckup<pre>' . print_r($paymentCheckup, true) . '</pre>';
+  }
   if(!empty($kopaIdReferenceId) || !empty($paymentDataSerialized)){
     ?>
     <section class="woocommerce-transaction-details">
@@ -44,7 +51,7 @@ add_action('woocommerce_order_details_after_order_table', 'addKopaOrderIdToMyOrd
  * Adding kopa payment details to email notifications to Admin and User
  */
 function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $email) {
-  if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order'])) {
+  if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order', 'cancelled_order', 'customer_note'])) {
     $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
     $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
     if (!empty($paymentDataSerialized) && !empty($kopaReferenceId)) {
@@ -135,26 +142,47 @@ function serializeTransactionDetails($paymentData){
   if(!empty($paymentData) && is_array($paymentData)){
     if(isset($paymentData['transaction'])){
       $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['response'];
-      $serializedData[__('Transaction Error Code', 'kopa-payment')] = $paymentData['errMsg'];
-      foreach($paymentData['transaction'] as $key => $value){
-        switch ($key) {
-          case 'date':
-            $serializedData[__('Transaction Date', 'kopa-payment')] = gmdate("d/m/Y - H:i:s", $value);
-            break;
-          case 'transId':
-            $serializedData[__('Transaction Id', 'kopa-payment')] = $value;
-            break;
-          case 'numCode':
-            $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
-            break;
+      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['authCode'];
+      $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['errMsg'])? $paymentData['errMsg'] : '-';
+      
+      if(isset($paymentData['transaction']['transaction'])){
+        $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['transaction']['response'];
+        $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['transaction']['errMsg'])? $paymentData['transaction']['errMsg'] : '-';
+        foreach($paymentData['transaction']['transaction'] as $key => $value){
+          switch ($key) {
+            case 'date':
+              $serializedData[__('Transaction Date', 'kopa-payment')] = gmdate("d/m/Y - H:i:s", $value);
+              break;
+            case 'transId':
+              $serializedData[__('Transaction Id', 'kopa-payment')] = $value;
+              break;
+            case 'numCode':
+              $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
+              break;
+          }
+        }
+      }else{
+        foreach($paymentData['transaction'] as $key => $value){
+          switch ($key) {
+            case 'date':
+              $serializedData[__('Transaction Date', 'kopa-payment')] = gmdate("d/m/Y - H:i:s", $value);
+              break;
+            case 'transId':
+              $serializedData[__('Transaction Id', 'kopa-payment')] = $value;
+              break;
+            case 'numCode':
+              $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
+              break;
+          }
         }
       }
     }else{
       $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['TransStatus'];
-      $serializedData[__('Transaction Date', 'kopa-payment')] = $paymentData['TransDate'];
+      $serializedData[__('Transaction Date', 'kopa-payment')] = gmdate("d/m/Y - H:i:s", $paymentData['TransDate']);
       $serializedData[__('Transaction Id', 'kopa-payment')] = $paymentData['TansId'];
       $serializedData[__('Transaction Code', 'kopa-payment')] = $paymentData['TransNumCode'];
-      $serializedData[__('Transaction Error Code', 'kopa-payment')] = $paymentData['TransErrorCode'];
+      $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['TransErrorCode'])? $paymentData['TransDate'] : '-';
+      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['AuthCode'];
     }
   }
   return $serializedData;
