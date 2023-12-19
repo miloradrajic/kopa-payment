@@ -54,6 +54,7 @@ function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $ema
   if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order', 'cancelled_order', 'customer_note'])) {
     $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
     $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+    echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
     if (!empty($paymentDataSerialized) && !empty($kopaReferenceId)) {
       ?>
       <h2 style="color:#7f54b3;display:block;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif;font-size:18px;font-weight:bold;line-height:130%;margin:0 0 18px;text-align:left"><?php __('Transaction details', 'kopa-payment') ?></h2>
@@ -142,6 +143,7 @@ function serializeTransactionDetails($paymentData){
   if(!empty($paymentData) && is_array($paymentData)){
     if(isset($paymentData['transaction'])){
       $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['response'];
+      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['authCode'];
       $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['errMsg'])? $paymentData['errMsg'] : '-';
       
       if(isset($paymentData['transaction']['transaction'])){
@@ -158,9 +160,6 @@ function serializeTransactionDetails($paymentData){
             case 'numCode':
               $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
               break;
-            case 'authCode':
-              $serializedData[__('Authorization Code', 'kopa-payment')] = $value;
-              break;
           }
         }
       }else{
@@ -174,9 +173,6 @@ function serializeTransactionDetails($paymentData){
               break;
             case 'numCode':
               $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
-              break;
-            case 'authCode':
-              $serializedData[__('Authorization Code', 'kopa-payment')] = $value;
               break;
           }
         }
