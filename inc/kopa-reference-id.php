@@ -54,7 +54,6 @@ function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $ema
   if (in_array($email->id, ['new_order','customer_processing_order', 'customer_completed_order', 'cancelled_order', 'customer_note'])) {
     $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
     $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
-    echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
     if (!empty($paymentDataSerialized) && !empty($kopaReferenceId)) {
       ?>
       <h2 style="color:#7f54b3;display:block;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif;font-size:18px;font-weight:bold;line-height:130%;margin:0 0 18px;text-align:left"><?php __('Transaction details', 'kopa-payment') ?></h2>
