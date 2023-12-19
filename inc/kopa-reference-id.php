@@ -158,6 +158,9 @@ function serializeTransactionDetails($paymentData){
             case 'numCode':
               $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
               break;
+            case 'authCode':
+              $serializedData[__('Authorization Code', 'kopa-payment')] = $value;
+              break;
           }
         }
       }else{
@@ -172,6 +175,9 @@ function serializeTransactionDetails($paymentData){
             case 'numCode':
               $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
               break;
+            case 'authCode':
+              $serializedData[__('Authorization Code', 'kopa-payment')] = $value;
+              break;
           }
         }
       }
@@ -181,6 +187,7 @@ function serializeTransactionDetails($paymentData){
       $serializedData[__('Transaction Id', 'kopa-payment')] = $paymentData['TansId'];
       $serializedData[__('Transaction Code', 'kopa-payment')] = $paymentData['TransNumCode'];
       $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['TransErrorCode'])? $paymentData['TransDate'] : '-';
+      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['AuthCode'];
     }
   }
   return $serializedData;

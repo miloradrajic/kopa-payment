@@ -45,23 +45,18 @@ function handle_custom_endpoint($wp) {
       ){
         $authResult = $_GET['authResult'];
         $order = wc_get_order($orderId);
+        $kopaClass = new KOPA_Payment();
+        $kopaCurl = new KopaCurl();
+        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
         if(!empty($order)) {
           if($authResult == 'AUTHORISED'){
-            $kopaClass = new KOPA_Payment();
-            $kopaCurl = new KopaCurl();
             $physicalProducts = $kopaClass->isPhysicalProducts($order);
             $userId = $order->get_user_id();
             
-            $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
             $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             
-            if(isDebugActive(Debug::AFTER_PAYMENT)){
-              echo 'userId<pre>' . print_r($userId, true) . '</pre>';
-              echo 'kopaOrderId<pre>' . print_r($kopaOrderId, true) . '</pre>';
-              echo 'saved transaction details<pre>' . print_r($kopaTransactionDetails, true) . '</pre>';
-              echo 'order details kopa<pre>' . print_r($orderDetailsKopa, true) . '</pre>';
-            }
+           
             // Check for payment transaction details on KOPA
             paymentCheckup($order, $orderDetailsKopa, $physicalProducts);
             
@@ -97,21 +92,24 @@ function handle_custom_endpoint($wp) {
             }
           }
           if($authResult == 'CANCELLED'){
+            $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+
             // Add a notice
-            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
+            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
             $order->update_status('cancelled');
-            $order->add_order_note(
-              __('Order has failed CC transaction', 'kopa-payment'),
-              true
-            );
+            // $order->add_order_note(
+            //   __('Order has failed CC transaction', 'kopa-payment'),
+            //   true
+            // );
             $order->save();
             // Redirect to the checkout page
             wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($order,'_order_key', true));
             exit;
           }
           if($authResult == 'REFUSED'){
+            $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             // Add a notice
-            wc_add_notice(__('Your payment was refused. Check with your bank and try again', 'kopa-payment'), 'error');
+            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
             $order->update_status('cancelled');
             $order->add_order_note(
               __('Order has failed CC transaction', 'kopa-payment'),
@@ -124,9 +122,19 @@ function handle_custom_endpoint($wp) {
           }
         }
       }
+
       if(isDebugActive(Debug::AFTER_PAYMENT)){
+        $kopaCurl = new KopaCurl();
+        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
+        $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+
+        echo 'order<pre>' . print_r($orderId, true) . '</pre>';
         echo 'REQUEST_METHOD<pre>' . print_r($_SERVER['REQUEST_METHOD'], true) . '</pre>';
         echo 'authResult<pre>' . print_r($_GET['authResult'], true) . '</pre>';
+        echo 'saved transaction details<pre>' . print_r($kopaTransactionDetails, true) . '</pre>';
+        echo 'order details kopa<pre>' . print_r($orderDetailsKopa, true) . '</pre>';
+        echo 'error message<pre>' . print_r($orderDetailsKopa['errMsg'], true) . '</pre>';
         exit;
       }
       if (
