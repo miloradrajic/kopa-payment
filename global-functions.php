@@ -148,3 +148,33 @@ function isDebugActive(string $debug){
   ) return true;
   return false;
 }
+
+
+
+// Show product unit price on the Thank You Page, Emails, and order view in My Account.
+function ecommercehints_return_unit_price( $product ) {
+  $unit_price = wc_price($product->get_price());
+  if (!empty($unit_price )) {
+    return $unit_price;
+  } else {
+    return '';
+  }
+}
+
+// Show Product Unit Price On The Checkout
+add_filter( 'woocommerce_cart_item_subtotal', 'ecommercehints_show_unit_price_below_subtotal', 10, 3 );
+function ecommercehints_show_unit_price_below_subtotal( $wc, $cart_item, $cart_item_key ) {
+  if ( ! is_cart() ) { // The cart already shows unit price so no need to show it again here
+    $unit_price = wc_price(get_post_meta($cart_item['product_id'] , '_price', true));
+    return $unit_price;
+  } else {
+    return $wc;
+  }
+}
+
+// Show unit price 
+add_filter( 'woocommerce_order_formatted_line_subtotal', 'wp_kama_woocommerce_order_formatted_line_subtotal_filter', 10, 3 );
+function wp_kama_woocommerce_order_formatted_line_subtotal_filter( $subtotal, $item, $order ){
+  $product = $item->get_product();
+	return ecommercehints_return_unit_price( $product );
+}
