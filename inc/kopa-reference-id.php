@@ -10,6 +10,7 @@ function addKopaOrderIdToMyOrdersPage($order) {
 
   if(isDebugActive(Debug::AFTER_PAYMENT)){
     echo 'kopaReferenceId<pre>' . print_r($kopaReferenceId, true) . '</pre>';
+    echo 'kopaOrderPaymentData<pre>' . print_r($order->get_meta('kopaOrderPaymentData'), true) . '</pre>';
     echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
     echo 'paymentCheckup<pre>' . print_r($paymentCheckup, true) . '</pre>';
   }
@@ -142,7 +143,7 @@ function serializeTransactionDetails($paymentData){
   if(!empty($paymentData) && is_array($paymentData)){
     if(isset($paymentData['transaction'])){
       $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['response'];
-      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['authCode'];
+      $serializedData[__('Authorization Code', 'kopa-payment')] = ($paymentData['authCode'])? $paymentData['authCode'] : '-';
       $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['errMsg'])? $paymentData['errMsg'] : '-';
       
       if(isset($paymentData['transaction']['transaction'])){
@@ -182,7 +183,7 @@ function serializeTransactionDetails($paymentData){
       $serializedData[__('Transaction Id', 'kopa-payment')] = $paymentData['TansId'];
       $serializedData[__('Transaction Code', 'kopa-payment')] = $paymentData['TransNumCode'];
       $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['TransErrorCode'])? $paymentData['TransDate'] : '-';
-      $serializedData[__('Authorization Code', 'kopa-payment')] = $paymentData['AuthCode'];
+      $serializedData[__('Authorization Code', 'kopa-payment')] = ($paymentData['AuthCode'])? $paymentData['AuthCode'] : '-';;
     }
   }
   return $serializedData;
