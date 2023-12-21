@@ -11,7 +11,7 @@ msgstr ""
 "POT-Creation-Date: 2023-11-09T18:59:23+01:00\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Domain: kopa-payment\n"
-"PO-Revision-Date: 2023-11-15 22:45+0000\n"
+"PO-Revision-Date: 2023-12-21 08:32+0000\n"
 "Language-Team: English (United States)\n"
 "Language: en_US\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
@@ -21,47 +21,51 @@ msgstr ""
 msgid "Add a KOPA payment method with credit cards to WooCommerce."
 msgstr "Add a KOPA payment method with credit cards to WooCommerce."
 
+#: inc/kopa-class.php:198
+msgid "After payment (3D)"
+msgstr ""
+
 #: inc/my-account-functions.php:46
 msgid "Alias"
 msgstr "Alias"
 
-#: inc/curl.php:600
+#: inc/curl.php:734
 msgid "Already refunded with KOPA"
 msgstr "Already refunded with KOPA"
 
-#: inc/curl.php:610
+#: inc/curl.php:746
 msgid "Already refunded with KOPA system"
 msgstr "Already refunded with KOPA system"
 
-#: inc/kopa-class.php:159
+#: inc/kopa-class.php:177
 msgid "API & 3D Payment method for banking system"
 msgstr "API & 3D Payment method for banking system"
 
-#: inc/kopa-class.php:138
+#: inc/kopa-class.php:156
 msgid "API password"
 msgstr "API password"
 
-#: inc/kopa-class.php:140
+#: inc/kopa-class.php:158
 msgid "API password for banking system"
 msgstr "API password for banking system"
 
-#: inc/kopa-class.php:628 inc/kopa-class.php:635
+#: inc/kopa-class.php:718 inc/kopa-class.php:726
 msgid "API payment success"
 msgstr "API payment success"
 
-#: inc/kopa-class.php:145
+#: inc/kopa-class.php:163
 msgid "API storekey"
 msgstr "API storekey"
 
-#: inc/kopa-class.php:147
+#: inc/kopa-class.php:165
 msgid "API storekey for banking system"
 msgstr "API storekey for banking system"
 
-#: inc/kopa-class.php:131
+#: inc/kopa-class.php:149
 msgid "API Username"
 msgstr "API Username"
 
-#: inc/kopa-class.php:133
+#: inc/kopa-class.php:151
 msgid "API username for banking system"
 msgstr "API username for banking system"
 
@@ -69,19 +73,27 @@ msgstr "API username for banking system"
 msgid "Are you sure you want to remove saved credit card"
 msgstr "Are you sure you want to remove saved credit card"
 
-#: inc/kopa-class.php:152
+#: inc/kopa-reference-id.php:146 inc/kopa-reference-id.php:186
+msgid "Authorization Code"
+msgstr ""
+
+#: inc/kopa-class.php:170
 msgid "Banking payment methods:"
 msgstr "Banking payment methods:"
 
-#: inc/curl.php:593
+#: inc/curl.php:727
 msgid "Canceled payment with KOPA system"
 msgstr "Canceled payment with KOPA system"
 
-#: inc/kopa-class.php:302
+#: inc/curl.php:334
+msgid "Card with this alias already exists"
+msgstr ""
+
+#: inc/kopa-class.php:334
 msgid "CC Alias"
 msgstr "CC Alias"
 
-#: inc/ajax-functions.php:55
+#: inc/ajax-functions.php:67
 msgid "CC Deleted"
 msgstr "CC Deleted"
 
@@ -89,11 +101,11 @@ msgstr "CC Deleted"
 msgid "CC Saved"
 msgstr "CC Saved"
 
-#: inc/kopa-class.php:244
+#: inc/kopa-class.php:276
 msgid "CC Type"
 msgstr "CC Type"
 
-#: inc/kopa-class.php:280
+#: inc/kopa-class.php:312
 msgid "CCV"
 msgstr "CCV"
 
@@ -101,35 +113,27 @@ msgstr "CCV"
 msgid "Created At"
 msgstr "Created At"
 
-#: inc/curl.php:233
-msgid "Credit card already saved"
-msgstr "Credit card already saved"
-
-#: inc/kopa-class.php:257
+#: inc/kopa-class.php:289
 msgid "Credit card number"
 msgstr "Credit card number"
 
-#: global-functions.php:129
-msgid "Data sent is not a valid structure"
-msgstr "Data sent is not a valid structure"
+#: inc/kopa-class.php:195
+msgid "Debug KOPA"
+msgstr ""
 
 #: inc/my-account-functions.php:50 inc/my-account-functions.php:64
 msgid "Delete"
 msgstr "Delete"
 
-#: inc/kopa-class.php:106
-msgid "Enable KOPA Payment Method"
-msgstr "Enable KOPA Payment Method"
+#: inc/kopa-class.php:129 inc/kopa-class.php:130
+msgid "Enable test mode"
+msgstr ""
 
-#: inc/kopa-class.php:104
-msgid "Enable/Disable"
-msgstr "Enable/Disable"
-
-#: inc/ajax-functions.php:57
+#: inc/ajax-functions.php:69
 msgid "Error deleting CC"
 msgstr "Error deleting CC"
 
-#: inc/ajax-functions.php:78
+#: inc/ajax-functions.php:90
 msgid "Error getting card details"
 msgstr "Error getting card details"
 
@@ -137,22 +141,30 @@ msgstr "Error getting card details"
 msgid "Error getting pi key"
 msgstr "Error getting pi key"
 
-#: inc/ajax-functions.php:129
+#: inc/ajax-functions.php:141
 msgid "Error log has been updated"
 msgstr "Error log has been updated"
 
-#: inc/kopa-class.php:470
+#: inc/kopa-class.php:536
 msgid "Error with API payment"
 msgstr "Error with API payment"
 
-#: inc/kopa-class.php:641
+#: inc/kopa-class.php:740
 msgid "Error with starting API payment"
 msgstr "Error with starting API payment"
 
-#: inc/kopa-class.php:268
+#: inc/kopa-class.php:300
 #| msgid "Expiration Date"
 msgid "Exparation Date"
 msgstr "Еxpiration date"
+
+#: inc/kopa-class.php:199
+msgid "Global (payment will not work, it will only return sent values)"
+msgstr ""
+
+#: inc/kopa-class.php:197
+msgid "Inactive"
+msgstr ""
 
 #: inc/log-functions.php:32
 msgid "Kopa Logs Preview"
@@ -170,14 +182,17 @@ msgstr "KOPA Payment Method"
 msgid "KOPA Payment Method description"
 msgstr "Credit cards payment with KOPA payment system"
 
-#: inc/kopa-reference-id.php:10 inc/kopa-reference-id.php:27
-#: inc/kopa-reference-id.php:51
+#: inc/kopa-reference-id.php:26 inc/kopa-reference-id.php:63
 msgid "KOPA Reference ID:"
 msgstr "KOPA Reference ID:"
 
-#: inc/kopa-class.php:21
+#: inc/kopa-class.php:760
 msgid "Kopa server URL cannot be empty!"
 msgstr "Kopa server URL cannot be empty!"
+
+#: inc/kopa-class.php:776
+msgid "Kopa test server URL cannot be empty!"
+msgstr ""
 
 #. Author URI of the plugin
 msgid "kopa.rs"
@@ -195,23 +210,19 @@ msgstr "Log preview content"
 msgid "Manage Credit Cards"
 msgstr "Manage Credit Cards"
 
-#: inc/kopa-class.php:117
+#: inc/kopa-class.php:113
 msgid "Merchant id"
 msgstr "Merchant id"
 
-#: inc/kopa-class.php:182
-msgid "Merchant ID needs to be entered for this option to be active"
-msgstr "Merchant ID needs to be entered for this option to be active"
-
-#: inc/kopa-class.php:119
+#: inc/kopa-class.php:115
 msgid "Merchant ID. Without this, KOPA payment will not be active"
 msgstr "Merchant ID. Without this, KOPA payment will not be active"
 
-#: inc/kopa-class.php:167
+#: inc/kopa-class.php:185
 msgid "MOTO Payment method for banking system"
 msgstr "MOTO Payment method for banking system"
 
-#: inc/kopa-class.php:223
+#: inc/kopa-class.php:255
 msgid "New credit card"
 msgstr "New credit card"
 
@@ -219,11 +230,11 @@ msgstr "New credit card"
 msgid "Only digits are allowed"
 msgstr "Only digits are allowed"
 
-#: inc/ajax-functions.php:109
+#: inc/ajax-functions.php:121
 msgid "Order could not be completed"
 msgstr "Order could not be completed"
 
-#: inc/order-status-change.php:74
+#: inc/order-status-change.php:88
 msgid ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Refund"
@@ -231,7 +242,7 @@ msgstr ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Refund"
 
-#: inc/order-status-change.php:71
+#: inc/order-status-change.php:85
 msgid ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Void"
@@ -239,56 +250,63 @@ msgstr ""
 "Order could not be completed on KOPA because order transaction was set to "
 "Void"
 
-#: inc/order-status-change.php:76
+#: inc/order-status-change.php:90
 msgid "Order could not be completed on KOPA because PostAuth has failed"
 msgstr "Order could not be completed on KOPA because PostAuth has failed"
 
-#: inc/ajax-functions.php:105
+#: inc/ajax-functions.php:117
 msgid "Order has been completed"
 msgstr "Order has been completed"
 
-#: inc/order-status-change.php:58
+#: inc/order-status-change.php:70
 msgid "Order has been completed on KOPA system."
 msgstr "Order has been completed on KOPA system."
 
-#: inc/ajax-functions.php:99 inc/kopa-class.php:401 inc/kopa-class.php:459
-#: inc/kopa-class.php:513
+#: inc/ajax-functions.php:111 inc/kopa-class.php:433 inc/kopa-class.php:514
+#: inc/kopa-class.php:583
 msgid "Order has been paid with KOPA system"
 msgstr "Order has been paid with KOPA system"
 
-#: inc/curl.php:550
+#: inc/curl.php:684
 msgid "Order has been refunded"
 msgstr "Order has been refunded"
 
-#: inc/curl.php:586
+#: inc/kopa-class.php:607 inc/kopa-class.php:735 inc/payment-endpoint.php:115
+msgid "Order has failed CC transaction"
+msgstr ""
+"The payment was not successful, your account was not charged. The most "
+"common cause is the incorrect entry of the card number, expiration date or "
+"security code. Try again, in case of repeated errors call your bank"
+
+#: inc/curl.php:720
 msgid "Order payment was not completed on KOPA"
 msgstr "Order payment was not completed on KOPA"
 
-#: inc/order-status-change.php:116
+#: inc/order-status-change.php:129
 msgid "Order was already set to be refunded in KOPA system."
 msgstr "Order was already set to be refunded in KOPA system."
 
-#: inc/curl.php:540
+#: inc/curl.php:674
 msgid "Order was not paid with KOPA payment method."
 msgstr "Order was not paid with KOPA payment method."
 
-#: inc/order-status-change.php:104
+#: inc/order-status-change.php:117
 msgid "Order was set to be refunded in KOPA system."
 msgstr "Order was set to be refunded in KOPA system."
 
-#: inc/kopa-class.php:313
+#: inc/kopa-class.php:345
 msgid "Payment description:"
 msgstr "Payment description:"
 
-#: inc/kopa-class.php:311
+#: inc/kopa-class.php:343
 msgid "Payment details"
 msgstr "Payment details"
 
-#: inc/kopa-class.php:312
+#: inc/kopa-class.php:344
 msgid "Payment total:"
 msgstr "Payment total:"
 
-#: inc/kopa-class.php:355
+#: inc/ajax-functions.php:52 inc/kopa-class.php:388
 msgid "Please check CC number and selected CC type."
 msgstr "Please check CC number and selected CC type."
 
@@ -305,7 +323,7 @@ msgstr "Please enter a valid expiration date (MM/YY)"
 msgid "Please enter credit card alias"
 msgstr "Please enter credit card alias"
 
-#: inc/kopa-class.php:385
+#: inc/kopa-class.php:418
 msgid "Please enter credit card alias."
 msgstr "Please enter credit card alias."
 
@@ -313,59 +331,79 @@ msgstr "Please enter credit card alias."
 msgid "Please enter valid CCV number"
 msgstr "Please enter valid CCV number"
 
-#: inc/kopa-class.php:361 inc/kopa-class.php:382
+#: inc/kopa-class.php:394 inc/kopa-class.php:415
 msgid "Please fill in a valid credit card CCV number."
 msgstr "Please fill in a valid credit card CCV number."
 
-#: inc/kopa-class.php:371 inc/kopa-class.php:378
+#: inc/kopa-class.php:404 inc/kopa-class.php:411
 #| msgid "Please fill in a valid credit card expiration date."
 msgid "Please fill in a valid credit card exparation date."
 msgstr "Please fill in a valid credit card expiration date."
 
-#: inc/kopa-class.php:366 inc/kopa-class.php:368
+#: inc/kopa-class.php:399 inc/kopa-class.php:401
 msgid "Please fill in a valid credit card number."
 msgstr "Please fill in a valid credit card number."
 
-#: inc/curl.php:607
+#: inc/curl.php:743
 msgid "Refunded completed on KOPA system"
 msgstr "Refunded completed on KOPA system"
 
-#: inc/kopa-class.php:293
+#: inc/kopa-class.php:325
 msgid "Save credit card"
 msgstr "Save credit card"
 
-#: inc/kopa-class.php:124
+#: inc/kopa-class.php:200
+msgid "Saving CC"
+msgstr ""
+
+#: inc/kopa-class.php:120
 msgid "Server URL"
 msgstr "Server URL"
 
-#: inc/kopa-class.php:189
-msgid "Server URL needs to be entered for this option to be active"
-msgstr "Server URL needs to be entered for this payment option to be active"
+#: inc/kopa-class.php:144
+msgid "Server URL for testing on KOPA system"
+msgstr ""
 
-#: inc/kopa-class.php:126
+#: inc/kopa-class.php:122
 msgid "Server URL to KOPA system"
 msgstr ""
 "Server URL to KOPA system. Without this, KOPA payment will not be active"
 
-#: inc/kopa-class.php:436
+#: inc/kopa-class.php:492
 msgid "Starting 3D incognito payment"
 msgstr "Starting 3D incognito payment"
 
-#: inc/kopa-class.php:492
+#: inc/kopa-class.php:559
 msgid "Starting 3D payment"
 msgstr "Starting 3D payment"
 
-#: inc/kopa-class.php:518
+#: inc/kopa-class.php:599
 msgid "Starting moto payment"
 msgstr "Starting moto payment"
 
-#: inc/curl.php:547
+#: inc/curl.php:681
 msgid "Status of the order is PreAuth"
 msgstr "Status of the order is PreAuth"
 
 #. Author of the plugin
 msgid "Tehnološko Partnerstvo"
 msgstr "Tehnološko Partnerstvo"
+
+#: inc/kopa-class.php:135
+msgid "Test Merchant id"
+msgstr ""
+
+#: inc/kopa-class.php:137
+msgid "Test Merchant ID. Without this, KOPA payment will not be active"
+msgstr ""
+
+#: inc/kopa-class.php:218
+msgid "Test mode is active"
+msgstr ""
+
+#: inc/kopa-class.php:142
+msgid "Test Server URL"
+msgstr ""
 
 #: inc/my-account-functions.php:73
 msgid "There are no saved credit cards."
@@ -375,66 +413,94 @@ msgstr "There are no saved credit cards."
 msgid "There has been an error with payment"
 msgstr "There has been an error with payment"
 
+#: inc/payment-endpoint.php:146
+msgid "There was a problem with a payment - "
+msgstr ""
+
+#: inc/payment-endpoint.php:154
+msgid "There was a problem with a payment. Please contant shop administrator."
+msgstr ""
+
 #: inc/enqueue-scripts.php:19
 msgid "There was a problem with connection with payment"
 msgstr "There was a problem with connection with payment"
 
-#: inc/curl.php:613
+#: inc/curl.php:749
 msgid "There was a problem with KOPA refund process"
 msgstr "There was a problem with KOPA refund process"
 
-#: inc/order-status-change.php:108
+#: inc/order-status-change.php:121
 msgid "There was an error canceling order in KOPA system."
 msgstr "There was an error canceling order in KOPA system."
 
-#: inc/curl.php:178
-#| msgid "There was a problem with Kopa Payment method"
-msgid "There was problem with Kopa Payment method"
-msgstr "There was a problem with Kopa Payment method"
-
-#: inc/curl.php:199
+#: inc/curl.php:289
 #| msgid "There was a problem with Kopa Payment method."
 msgid "There was problem with Kopa Payment method."
 msgstr "There was a problem with Kopa Payment method."
 
-#: inc/curl.php:265
+#: inc/curl.php:368
 #| msgid "There was a problem with Kopa Payment method. DELETE CC"
 msgid "There was problem with Kopa Payment method. DELETE CC"
 msgstr "There was a problem with Kopa Payment method. Deleting CC"
 
-#: inc/curl.php:240
+#: inc/curl.php:340
 #| msgid "There was a problem with Kopa Payment method. Saving CC"
 msgid "There was problem with Kopa Payment method. Saving CC"
 msgstr "There was a problem with Kopa Payment method. Saving CC"
 
-#: inc/kopa-class.php:112
+#: inc/kopa-class.php:108
 msgid "This is the title that the user sees during checkout."
 msgstr "This is the title that the user sees during checkout."
 
-#: inc/kopa-class.php:110
+#: inc/kopa-class.php:106
 msgid "Title"
 msgstr "Title"
 
-#: inc/curl.php:544
+#: inc/kopa-reference-id.php:161 inc/kopa-reference-id.php:175
+#: inc/kopa-reference-id.php:184
+msgid "Transaction Code"
+msgstr ""
+
+#: inc/kopa-reference-id.php:155 inc/kopa-reference-id.php:169
+#: inc/kopa-reference-id.php:182
+msgid "Transaction Date"
+msgstr ""
+
+#: inc/kopa-reference-id.php:20 inc/kopa-reference-id.php:60
+msgid "Transaction details"
+msgstr ""
+
+#: inc/kopa-reference-id.php:147 inc/kopa-reference-id.php:151
+#: inc/kopa-reference-id.php:185
+msgid "Transaction Error Code"
+msgstr ""
+
+#: inc/kopa-reference-id.php:158 inc/kopa-reference-id.php:172
+#: inc/kopa-reference-id.php:183
+msgid "Transaction Id"
+msgstr ""
+
+#: inc/curl.php:678
 msgid "Transaction on this order was not completed with KOPA system"
 msgstr "Transaction on this order was not completed with KOPA system"
+
+#: inc/kopa-reference-id.php:145 inc/kopa-reference-id.php:150
+#: inc/kopa-reference-id.php:181
+msgid "Transaction Status"
+msgstr ""
 
 #: inc/my-account-functions.php:47
 msgid "Type"
 msgstr "Type"
 
-#: inc/kopa-class.php:231
+#: inc/kopa-class.php:263
 msgid "Use saved credit cards"
 msgstr "Use saved credit cards"
 
-#: global-functions.php:171
-msgid "You are not allowed"
-msgstr "You are not allowed"
-
-#: global-functions.php:155
+#: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
 msgstr "Your payment was canceled, please try again."
 
-#: global-functions.php:163
-msgid "Your payment was refused. Check with your bank and try again"
-msgstr "Your payment was refused. Check with your bank and try again"
+#: inc/payment-endpoint.php:112
+msgid "Your payment was refused."
+msgstr ""
