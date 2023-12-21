@@ -4,7 +4,7 @@ Tags: WooCommerce, payments, sopping, products, credit card
 Requires at least: 6.0
 Tested up to: 6.4.1
 Requires PHP: 7.3
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 Author: Tehnološko Partnerstvo
 Author URI: kopa.rs
 License: GPLv2 or later
