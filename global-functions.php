@@ -149,32 +149,49 @@ function isDebugActive(string $debug){
   return false;
 }
 
-
+/**
+ * UNIT PRICE DISPLAY
+ */
 
 // Show product unit price on the Thank You Page, Emails, and order view in My Account.
-function ecommercehints_return_unit_price( $product ) {
-  $unit_price = wc_price($product->get_price());
-  if (!empty($unit_price )) {
-    return $unit_price;
-  } else {
-    return '';
+// function ecommercehints_return_unit_price( $product ) {
+//   $unit_price = wc_price($product->get_price());
+//   if (!empty($unit_price )) {
+//     return $unit_price;
+//   } else {
+//     return '';
+//   }
+// }
+
+add_filter( 'woocommerce_cart_item_name', 'checkoutSingleItemAddUnitPrice', 10, 3 );
+function checkoutSingleItemAddUnitPrice( $itemName, $item, $itemKey ) {
+  if(is_cart()){
+    echo $itemName;    
+  }else{
+    $unit_price = wc_price(get_post_meta($item['product_id'] , '_price', true));
+    echo $itemName. ' - '.$unit_price;
   }
 }
 
-// Show Product Unit Price On The Checkout
-add_filter( 'woocommerce_cart_item_subtotal', 'ecommercehints_show_unit_price_below_subtotal', 10, 3 );
-function ecommercehints_show_unit_price_below_subtotal( $wc, $cart_item, $cart_item_key ) {
-  if ( ! is_cart() ) { // The cart already shows unit price so no need to show it again here
-    $unit_price = wc_price(get_post_meta($cart_item['product_id'] , '_price', true));
-    return $unit_price;
-  } else {
-    return $wc;
-  }
+// Adding unit price on thank you page
+add_filter( 'woocommerce_order_item_name', 'displayUnitPriceOnOrderRecievedPage', 10, 3 );
+function displayUnitPriceOnOrderRecievedPage( $itemName, $item, $itemKey ) {
+  $unit_price = wc_price(get_post_meta($item['product_id'] , '_price', true));
+  return $itemName. ' - '.$unit_price;
 }
 
-// Show unit price 
-add_filter( 'woocommerce_order_formatted_line_subtotal', 'wp_kama_woocommerce_order_formatted_line_subtotal_filter', 10, 3 );
-function wp_kama_woocommerce_order_formatted_line_subtotal_filter( $subtotal, $item, $order ){
-  $product = $item->get_product();
-	return ecommercehints_return_unit_price( $product );
-}
+
+// Show unit price on Email
+// add_filter( 'woocommerce_order_formatted_line_subtotal', 'orderShowSubtotal', 10, 3 );
+// function orderShowSubtotal( $subtotal, $item, $order ){
+//   if(empty( is_wc_endpoint_url('order-received') )){
+//     $product = $item->get_product();
+//     return ecommercehints_return_unit_price( $product );
+//   }else{
+//     return $subtotal;
+//   }
+// }
+
+/**
+ * UNIT PRICE DISPLAY END
+ */
