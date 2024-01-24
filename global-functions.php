@@ -195,3 +195,52 @@ function displayUnitPriceOnOrderRecievedPage( $itemName, $item, $itemKey ) {
 /**
  * UNIT PRICE DISPLAY END
  */
+
+
+ add_action('init', 'load_kopa_textdomain');
+
+  /*
+	 * Function that will load translations from the language files in the /languages folder in the root folder of the plugin.
+	 */
+function load_kopa_textdomain(){
+  load_plugin_textdomain('kopa-payment', false, basename(dirname(__FILE__)) . '/languages');
+  
+  // Find proper locale
+  $locale = get_locale();
+  if( is_user_logged_in() ) {
+    if( $user_locale = get_user_locale( get_current_user_id() ) ) {
+      $locale = $user_locale;
+    }
+  }
+  
+  // Get locale
+  $locale = apply_filters( 'woo_kopa_payment_plugin_locale', $locale, 'kopa-payment');
+  
+  // We need standard file
+  $mofile = sprintf( '%s-%s.mo', 'kopa-payment', $locale );
+  
+  // Check first inside `/wp-content/languages/plugins`
+  $domain_path = path_join( WP_LANG_DIR, 'plugins' );
+  $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, $mofile ) );
+  // Or inside `/wp-content/languages`
+  if ( ! $loaded ) {
+    $loaded = load_textdomain( 'kopa-payment', path_join( WP_LANG_DIR, $mofile ) );
+  }
+  
+  // Or inside `/wp-content/plugin/kopa-payment/languages`
+  if ( ! $loaded ) {
+    $domain_path = KOPA_PLUGIN_PATH . '/languages';
+    $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, $mofile ) );
+    
+    // Or load with only locale without prefix
+    if ( ! $loaded ) {
+      $loaded = load_textdomain( 'kopa-payment', path_join( $domain_path, "{$locale}.mo" ) );
+    }
+
+    // Or old fashion way
+    if ( ! $loaded && function_exists('load_plugin_textdomain') ) {
+      load_plugin_textdomain( 'kopa-payment', false, $domain_path );
+    }
+  }
+}
+  
