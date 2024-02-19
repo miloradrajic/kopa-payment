@@ -22,24 +22,29 @@ function detectCreditCardType($cardNumber, $sentType = 'dynamic') {
   }
 
   // If dynamic CC number check, but no match was found, returning error
-  if( $sentType == 'dynamic' && empty($foundTypeMatch) ) {
-    return false;
-  }
+  // if( $sentType == 'dynamic' && empty($foundTypeMatch) ) {
+  //   return false;
+  // }
 
   // If there were no matches and sent type is 'dina', returning 'dina'
-  if(
-    $sentType == 'dina' &&
-    empty($foundTypeMatch)
-  ){
-    return 'dina';
-  }
+  // if(
+  //   $sentType == 'dina' &&
+  //   empty($foundTypeMatch)
+  // ){
+  //   return 'dina';
+  // }
 
-  if(
-    $sentType == 'dina' &&
-    !empty($foundTypeMatch) &&
-    $foundTypeMatch !== 'dina'
-  ){
-    return false;
+  // if(
+  //   $sentType == 'dina' &&
+  //   !empty($foundTypeMatch) &&
+  //   $foundTypeMatch !== 'dina'
+  // ){
+  //   return false;
+  // }
+
+  // Requested fallback wihtout checking for dina card
+  if( empty($foundTypeMatch) ) {
+    return 'dina';
   }
 
   return $foundTypeMatch;

@@ -208,7 +208,9 @@ $(document).ready(async function() {
         let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
         let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
         let ccv = $('#kopa_ccv').val().replace(/\D/g, '');
-        const cardType = await getCardType(ccNumber, $('input[name="kopa_cc_type"]:checked').val());
+        // const cardType = await getCardType(ccNumber, $('input[name="kopa_cc_type"]:checked').val());
+        // Requested no CC checkup 
+        const cardType = await getCardType(ccNumber, 'dynamic');
 
         if(cardType.success == false){
           // Display error message
