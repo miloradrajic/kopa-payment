@@ -218,23 +218,23 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'options'     => $ccOptions,
           'default'     => 'new',
           'required'    => true
-          ),
+          )
         );
       }
     }
     echo '<div class="kopaCcPaymentInput '.$userHaveSavedCcClass.'">';
-    woocommerce_form_field( 
-      'kopa_cc_type', array(
-      'type'        => 'radio',
-      'class'       => array('input-text'),
-      'label'       => __('CC Type', 'kopa-payment'),
-      'options'     => array(
-                        'dynamic' => 'Master Card, Visa, American Express',
-                        'dina' => 'Dina'
-                      ),
-      'default' => 'dynamic'
-      ), 
-    );
+    // woocommerce_form_field( 
+    //   'kopa_cc_type', array(
+    //   'type'        => 'radio',
+    //   'class'       => array('input-text'),
+    //   'label'       => __('CC Type', 'kopa-payment'),
+    //   'options'     => array(
+    //                     'dynamic' => 'Master Card, Visa, American Express',
+    //                     'dina' => 'Dina'
+    //                   ),
+    //   'default' => 'dynamic'
+    //   ), 
+    // );
     woocommerce_form_field(
       'kopa_cc_number',
       array(
@@ -244,7 +244,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'placeholder' => 'xxxx xxxx xxxx xxxx',
         'required' => true,
         'clear' => true,
-      ),
+      )
     );
     woocommerce_form_field(
       'kopa_cc_exparation_date',
@@ -255,7 +255,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'placeholder' => 'xx/xx',
         'required' => true,
         'clear' => true,
-      ),
+      )
     );
     echo '</div>';
     woocommerce_form_field(
@@ -267,7 +267,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'placeholder' => 'xxx',
         'required' => true,
         'clear' => true,
-      ),
+      )
     );
     if ( is_user_logged_in() ) {
       echo '<div class="kopaCcPaymentInput '.$userHaveSavedCcClass.'">';
@@ -278,7 +278,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'class' => array('input-checkbox'),
           'label' => __('Save credit card', 'kopa-payment'),
           'required' => false,
-        ),
+        )
       );
       woocommerce_form_field(
         'kopa_cc_alias',
@@ -289,7 +289,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           'placeholder' => '',
           'required' => true,
           'clear' => true,
-        ),
+        )
       );
       echo '</div>';
     }
@@ -521,7 +521,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           $kopaUseSavedCcId,
           $orderTotalAmount,
           $physicalProducts,
-          $kopaOrderId,
+          $kopaOrderId
         );
         
         update_post_meta($order->ID, 'kopaOrderPaymentData', $motoPaymentResult );
@@ -661,7 +661,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
       $data,
       $orderTotalAmount,
       $physicalProducts,
-      $orderId,
+      $orderId
     );
 
     $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentResult );
