@@ -39,7 +39,7 @@
 
 #kopaPaymentIcons {
   margin: 15px 0;
-  padding: 15px;
+  padding: 0 15px;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
@@ -52,8 +52,12 @@
 .woocommerce-checkout #payment .payment_box.payment_method_kopa_payment div#kopaPaymentIcons img,
 #kopaPaymentIcons img 
 {
-  max-height: 25px;
+  max-height: 50px;
   width: auto;
+}
+
+div#kopaPaymentIcons.securityLogosRow img {
+  max-height: 80px;
 }
 
 .kopaPciDssIcon {
