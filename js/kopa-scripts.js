@@ -22,7 +22,6 @@ $(document).ready(async function() {
   
   // Handle the keydown event to capture the backspace key
   $("body").on("keydown", "#kopa_cc_number", function(e) {
-    console.log(e)
     if (e.key === 'Backspace') {
       // Remove the last character and the preceding space, if any
       var currentValue = $(this).val();
