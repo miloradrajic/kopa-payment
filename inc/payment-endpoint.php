@@ -95,7 +95,7 @@ function handle_custom_endpoint($wp) {
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
             // Add a notice
-            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
+            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $orderDetailsKopa['errMsg'], 'error');
             $order->update_status('cancelled');
             // $order->add_order_note(
             //   __('Order has failed CC transaction', 'kopa-payment'),

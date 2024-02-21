@@ -496,8 +496,8 @@ msgstr "Користете ги зачуваните кредитни карти
 
 #: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
-msgstr "Вашата исплата е откажана, обидете се повторно."
+msgstr "Вашата исплата е откажана, обидете се повторно или контактирајте со вашата банка."
 
 #: inc/payment-endpoint.php:112
 msgid "Your payment was refused."
-msgstr ""
+msgstr "Вашето плаќање беше одбиено, обидете се повторно или контактирајте со вашата банка"

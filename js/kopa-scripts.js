@@ -200,7 +200,6 @@ $(document).ready(async function() {
 
       const form = $(this).closest('form');
       const usingSavedOrNew = $('input[name="kopa_use_saved_cc"]:checked').val();
-      const cardTypeSelected = $('input[name="kopa_cc_type"]:checked').val();
       const $noticesMessageWrapper = $('.woocommerce-notices-wrapper').first();
       // If there are saved cards and "NEW" card is selected, or there are no saved cards
       if(usingSavedOrNew == 'new' || typeof usingSavedOrNew == "undefined"){
@@ -235,13 +234,14 @@ $(document).ready(async function() {
                       +'<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
                       +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
                       +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_type" value="'+cardType.cardType+'">'
                       );
           form.submit();
           form.find('.additionalKopaInput').remove();
           return;
         }
         // If incognito card and type != dina
-        if(cardTypeSelected != 'dina') {
+        if(cardType.cardType != 'dina') {
           // use 3D incognito CC payment
           form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
           if($('#kopa_save_cc').is(':checked')){
@@ -253,6 +253,7 @@ $(document).ready(async function() {
             form.append('<input type="hidden" class="additionalKopaInput" name="encodedCcNumber" value="'+encodedCC.ccEncoded+'">'
                       +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
                       +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_type" value="'+cardType.cardType+'">'
                       );
           }
           form.submit();
@@ -286,6 +287,7 @@ $(document).ready(async function() {
                         +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
+                        +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_type" value="'+cardParsed.type+'">'
                         );
             form.submit();
             form.find('.additionalKopaInput').remove();
@@ -300,6 +302,7 @@ $(document).ready(async function() {
                         +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="is3dAuth" value="'+cardParsed.is3dAuth+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="paymentType" value="moto">'
+                        +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_type" value="'+cardParsed.type+'">'
                       );
             form.submit();
             form.find('.additionalKopaInput').remove();
@@ -317,6 +320,7 @@ $(document).ready(async function() {
                         +'<input type="hidden" class="additionalKopaInput" name="encodedExpDate" value="'+encodedCC.ccExpDateEncoded+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="encodedCcv" value="'+encodedCC.ccvEncoded+'">'
                         +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
+                        +'<input type="hidden" class="additionalKopaInput" name="kopa_cc_type" value="'+cardParsed.type+'">'
                         );
             form.submit();
             form.find('.additionalKopaInput').remove();

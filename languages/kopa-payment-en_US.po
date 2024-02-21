@@ -499,8 +499,8 @@ msgstr "Use saved credit cards"
 
 #: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
-msgstr "Your payment was canceled, please try again."
+msgstr "Your payment was canceled, please try again or contact your bank."
 
 #: inc/payment-endpoint.php:112
 msgid "Your payment was refused."
-msgstr ""
+msgstr "Your payment was refused, please try again or contact your bank."

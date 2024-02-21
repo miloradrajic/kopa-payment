@@ -499,8 +499,8 @@ msgstr "Përdorni kartë kreditë e ruajtura"
 
 #: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
-msgstr "Pagesa juaj u anulua, ju lutemi provoni përsëri."
+msgstr "Pagesa juaj u anulua, ju lutemi provoni përsëri ose kontaktoni bankën tuaj."
 
 #: inc/payment-endpoint.php:112
 msgid "Your payment was refused."
-msgstr ""
+msgstr "Pagesa juaj u refuzua, ju lutemi provoni përsëri ose kontaktoni bankën tuaj"

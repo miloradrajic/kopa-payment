@@ -497,8 +497,8 @@ msgstr "Koristite sačuvane kreditne kartice"
 
 #: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
-msgstr "Vaša uplata je otkazana, pokušajte ponovo."
+msgstr "Vaša uplata je otkazana. Pokušajte ponovo ili kontaktirajte svoju banku."
 
 #: inc/payment-endpoint.php:112
 msgid "Your payment was refused."
-msgstr ""
+msgstr "Vaša uplata je odbijena. Pokušajte ponovo ili kontaktirajte svoju banku."

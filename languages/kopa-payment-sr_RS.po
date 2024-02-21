@@ -498,8 +498,8 @@ msgstr "Користите сачуване платне картице."
 
 #: inc/payment-endpoint.php:87 inc/payment-endpoint.php:98
 msgid "Your payment was canceled, please try again."
-msgstr "Ваше плаћање је стопирано. Покушајте поново"
+msgstr "Ваше плаћање је стопирано. Покушајте поново или контактирајте банку."
 
 #: inc/payment-endpoint.php:112
 msgid "Your payment was refused."
-msgstr "Плаћање је одбијено"
+msgstr "Плаћање је одбијено. Покушајте поново или контактирајте банку."
