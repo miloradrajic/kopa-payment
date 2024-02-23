@@ -140,7 +140,14 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'default' => '',
         'desc_tip' => false,
       ],
-      
+      'kopa_enable_logos_on_checkout' => [
+        'title' => '',
+        'type' => 'checkbox',
+        'label' => __('Display logos on checkout', 'kopa-payment'),
+        'description' => __('Display bank logos when user select this payment option', 'kopa-payment'),
+        'default' => 'no',
+        'desc_tip' => false,
+      ],
     ];
     if(current_user_can('administrator') && isset($_GET['debug']) && $_GET['debug'] == true){
       $this->form_fields['kopa_debug'] = [
@@ -174,39 +181,44 @@ class KOPA_Payment extends WC_Payment_Gateway {
       </div>
       <?php
 
-}
+    }
+
+    if(
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_logos_on_checkout']) && 
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_logos_on_checkout'] == 'yes'
+    ){
     ?>
-    <div id="kopaPaymentIconsWrapper">
-      <div id="kopaPaymentIcons" class="cardLogosRow">
-        <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Dina.png" alt="dina">
-        <!-- <a href="https://www.mastercard.rs/sr-rs/korisnici/pronadite-karticu.html" target="_blank" rel="noopener noreferrer"> -->
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Master.png" alt="master">
-        <!-- </a> -->
-        <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Maestro.png" alt="maestro">
-        <!-- <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer"> -->
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Visa.png" alt="visa">
-        <!-- </a> -->
-        <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Amex.png" alt="amex">
+      <div id="kopaPaymentIconsWrapper">
+        <div id="kopaPaymentIcons" class="cardLogosRow">
+          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Dina.png" alt="dina">
+          <!-- <a href="https://www.mastercard.rs/sr-rs/korisnici/pronadite-karticu.html" target="_blank" rel="noopener noreferrer"> -->
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Master.png" alt="master">
+          <!-- </a> -->
+          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Maestro.png" alt="maestro">
+          <!-- <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer"> -->
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Visa.png" alt="visa">
+          <!-- </a> -->
+          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Amex.png" alt="amex">
+        </div>
+        <div id="kopaPaymentIcons" class="firmsLogosRow">
+          <a href="https://ledpay.rs" target="_blank" rel="noopener noreferrer">
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoLEDPay.png" alt="ledPay">
+          </a>
+          <a href="https://www.bancaintesa.rs" target="_blank" rel="noopener noreferrer">
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoBIB.png" alt="intesa">
+          </a>
+        </div>
+        <div id="kopaPaymentIcons" class="securityLogosRow">
+          <a href="http://www.mastercard.com/rs/consumer/credit-cards.html" target="_blank" rel="noopener noreferrer">
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoMcIdCheckPutLink.png" alt="id-check">
+          </a>
+          <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer">
+            <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoVisaVerifiedPutLink.png" alt="visa-secure">
+          </a>
+        </div>
       </div>
-      <div id="kopaPaymentIcons" class="firmsLogosRow">
-        <a href="https://ledpay.rs" target="_blank" rel="noopener noreferrer">
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoLEDPay.png" alt="ledPay">
-        </a>
-        <a href="https://www.bancaintesa.rs" target="_blank" rel="noopener noreferrer">
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoBIB.png" alt="intesa">
-        </a>
-      </div>
-      <div id="kopaPaymentIcons" class="securityLogosRow">
-        <a href="http://www.mastercard.com/rs/consumer/credit-cards.html" target="_blank" rel="noopener noreferrer">
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoMcIdCheckPutLink.png" alt="id-check">
-        </a>
-        <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer">
-          <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoVisaVerifiedPutLink.png" alt="visa-secure">
-        </a>
-      </div>
-    </div>
-    
-    <?php
+      <?php
+    }
     $userHaveSavedCcClass = '';
     if ( is_user_logged_in() ) {
       $savedCC = $this->curl->getSavedCC();
