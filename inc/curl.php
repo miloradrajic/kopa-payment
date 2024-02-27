@@ -735,7 +735,7 @@ class KopaCurl {
     }
     
     
-    if(isset($orderDetails['trantype']) && in_array($orderDetails['trantype'], ['PostAuth', 'Void']) ) {
+    if(isset($orderDetails['trantype']) && in_array($orderDetails['trantype'], ['PostAuth', 'Auth']) ) {
       // Refund function
       $refundResult = $this->refund($kopaOrderId, $userId, $orderId);
 
