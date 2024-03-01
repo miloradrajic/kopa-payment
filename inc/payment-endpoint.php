@@ -183,6 +183,7 @@ function paymentCheckup($order, $orderDetailsKopa, $physicalProducts, $delay = f
     }
     // Save details about transaction from KOPA
     $order->update_meta_data('paymentCheckup', $orderDetailsKopa);
+    $order->update_meta_data('kopaTranType', '3d_success');
     $order->save();
     
     if(!isDebugActive(Debug::AFTER_PAYMENT)){

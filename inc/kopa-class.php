@@ -564,7 +564,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
             $order->update_meta_data('isPhysicalProducts', 'false');
             $order->update_status('completed');
           }
-
+          $order->update_meta_data('kopaTranType', 'moto_success');
           $order->save();
           return [
             'result' => 'success',
@@ -685,6 +685,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $order->update_meta_data( 'kopaOrderPaymentData', $apiPaymentResult );
     $order->save();
     if($apiPaymentResult['success'] == true && $apiPaymentResult['response'] == 'Approved'){
+      $order->update_meta_data('kopaTranType', 'api_payment_success');
       return [
         'result' => 'success',
         'messages' => __('API payment success', 'kopa-payment'),
@@ -693,6 +694,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     }else{
       if($apiPaymentResult['transaction']['errorCode'] == 'CORE-2507'){
         // Order has already successful transaction
+        $order->update_meta_data('kopaTranType', 'api_payment_success');
         return [
           'result' => 'success',
           'messages' => __('API payment success', 'kopa-payment'),

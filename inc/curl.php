@@ -711,8 +711,8 @@ class KopaCurl {
    * Running refund cURL
    */
   public function refundProcess($orderId, $userId){
+    $order = wc_get_order($order_id);
     $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
-    
     // check if order is in preAuth state
     $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
     
@@ -720,17 +720,21 @@ class KopaCurl {
     if($orderDetails['transaction'] == null) return ['success'=> true, 'response'=> __('Order payment was not completed on KOPA', 'kopa-payment')];
 
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'PreAuth') {
-      
       // if Order is in PreAuth state, Void last order action will initiate refund
       $returnData = $this->voidLastStepOnOrder($orderId, $userId);
       if($returnData['success'] == true ) {
+        $order->update_meta_data('kopaTranType', 'void_success');
         return ['success'=> true, 'response'=> __('Canceled payment with KOPA system', 'kopa-payment')];
+      }else{
+        $order->update_meta_data('kopaTranType', 'void_failed');
+        return ['success'=> false, 'response'=> __('Failed voiding payment with KOPA system', 'kopa-payment')];
       }
     }
 
     // Check transaction status if it was already refunded 
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'Refund') {
       // Already refunded
+      $order->update_meta_data('kopaTranType', 'refund_success');
       return ['success'=> true, 'response'=> __('Already refunded with KOPA', 'kopa-payment')];
     }
     
@@ -740,12 +744,15 @@ class KopaCurl {
       $refundResult = $this->refund($kopaOrderId, $userId, $orderId);
 
       if($refundResult['success'] == true && $refundResult['response'] == 'Approved'){
+        $order->update_meta_data('kopaTranType', 'refund_success');
         return ['success'=> true, 'response'=> __('Refunded completed on KOPA system', 'kopa-payment')];
       }
       if($refundResult['response'] == 'Error' && $refundResult['transaction']['errorCode'] == 'CORE-2504') {
+        $order->update_meta_data('kopaTranType', 'refund_success');
         return ['success'=> true, 'response'=> __('Already refunded with KOPA system', 'kopa-payment')];
       }
     }
+    $order->update_meta_data('kopaTranType', 'refund_failed');
     return ['success' => false, 'response' => __('There was a problem with KOPA refund process', 'kopa-payment')];
   }
 

@@ -21,6 +21,7 @@ function kopaRefundActionCallback($order_id) {
       $order->set_status('refunded');
       $note = $refundResult['response'];
       $order->add_order_note($note);
+      $order->update_meta_data('kopaTranType', 'refund_success');
     }
 
     // Recheck refund proccess and add note 
@@ -115,10 +116,12 @@ function kopaCancelFunction($order_id) {
       // VOID function was a success
       if($voidResult['success'] == true){
         $note = __('Order was set to be refunded in KOPA system.', 'kopa-payment');
+        $order->update_meta_data('kopaTranType', 'void_success');
         $order->add_order_note($note);
       }else{
         // VOID function failed
         $note = __('There was an error canceling order in KOPA system.', 'kopa-payment');
+        $order->update_meta_data('kopaTranType', 'void_failed');
         $order->add_order_note($note);
       }
 
@@ -131,6 +134,9 @@ function kopaCancelFunction($order_id) {
 
       // Save note changes on order
       $order->save();  
+    }
+    if($tranType != 'Refund'){
+      kopaRefundActionCallback($order_id);
     }
   }
 }

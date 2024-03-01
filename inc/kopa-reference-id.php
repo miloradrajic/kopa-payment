@@ -96,6 +96,7 @@ add_filter('woocommerce_shop_order_search_fields', 'extendOrdersSearchWithKopaRe
  */
 function add_custom_column($columns) {
   $columns['kopaIdReferenceId'] = 'KOPA ID';
+  $columns['kopaPaymentMethod'] = 'KOPA Payment status';
   return $columns;
 }
 add_filter('manage_edit-shop_order_columns', 'add_custom_column');
@@ -117,6 +118,10 @@ function display_custom_column_value($column, $post_id) {
   if ($column === 'kopaIdReferenceId') {
     $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
     echo $kopaIdReferenceId;
+  }
+  if ($column === 'kopaPaymentMethod') {
+    $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
+    echo $kopaPaymentMethod;
   }
 }
 add_action('manage_shop_order_posts_custom_column', 'display_custom_column_value', 10, 2);

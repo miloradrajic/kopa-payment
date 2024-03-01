@@ -4,7 +4,7 @@ Tags: WooCommerce, payments, sopping, products, credit card
 Requires at least: 6.0
 Tested up to: 6.4.1
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 Author: Tehnološko Partnerstvo
 Author URI: kopa.rs
 License: GPLv2 or later
@@ -29,6 +29,10 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 3. Activate the plugin through the "Plugins" menu in WordPress
 
 == Changelog ==
+
+= 1.1.3 =
+* Added refund function also on order status change to cancel
+* Additional columns on orders listing for kopa payment status
 
 = 1.0.0 =
 * First stable version
