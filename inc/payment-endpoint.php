@@ -17,7 +17,6 @@ function handle_custom_endpoint($wp) {
   if (array_key_exists('accept_order_id', $wp->query_vars) && !empty($wp->query_vars['accept_order_id'])) {
     $orderId = absint($wp->query_vars['accept_order_id']);
     if ($orderId) {
-
       // Bank sending details of the transaction 
       // Saving transaction details
       if ($_SERVER['REQUEST_METHOD'] === 'POST' ) {
@@ -96,28 +95,28 @@ function handle_custom_endpoint($wp) {
 
             // Add a notice
             wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $orderDetailsKopa['errMsg'], 'error');
-            $order->update_status('cancelled');
+            $order->update_status('pending');
             // $order->add_order_note(
             //   __('Order has failed CC transaction', 'kopa-payment'),
             //   true
             // );
             $order->save();
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($order,'_order_key', true));
+            wp_redirect(wc_get_checkout_url().$orderId.'/?pay_for_order=true&key='.get_post_meta($orderId,'_order_key', true));
             exit;
           }
           if($authResult == 'REFUSED'){
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             // Add a notice
             wc_add_notice(__('Your payment was refused.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
-            $order->update_status('cancelled');
+            $order->update_status('pending');
             $order->add_order_note(
               __('Order has failed CC transaction', 'kopa-payment'),
               true
             );
             $order->save();
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($order,'_order_key', true));
+            wp_redirect(wc_get_checkout_url().'/'.$orderId.'/?pay_for_order=true&key='.get_post_meta($orderId,'_order_key', true));
             exit;
           }
         }

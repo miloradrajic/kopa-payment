@@ -1,7 +1,7 @@
 <?php
 
 // Calling refund function on KOPA refund and adding order note with result
-function kopaRefundActionCallback($order_id) {
+function kopaRefundActionCallback($order_id, $voidStatus = false ) {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
   // $order_id = $order->get_id();
@@ -11,17 +11,25 @@ function kopaRefundActionCallback($order_id) {
     // Refund function
     $kopaCurl = new KopaCurl();
     $refundResult = $kopaCurl->refundProcess($order_id, $user_id);
-    
+    // echo 'refundResult<pre>' . print_r($refundResult, true) . '</pre>';
+    // exit;
     if(
       !empty($refundResult) && 
       isset($refundResult['success']) && 
       $refundResult['success'] == true  
       ){
       // Set the order status back to the previous status
-      $order->set_status('refunded');
+      if($voidStatus == true) {
+        $order->set_status('cancelled');
+        $order->update_meta_data('kopaTranType', 'void_success');
+      }else{
+        $order->set_status('refunded');
+        $order->update_meta_data('kopaTranType', 'refund_success');
+      }
       $note = $refundResult['response'];
       $order->add_order_note($note);
-      $order->update_meta_data('kopaTranType', 'refund_success');
+    }else{
+      $order->update_meta_data('kopaTranType', 'refund_'.$refundResult['success']);
     }
 
     // Recheck refund proccess and add note 
@@ -112,7 +120,7 @@ function kopaCancelFunction($order_id) {
     if($tranType == 'PreAuth'){
       // VOID function, canceling last step on order
       $voidResult = $kopaCurl->orderVoidLastFunction($order_id, $user_id);
-
+      
       // VOID function was a success
       if($voidResult['success'] == true){
         $note = __('Order was set to be refunded in KOPA system.', 'kopa-payment');
@@ -136,7 +144,7 @@ function kopaCancelFunction($order_id) {
       $order->save();  
     }
     if($tranType != 'Refund'){
-      kopaRefundActionCallback($order_id);
+      kopaRefundActionCallback($order_id, true);
     }
   }
 }
