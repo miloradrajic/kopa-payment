@@ -2,6 +2,7 @@
 
 /**
  * Adding KOPA payment data to My Account/Orders preview
+ * adding details to Thank you page
  */
 function addKopaOrderIdToMyOrdersPage($order) {
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
@@ -23,7 +24,7 @@ function addKopaOrderIdToMyOrdersPage($order) {
             <?php
           if(!empty($kopaReferenceId)){ ?>
             <tr>
-              <th><?php echo __('KOPA Reference ID:', 'kopa-payment'); ?></th>
+              <td><?php echo __('KOPA Reference ID:', 'kopa-payment'); ?></td>
               <td><?php echo esc_html($kopaReferenceId); ?></td>
             </tr>
             <?php }
@@ -32,7 +33,7 @@ function addKopaOrderIdToMyOrdersPage($order) {
             foreach($paymentDataSerialized as $key => $tranData){
               ?>
                 <tr>
-                  <th><?php echo $key; ?></th>
+                  <td><?php echo $key; ?></td>
                   <td><?php echo $tranData; ?></td>
                 </tr>
               <?php
@@ -100,6 +101,7 @@ function add_custom_column($columns) {
   return $columns;
 }
 add_filter('manage_edit-shop_order_columns', 'add_custom_column');
+add_filter('woocommerce_shop_order_list_table_columns', 'add_custom_column');
 
 
 /**
@@ -111,22 +113,37 @@ function makeKopaColumnSortable($sortable_columns) {
 }
 add_filter('manage_edit-shop_order_sortable_columns', 'makeKopaColumnSortable');
 
-/**
- * Display the custom input value in the column
- */
-function display_custom_column_value($column, $post_id) {
-  if ($column === 'kopaIdReferenceId') {
-    $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
-    echo $kopaIdReferenceId;
+
+if(WC_CUSTOM_ORDERS_TABLE === 'yes'){
+
+  function display_custom_column_value_new($column, $order) {
+    if ($column === 'kopaIdReferenceId') {
+      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
+      echo $kopaIdReferenceId;
+    }
+    if ($column === 'kopaPaymentMethod') {
+      $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
+      echo $kopaPaymentMethod;
+    }
   }
-  if ($column === 'kopaPaymentMethod') {
-    $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
-    echo $kopaPaymentMethod;
+  add_action('woocommerce_shop_order_list_table_custom_column', 'display_custom_column_value_new', 10, 2);
+}else{
+  /**
+   * Display the custom input value in the column
+   */
+  function display_custom_column_value($column, $post_id) {
+    if ($column === 'kopaIdReferenceId') {
+      $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
+      echo $kopaIdReferenceId;
+    }
+    if ($column === 'kopaPaymentMethod') {
+      $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
+      echo $kopaPaymentMethod;
+    }
   }
+  add_action('manage_shop_order_posts_custom_column', 'display_custom_column_value', 10, 2);
+
 }
-add_action('manage_shop_order_posts_custom_column', 'display_custom_column_value', 10, 2);
-
-
 /**
  * Adding sorting of additional KOPA column in admin panel
  */
@@ -193,3 +210,28 @@ function serializeTransactionDetails($paymentData){
   }
   return $serializedData;
 }
+
+/**
+ * Shortcode to be used on custom thank you page
+ * [kopa-thank-you-page-details] 
+ * or
+ * [kopa-thank-you-page-details][order_number][/kopa-thank-you-page-details]
+ * if theme provides order number only as shortcode without URL get variable
+ */
+function kopa_thank_you_page_shortcode($atts, $content = "") {
+  if(!empty($content)) {
+    $order = wc_get_order($content);
+  }
+  if(isset($_GET['order_id']) && !empty($_GET['order_id'])){
+    $order = wc_get_order($_GET['order_id']);
+  }
+    
+  if ($order) {
+    ob_start();
+    addKopaOrderIdToMyOrdersPage($order);
+    $output = ob_get_clean();
+    return $output;
+  }
+  return;
+}
+add_shortcode('kopa-thank-you-page-details', 'kopa_thank_you_page_shortcode');

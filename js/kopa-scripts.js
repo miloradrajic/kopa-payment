@@ -1,4 +1,9 @@
-let $ = jQuery.noConflict();
+console.log('asdfasdf', typeof jq)
+if (typeof $ === 'undefined') {
+  $ = jQuery.noConflict();
+}
+
+
 
 $(document).ready(async function() {
   const kopaIdReferenceId = generateUUID();

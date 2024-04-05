@@ -1,12 +1,13 @@
 <?php
 class KOPA_Payment extends WC_Payment_Gateway {
   private $curl; // Declare the $curl property
-  public $errors;
+  public $errors, $pluginVersion;
   public function __construct() {
     $this->id = 'kopa-payment';
     $this->method_title = __('KOPA Payment Method', 'kopa-payment');
     $this->method_description = __('KOPA Payment Method description', 'kopa-payment');
     $this->has_fields = true;
+    $this->pluginVersion = $this->get_plugin_version();
     $this->init_form_fields();
     $this->init_settings();
     $this->title = $this->get_option('title');
@@ -20,6 +21,14 @@ class KOPA_Payment extends WC_Payment_Gateway {
     }
   }
 
+  private function get_plugin_version() {
+    if (!function_exists('get_plugin_data')) {
+      require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+    }
+    $pluginMainFileUri = realpath(dirname(dirname(__FILE__)).'/kopa-payment.php');
+    $plugin_data = get_plugin_data($pluginMainFileUri);
+    return $plugin_data['Version'];
+  }
   /**
    * Check if KOPA payment method is active
    */
@@ -53,6 +62,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
   /**
    * Adding addtional settings fields in woocommerce payment options for KOPA
    */
+
   public function init_form_fields() {
     $this->form_fields = 
     [
@@ -148,6 +158,16 @@ class KOPA_Payment extends WC_Payment_Gateway {
         'default' => 'no',
         'desc_tip' => false,
       ],
+      'instructions' => [
+        'title' => __('', 'kopa-payment'),
+        'type' => 'title',
+        'description' => __('Shortcode option for custom thank-you page <pre>[kopa-thank-you-page-details]</pre> or <pre>[kopa-thank-you-page-details][order_number][/kopa-thank-you-page-details]</pre> if theme provides order number only as shortcode without URL get variable', 'kopa-payment'),
+      ],
+      'plugin_version' => [
+        'title' => __('', 'kopa-payment'),
+        'type' => 'title',
+        'description' => __('Plugin version', 'kopa-payment'). ' - ' .$this->pluginVersion,
+      ],
     ];
     if(current_user_can('administrator') && isset($_GET['debug']) && $_GET['debug'] == true){
       $this->form_fields['kopa_debug'] = [
@@ -212,7 +232,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           <a href="http://www.mastercard.com/rs/consumer/credit-cards.html" target="_blank" rel="noopener noreferrer">
             <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoMcIdCheckPutLink.png" alt="id-check">
           </a>
-          <a href="https://rs.visa.com/pay-with-visa/security-and-assistance/protected-everywhere.html" target="_blank" rel="noopener noreferrer">
+          <a href="http://rs.visa.com/rs/rs-rs/protectedeverywhere/index.html" target="_blank" rel="noopener noreferrer">
             <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoVisaVerifiedPutLink.png" alt="visa-secure">
           </a>
         </div>

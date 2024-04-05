@@ -477,7 +477,7 @@ msgstr "Шифра грешке"
 #: inc/kopa-reference-id.php:158 inc/kopa-reference-id.php:172
 #: inc/kopa-reference-id.php:183
 msgid "Transaction Id"
-msgstr "Број траансакције"
+msgstr "Број трансакције"
 
 #: inc/curl.php:678
 msgid "Transaction on this order was not completed with KOPA system"

@@ -6,7 +6,7 @@ function enqueue_kopa_scripts() {
   // Enqueue scripts and styles on checkout
   if (is_checkout() && !is_wc_endpoint_url()) {
     wp_enqueue_script('jquery-validate', KOPA_PLUGIN_URL .'js/inc/jquery.validate.min.js', array('jquery'), '1.0', true);
-    wp_enqueue_script('jquery-validate-additional', KOPA_PLUGIN_URL .'js/inc/additional-validate-methods.min.js', array('jquery'), '1.0', true);
+    wp_enqueue_script('jquery-validate-additional', KOPA_PLUGIN_URL .'js/inc/additional-validate-methods.min.js', array('jquery','jquery-validate'), '1.0', true);
     wp_enqueue_script('crypto-js', KOPA_PLUGIN_URL .'js/inc/crypto-js.js', array('jquery'), '1.0', true);
     wp_enqueue_script('socket-io', KOPA_PLUGIN_URL .'js/inc/socket.io.js', array('jquery'), '1.0', true);
     wp_enqueue_script('ajax-checkout', KOPA_PLUGIN_URL .'js/kopa-scripts.js', array('jquery'), '1.0', true);
