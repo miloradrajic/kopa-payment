@@ -170,7 +170,6 @@ function serializeTransactionDetails($paymentData){
       
       if(isset($paymentData['transaction']['transaction'])){
         $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['transaction']['response'];
-        $serializedData[__('MD Status', 'kopa-payment')] = $paymentData['transaction']['mdStatus'];
         $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['transaction']['errMsg'])? $paymentData['transaction']['errMsg'] : '-';
         foreach($paymentData['transaction']['transaction'] as $key => $value){
           switch ($key) {
@@ -180,13 +179,15 @@ function serializeTransactionDetails($paymentData){
             case 'transId':
               $serializedData[__('Transaction Id', 'kopa-payment')] = $value;
               break;
-            case 'numCode':
-              $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
+              case 'numCode':
+                $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
+              break;
+              case 'mdStatus':
+                $serializedData[__('MD Status', 'kopa-payment')] = $value;
               break;
           }
         }
       }else{
-        $serializedData[__('MD Status', 'kopa-payment')] = $paymentData['transaction']['mdStatus'];
         foreach($paymentData['transaction'] as $key => $value){
           switch ($key) {
             case 'date':
@@ -198,6 +199,9 @@ function serializeTransactionDetails($paymentData){
             case 'numCode':
               $serializedData[__('Transaction Code', 'kopa-payment')] = $value;
               break;
+            case 'mdStatus':
+              $serializedData[__('MD Status', 'kopa-payment')] = $value;
+              break;
           }
         }
       }
@@ -207,7 +211,8 @@ function serializeTransactionDetails($paymentData){
       $serializedData[__('Transaction Id', 'kopa-payment')] = $paymentData['TansId'];
       $serializedData[__('Transaction Code', 'kopa-payment')] = $paymentData['TransNumCode'];
       $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['TransErrorCode'])? $paymentData['TransDate'] : '-';
-      $serializedData[__('Authorization Code', 'kopa-payment')] = ($paymentData['AuthCode'])? $paymentData['AuthCode'] : '-';;
+      $serializedData[__('Authorization Code', 'kopa-payment')] = ($paymentData['AuthCode'])? $paymentData['AuthCode'] : '-';
+      $serializedData[__('MD Status', 'kopa-payment')] = ($paymentData['MdStatus'])? $paymentData['MdStatus'] : '-';
     }
   }
   return $serializedData;
