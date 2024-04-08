@@ -170,6 +170,7 @@ function serializeTransactionDetails($paymentData){
       
       if(isset($paymentData['transaction']['transaction'])){
         $serializedData[__('Transaction Status', 'kopa-payment')] = $paymentData['transaction']['response'];
+        $serializedData[__('MD Status', 'kopa-payment')] = $paymentData['transaction']['mdStatus'];
         $serializedData[__('Transaction Error Code', 'kopa-payment')] = ($paymentData['transaction']['errMsg'])? $paymentData['transaction']['errMsg'] : '-';
         foreach($paymentData['transaction']['transaction'] as $key => $value){
           switch ($key) {
@@ -185,6 +186,7 @@ function serializeTransactionDetails($paymentData){
           }
         }
       }else{
+        $serializedData[__('MD Status', 'kopa-payment')] = $paymentData['transaction']['mdStatus'];
         foreach($paymentData['transaction'] as $key => $value){
           switch ($key) {
             case 'date':
