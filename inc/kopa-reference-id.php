@@ -6,19 +6,27 @@
  */
 function addKopaOrderIdToMyOrdersPage($order) {
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
-  $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+  $kopaPaymentData = $order->get_meta('kopaOrderPaymentData');
+  $paymentDataSerialized = serializeTransactionDetails($kopaPaymentData);
   $paymentCheckup = $order->get_meta('paymentCheckup');
 
   if(isDebugActive(Debug::AFTER_PAYMENT)){
     echo 'kopaReferenceId<pre>' . print_r($kopaReferenceId, true) . '</pre>';
-    echo 'kopaOrderPaymentData<pre>' . print_r($order->get_meta('kopaOrderPaymentData'), true) . '</pre>';
+    echo 'kopaOrderPaymentData<pre>' . print_r($kopaPaymentData, true) . '</pre>';
     echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
     echo 'paymentCheckup<pre>' . print_r($paymentCheckup, true) . '</pre>';
   }
   if(!empty($kopaIdReferenceId) || !empty($paymentDataSerialized)){
     ?>
     <section class="woocommerce-transaction-details">
-	    <h2 class="woocommerce-transaction-details__title"><?php _e('Transaction details','kopa-payment');?></h2>
+	    <h2 class="woocommerce-transaction-details__title"><?php _e('Transaction details','kopa-payment'); ?></h2>
+      <p class="kopaSuccessStatusMessage"><strong><?php
+        if(isset($kopaPaymentData['response']) && $kopaPaymentData['response'] == "Approved"){
+          _e('You have successfully made the payment - your payment card account has been debited.', 'kopa-payment'); 
+        }else{
+          _e('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'); 
+        }
+      ?></strong></p>
 	    <table class="woocommerce-table woocommerce-table--order-details shop_table order_details">
 		    <tbody>
             <?php
