@@ -138,7 +138,7 @@ msgstr "Приказивање логотипа на страници за пл�
 
 #: inc/kopa-class.php:93 inc/kopa-class.php:94
 msgid "Enable test mode"
-msgstr "Укључи мод за тестиранје"
+msgstr "Укључи мод за тестирање"
 
 #: inc/ajax-functions.php:69
 msgid "Error deleting CC"

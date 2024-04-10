@@ -27,7 +27,8 @@ function handle_custom_endpoint($wp) {
         // Check if OrderId and kopa reference id match
         if($data['OrderId'] == $kopaOrderId) {
           // Update transaction meta data
-          update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          $order = wc_get_order($orderId);
+          $order->update_meta_data( 'kopaOrderPaymentData', $data );
           echo 'OK';
           exit;
         } 

@@ -12,7 +12,7 @@ function addKopaOrderIdToMyOrdersPage($order) {
 
   if(isDebugActive(Debug::AFTER_PAYMENT)){
     echo 'kopaReferenceId<pre>' . print_r($kopaReferenceId, true) . '</pre>';
-    echo 'kopaOrderPaymentData<pre>' . print_r($kopaPaymentData, true) . '</pre>';
+    echo 'kopaPaymentData<pre>' . print_r($kopaPaymentData, true) . '</pre>';
     echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
     echo 'paymentCheckup<pre>' . print_r($paymentCheckup, true) . '</pre>';
   }
@@ -21,7 +21,7 @@ function addKopaOrderIdToMyOrdersPage($order) {
     <section class="woocommerce-transaction-details">
 	    <h2 class="woocommerce-transaction-details__title"><?php _e('Transaction details','kopa-payment'); ?></h2>
       <p class="kopaSuccessStatusMessage"><strong><?php
-        if(isset($kopaPaymentData['response']) && $kopaPaymentData['response'] == "Approved"){
+        if(isset($kopaPaymentData['TransStatus']) && $kopaPaymentData['TransStatus'] == "Approved"){
           _e('You have successfully made the payment - your payment card account has been debited.', 'kopa-payment'); 
         }else{
           _e('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'); 

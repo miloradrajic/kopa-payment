@@ -561,8 +561,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           $physicalProducts,
           $kopaOrderId
         );
-        
-        update_post_meta($order->ID, 'kopaOrderPaymentData', $motoPaymentResult );
+        $order->update_meta_data( 'kopaOrderPaymentData', $motoPaymentResult );
 
         if($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved'){
           // MOTO PAYMENT SUCCESS
