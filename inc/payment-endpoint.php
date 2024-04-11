@@ -31,11 +31,14 @@ function handle_custom_endpoint($wp) {
         // Check if OrderId and kopa reference id match
         if($data['OrderId'] == $kopaOrderId) {
           // Update transaction meta data
-          $order->update_meta_data( 'kopaOrderPaymentData', $data );
+          update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          // $order->update_meta_data( 'kopaOrderPaymentData', $data );
           echo 'OK';
           exit;
         }else{
-          $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
+          
+          update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+          // $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
             'sentData' => $data, 
             'message' => 'kopaId Not the same', 
             'kopaId' => $kopaOrderId,
@@ -45,11 +48,12 @@ function handle_custom_endpoint($wp) {
         echo 'ERROR';
         exit;
       }else{
-        $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
+        update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+          // $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
           'sentData' => $data, 
           'message' => 'Error recieving data',
           'orderId' => $orderId
-          ]) );
+        ]) );
       }
 
       // Bank redirection for order finalizing
