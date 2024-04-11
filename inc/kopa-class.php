@@ -592,7 +592,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
           ];
         }else{
           // MOTO PAYMENT FAILED
-          wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $motoPaymentResult['errMsg'], 'error');
+          wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' .__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . $motoPaymentResult['errMsg'], 'error');
           
           $order->add_order_note(
             __('Order has failed CC transaction', 'kopa-payment'),
@@ -666,7 +666,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
   // If there are any errors, stop prosses before payment_complete()
     if(!empty($errors)){
       foreach($errors as $error){
-        wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $error, 'error');
+        wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' .__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . $error, 'error');
       }
       return false;
     }
@@ -722,7 +722,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
       }
 
       // API PAYMENT FAILED
-      wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $apiPaymentResult['errMsg'], 'error');
+      wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' .__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . $apiPaymentResult['errMsg'], 'error');
 
       $order->add_order_note(
         __('Order has failed CC transaction', 'kopa-payment'),

@@ -21,7 +21,10 @@ function addKopaOrderIdToMyOrdersPage($order) {
     <section class="woocommerce-transaction-details">
 	    <h2 class="woocommerce-transaction-details__title"><?php _e('Transaction details','kopa-payment'); ?></h2>
       <p class="kopaSuccessStatusMessage"><strong><?php
-        if(isset($kopaPaymentData['TransStatus']) && $kopaPaymentData['TransStatus'] == "Approved"){
+        if(
+          (isset($kopaPaymentData['TransStatus']) && $kopaPaymentData['TransStatus'] == "Approved") ||
+          (isset($kopaPaymentData['response']) && $kopaPaymentData['response'] == "Approved")
+          ){
           _e('You have successfully made the payment - your payment card account has been debited.', 'kopa-payment'); 
         }else{
           _e('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'); 
