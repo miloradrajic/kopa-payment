@@ -31,14 +31,14 @@ function handle_custom_endpoint($wp) {
         // Check if OrderId and kopa reference id match
         if($data['OrderId'] == $kopaOrderId) {
           // Update transaction meta data
-          update_post_meta($orderId, 'kopaOrderPaymentData', $data);
-          // $order->update_meta_data( 'kopaOrderPaymentData', $data );
+          // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          $order->update_meta_data( 'kopaOrderPaymentData', $data );
           echo 'OK';
           exit;
         }else{
           
-          update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
-          // $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
+          // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+          $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
             'sentData' => $data, 
             'message' => 'kopaId Not the same', 
             'kopaId' => $kopaOrderId,
@@ -48,8 +48,8 @@ function handle_custom_endpoint($wp) {
         echo 'ERROR';
         exit;
       }else{
-        update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
-          // $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
+        // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+        $order->update_meta_data( 'kopaOrderPaymentData', json_encode([
           'sentData' => $data, 
           'message' => 'Error recieving data',
           'orderId' => $orderId
@@ -104,7 +104,7 @@ function handle_custom_endpoint($wp) {
               !empty($orderDetailsKopa['transaction']['errorCode'])
             ){
               // Add a notice
-              wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment'), 'error');
+              wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'), 'error');
               
               // Redirect to the checkout page
               wp_redirect(wc_get_checkout_url());
@@ -115,7 +115,7 @@ function handle_custom_endpoint($wp) {
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
             // Add a notice
-            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . $orderDetailsKopa['errMsg'], 'error');
+            wc_add_notice(__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . $orderDetailsKopa['errMsg'], 'error');
             $order->update_status('pending');
             // $order->add_order_note(
             //   __('Order has failed CC transaction', 'kopa-payment'),
@@ -129,7 +129,7 @@ function handle_custom_endpoint($wp) {
           if($authResult == 'REFUSED'){
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             // Add a notice
-            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
+            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
             $order->update_status('pending');
             $order->add_order_note(
               __('Order has failed CC transaction', 'kopa-payment'),
@@ -163,7 +163,7 @@ function handle_custom_endpoint($wp) {
         !empty($_POST['ErrMsg'])
       ){
         // Add a notice
-        wc_add_notice(__('There was a problem with a payment - '. $_POST['ErrMsg'], 'kopa-payment'), 'error');
+        wc_add_notice(__('There was a problem with a payment - '. $_POST['ErrMsg'], 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'), 'error');
 
         // Redirect to the checkout page
         wp_redirect(wc_get_checkout_url());
@@ -171,7 +171,7 @@ function handle_custom_endpoint($wp) {
       }
       
       // Add a notice
-      wc_add_notice(__('There was a problem with a payment. Please contant shop administrator.', 'kopa-payment'), 'error');
+      wc_add_notice(__('There was a problem with a payment. Please contant shop administrator.', 'kopa-payment'). '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'), 'error');
 
       // Redirect to the checkout page
       wp_redirect(wc_get_checkout_url());
