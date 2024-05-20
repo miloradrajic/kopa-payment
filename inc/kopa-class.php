@@ -12,12 +12,14 @@ class KOPA_Payment extends WC_Payment_Gateway {
     $this->init_settings();
     $this->title = $this->get_option('title');
     $this->curl = new KopaCurl();
+    $this->errors = [];
     add_action( 'woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
-    $this->errors = [];
+    add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'kopa_validate_and_trim_url']);
+    // add_filter('woocommerce_settings_save_' . $this->id, [$this,'kopa_validate_and_trim_url']);
     $this->getErrorsIfSettingsFieldsEmpty();
     if(!empty($this->errors)){
-      add_action( 'admin_notices', array($this,'warningsPrint'));
+      add_action( 'admin_notices', [$this,'warningsPrint']);
     }
   }
 
@@ -50,6 +52,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
                 <p>'.$error.' <a href="'.get_admin_url().'admin.php?page=wc-settings&tab=checkout&section=kopa_payment">Check here</a></p>
               </div>';
       }
+      $this->errors = [];
     }
   }
   /**
@@ -182,6 +185,37 @@ class KOPA_Payment extends WC_Payment_Gateway {
         ),
       ];
     };
+  }
+
+  /**
+   * Validating and trimming settings input values
+   */
+  public function kopa_validate_and_trim_url() {
+    if (isset($_POST[$this->plugin_id . $this->id . '_kopa_server_url'])) {
+      $url = trim($_POST[$this->plugin_id . $this->id . '_kopa_server_url']);
+      if (filter_var($url, FILTER_VALIDATE_URL) == false) {
+        add_action('admin_notices', function() {
+          ?>
+          <div class="notice notice-error">
+              <p><?php _e('Invalid URL for KOPA server URL', 'kopa-payment'); ?></p>
+          </div>
+          <?php
+      });
+      }
+    }
+
+    if (isset($_POST[$this->plugin_id . $this->id . '_kopa_server_test_url'])) {
+      $urlTest = trim($_POST[$this->plugin_id . $this->id . '_kopa_server_test_url']);
+      if (filter_var($urlTest, FILTER_VALIDATE_URL) == false) {
+        add_action('admin_notices', function() {
+          ?>
+          <div class="notice notice-error">
+              <p><?php _e('Invalid URL for KOPA server test URL', 'kopa-payment'); ?></p>
+          </div>
+          <?php
+        });
+      }
+    }
   }
 
   /**
@@ -335,7 +369,10 @@ class KOPA_Payment extends WC_Payment_Gateway {
     <h4><?php echo __('Payment details', 'kopa-payment'); ?></h4>
     <p><strong><?php echo __('Payment total:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsTotal"></span></p>
     <p><strong><?php echo __('Payment description:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsReferenceId"></span></p>
-    <div class="kopaPciDssIcon"><img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/pci-dss.svg" alt="id-check"></div>
+    <div class="kopaPciDssIcon">
+      <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/pci-dss.svg" alt="id-check">
+      <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/tp-rs.svg" alt="Tehnološko partnerstvo">
+    </div>
     <?php
   }
 
