@@ -371,7 +371,7 @@ class KOPA_Payment extends WC_Payment_Gateway {
     <p><strong><?php echo __('Payment description:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsReferenceId"></span></p>
     <div class="kopaPciDssIcon">
       <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/pci-dss.svg" alt="id-check">
-      <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/tp-rs.svg" alt="Tehnološko partnerstvo">
+      <a href="https://tp.rs" target="_blank"><img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/tp-rs.svg" alt="Tehnološko partnerstvo"></a>
     </div>
     <?php
   }
