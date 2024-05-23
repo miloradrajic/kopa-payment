@@ -600,9 +600,13 @@ class KopaCurl {
     array_pop($this->headers);
     
     $decodedReturn = json_decode($returnData, true);
-    if($decodedReturn['response'] == 'Error'){
-      // Log event
-      kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $decodedReturn['errMsg']);
+    if ($decodedReturn !== null && json_last_error() === JSON_ERROR_NONE) {
+      if($decodedReturn['response'] == 'Error'){
+        // Log event
+        kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $decodedReturn['errMsg']);
+      }
+    }elseif($returnData === 'Order not found'){
+      $decodedReturn = $returnData;
     }
 
     return $decodedReturn;

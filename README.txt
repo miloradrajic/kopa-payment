@@ -4,7 +4,7 @@ Tags: WooCommerce, payments, sopping, products, credit card
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.1.7
+Stable tag: 1.1.8
 Author: Tehnološko Partnerstvo
 Author URI: kopa.rs
 License: GPLv2 or later
@@ -29,6 +29,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 3. Activate the plugin through the "Plugins" menu in WordPress
 
 == Changelog ==
+
+= 1.1.7 =
+* If order not found on server, adding order notes and removing meta data about the order
 
 = 1.1.7 =
 * Cancelations notifications and bug fixing

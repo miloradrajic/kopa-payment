@@ -56,7 +56,8 @@ add_action( 'woocommerce_order_status_refunded', 'kopaRefundActionCallback', 999
 function kopaPostAuthOnOrderCompleted( $order_id ) {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
+  $kopaPaymentMethod = get_post_meta($order_id, 'kopa_payment_method', true);
+  $kopaOrderId = get_post_meta($order_id, 'kopaIdReferenceId', true);
   $note = '';
 
   // If this is automatic status change, this check will be triggered
@@ -69,10 +70,18 @@ function kopaPostAuthOnOrderCompleted( $order_id ) {
   }
 
   // Check if the custom metadata exists and if payment was done with MOTO or API payment
-  if (!empty($custom_metadata)) {
+  if (!empty($kopaPaymentMethod)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
 
+    if($postAuthResult === 'Order not found'){
+      $note = __('Order could not be found on KOPA '. $kopaOrderId.' - with payment method: '. $kopaPaymentMethod, 'kopa-payment');
+      delete_post_meta($order_id, 'kopaIdReferenceId');
+      delete_post_meta($order_id, 'kopa_payment_method');
+      $order->add_order_note($note);
+      $order->save();
+      return;
+    }
     // If PostAuth is successfully changed on KOPA system
     if($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved'){
       // Add an order note
