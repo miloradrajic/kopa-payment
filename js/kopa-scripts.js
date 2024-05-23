@@ -195,6 +195,8 @@ $(document).ready(async function() {
    * Starts payment process
    */
   $('body').on('click', '#place_order', async function(e){
+    const form = $(this).closest('form');
+    form.find('.additionalKopaInput').remove();
     if($('input[name=payment_method]:checked').val() == 'kopa-payment'){
       e.preventDefault();
       // Disable checkout button
@@ -202,7 +204,6 @@ $(document).ready(async function() {
       // Remove all previous displayed errors 
       $('.customKopaError').remove();
 
-      const form = $(this).closest('form');
       const usingSavedOrNew = $('input[name="kopa_use_saved_cc"]:checked').val();
       const $noticesMessageWrapper = $('.woocommerce-notices-wrapper').first();
       // If there are saved cards and "NEW" card is selected, or there are no saved cards
@@ -247,7 +248,10 @@ $(document).ready(async function() {
         // If incognito card and type != dina
         if(cardType.cardType != 'dina') {
           // use 3D incognito CC payment
-          form.append('<input type="hidden" name="paymentType" value="3d"><input type="hidden" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">');
+          form.append(
+                      '<input type="hidden" class="additionalKopaInput" name="paymentType" value="3d">'
+                      +'<input type="hidden" class="additionalKopaInput" name="kopaIdReferenceId" value="'+kopaIdReferenceId+'">'
+                    );
           if($('#kopa_save_cc').is(':checked')){
             let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
             let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');
@@ -336,6 +340,9 @@ $(document).ready(async function() {
           $('#place_order').removeClass('disabled');
         }
       }
+    }else{
+      // Clear all custom inputs
+      form.find('.additionalKopaInput').remove();      
     }
   });
 
