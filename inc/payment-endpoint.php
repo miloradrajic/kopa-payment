@@ -108,7 +108,7 @@ function handle_custom_endpoint($wp) {
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
             // Add a notice
-            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' .__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . $orderDetailsKopa['errMsg'], 'error');
+            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' .__('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . '<br>' . json_encode($orderDetailsKopa), 'error');
             $order->update_status('pending');
             // $order->add_order_note(
             //   __('Order has failed CC transaction', 'kopa-payment'),
@@ -122,7 +122,7 @@ function handle_custom_endpoint($wp) {
           if($authResult == 'REFUSED'){
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
             // Add a notice
-            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . $orderDetailsKopa['errMsg'], 'error');
+            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . json_encode($orderDetailsKopa), 'error');
             $order->update_status('pending');
             $order->add_order_note(
               __('Order has failed CC transaction', 'kopa-payment'),

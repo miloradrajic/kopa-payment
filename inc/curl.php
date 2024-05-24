@@ -623,13 +623,8 @@ class KopaCurl {
     $orderDetails = $this->serverUrl.'/api/orders/'.$kopaOrderId;
 
     $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token']; 
-    $data = json_encode(
-      [
-        'oid'     => $kopaOrderId, 
-        'userId'  => $loginResult['userId'], 
-      ]
-    );
-    $returnData = $this->get($orderDetails, $data);
+
+    $returnData = $this->get($orderDetails);
     $this->close();
     array_pop($this->headers);
 
@@ -678,7 +673,7 @@ class KopaCurl {
       return ['success' => false, 'message'=> __('Order was not paid with KOPA payment method.','kopa-payment'), 'isKopa'=> false];
     }
     $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
-    if($orderDetails['transaction'] == null){
+    if($orderDetails['transaction'] == null || $orderDetails == "Order not found"){
       return ['success' => false, 'message'=> __('Transaction on this order was not completed with KOPA system', 'kopa-payment'), 'isKopa'=> true];
     }
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'PreAuth'){
@@ -719,8 +714,9 @@ class KopaCurl {
     // check if order is in preAuth state
     $orderDetails = $this->getOrderDetails($kopaOrderId, $userId);
     // If transaction is not equal to NULL
-    if($orderDetails['transaction'] == null) return ['success'=> true, 'response'=> __('Order payment was not completed on KOPA', 'kopa-payment')];
-
+    if($orderDetails['transaction'] == null || $orderDetails == "Order not found"){ 
+      return ['success'=> true, 'response'=> __('Order payment was not completed on KOPA', 'kopa-payment')];
+    }
     if(isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'PreAuth') {
       // if Order is in PreAuth state, Void last order action will initiate refund
       $returnData = $this->voidLastStepOnOrder($orderId, $userId);
