@@ -30,7 +30,10 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
-= 1.1.7 =
+= 1.1.9 =
+* Added hook on order save action, if payment method was not kopa-payment, delete kopaOrderId that was generated when payment was attempted but not successfull an payment option was changed.
+
+= 1.1.8 =
 * If order not found on server, adding order notes and removing meta data about the order
 
 = 1.1.7 =

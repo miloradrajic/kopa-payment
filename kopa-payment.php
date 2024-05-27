@@ -4,7 +4,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.8
+ * Version:           1.1.9
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -101,3 +101,23 @@ function redirect_unpaid_order_to_checkout() {
   }
 }
 add_action('template_redirect', 'redirect_unpaid_order_to_checkout');
+
+/**
+ * If order was attempted to pay with kopa-payment, but changed after failed payment and completed with other payment method
+ * remove kopaIdReferenceId meta field value from order
+ */
+function modifyOrderOnUpdate($orderId){
+  $order = wc_get_order($orderId);
+  $payment_method = $order->get_payment_method();
+  // Check if payment method is not "Kopa payment"
+  if ( $payment_method !== 'kopa-payment' ) {
+    // Check if custom meta 'kopaIdReferenceId' is set
+    $kopaReferenceId = $order->get_meta( 'kopaIdReferenceId' );
+    if ( !empty( $kopaReferenceId ) ) {
+      // Delete the custom meta field 'kopaIdReferenceId'
+      $order->delete_meta_data( 'kopaIdReferenceId' );
+      $order->save(); // Save the changes
+    }
+  }
+}
+add_action( 'save_post_shop_order', 'modifyOrderOnUpdate');
