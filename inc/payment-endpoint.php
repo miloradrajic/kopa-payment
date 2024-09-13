@@ -98,8 +98,17 @@ function handle_custom_endpoint($wp)
               isset($orderDetailsKopa['transaction']['errorCode']) ||
               !empty($orderDetailsKopa['transaction']['errorCode'])
             ) {
+
+              $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-366 <br>';
+
+              if (
+                !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+                get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+              ) {
+                $notice .= json_encode($orderDetailsKopa);
+              }
               // Add a notice
-              wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-366', 'error');
+              wc_add_notice($notice, 'error');
 
               // Redirect to the checkout page
               wp_redirect(wc_get_checkout_url());
@@ -109,8 +118,17 @@ function handle_custom_endpoint($wp)
           if ($authResult == 'CANCELLED') {
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
+            $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-886 <br>';
+
+            if (
+              !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+              get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+            ) {
+              $notice .= json_encode($orderDetailsKopa);
+            }
             // Add a notice
-            wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-886 <br>' . json_encode($orderDetailsKopa), 'error');
+            wc_add_notice($notice, 'error');
+
             $order->update_status('pending');
             // $order->add_order_note(
             //   __('Order has failed CC transaction', 'kopa-payment'),
@@ -123,8 +141,18 @@ function handle_custom_endpoint($wp)
           }
           if ($authResult == 'REFUSED') {
             $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+
+            $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
+
+            if (
+              !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+              get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+            ) {
+              $notice .= __('Your payment was refused.', 'kopa-payment') . '<br>' . json_encode($orderDetailsKopa);
+            }
             // Add a notice
-            wc_add_notice(__('Your payment was refused.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . json_encode($orderDetailsKopa), 'error');
+            wc_add_notice($notice, 'error');
+
             $order->update_status('pending');
             $order->add_order_note(
               __('Order has failed CC transaction', 'kopa-payment'),
@@ -157,16 +185,32 @@ function handle_custom_endpoint($wp)
         isset($_POST['ErrMsg']) &&
         !empty($_POST['ErrMsg'])
       ) {
+        $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-951 <br>';
+
+        if (
+          !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+          get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+        ) {
+          $notice .= __('There was a problem with a payment - ' . $_POST['ErrMsg'], 'kopa-payment') . '<br>' . json_encode($orderDetailsKopa);
+        }
         // Add a notice
-        wc_add_notice(__('There was a problem with a payment - ' . $_POST['ErrMsg'], 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'), 'error');
+        wc_add_notice($notice, 'error');
 
         // Redirect to the checkout page
         wp_redirect(wc_get_checkout_url());
         exit;
       }
 
+      $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-684 <br>';
+
+      if (
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+        get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+      ) {
+        $notice .= __('There was a problem with a payment. Please contant shop administrator.', 'kopa-payment') . '<br>' . json_encode($orderDetailsKopa);
+      }
       // Add a notice
-      wc_add_notice(__('There was a problem with a payment. Please contant shop administrator.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment'), 'error');
+      wc_add_notice($notice, 'error');
 
       // Redirect to the checkout page
       wp_redirect(wc_get_checkout_url());

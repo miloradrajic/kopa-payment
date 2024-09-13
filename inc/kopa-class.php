@@ -645,7 +645,16 @@ class KOPA_Payment extends WC_Payment_Gateway
           ];
         } else {
           // MOTO PAYMENT FAILED
-          wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843<br>' . $motoPaymentResult['errMsg'], 'error');
+          $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
+
+          if (
+            !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+            get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+          ) {
+            $notice .= $motoPaymentResult['errMsg'];
+          }
+          // Add a notice
+          wc_add_notice($notice, 'error');
 
           $order->add_order_note(
             __('Order has failed CC transaction', 'kopa-payment'),
@@ -722,7 +731,16 @@ class KOPA_Payment extends WC_Payment_Gateway
     // If there are any errors, stop prosses before payment_complete()
     if (!empty($errors)) {
       foreach ($errors as $error) {
-        wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-456<br>' . $error, 'error');
+        $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-456 <br>';
+
+        if (
+          !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+          get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+        ) {
+          $notice .= $error;
+        }
+        // Add a notice
+        wc_add_notice($notice, 'error');
       }
       return false;
     }
@@ -779,7 +797,16 @@ class KOPA_Payment extends WC_Payment_Gateway
       }
 
       // API PAYMENT FAILED
-      wc_add_notice(__('Your payment was canceled, please try again.', 'kopa-payment') . '<br>' . __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-227<br>' . $apiPaymentResult['errMsg'], 'error');
+      $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
+
+      if (
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+        get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+      ) {
+        $notice .= $apiPaymentResult['errMsg'];
+      }
+      // Add a notice
+      wc_add_notice($notice, 'error');
 
       $order->add_order_note(
         __('Order has failed CC transaction', 'kopa-payment'),
