@@ -30,7 +30,7 @@ function addKopaOrderIdToMyOrdersPage($order)
           ) {
             _e('You have successfully made the payment - your payment card account has been debited.', 'kopa-payment');
           } else {
-            _e('Payment unsuccessful - your payment card account is not debited. EC-121', 'kopa-payment');
+            _e('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment');
           }
           ?>
         </strong>

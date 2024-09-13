@@ -328,7 +328,7 @@ msgstr "Укупно:"
 
 #: inc/kopa-reference-id.php:27
 msgid "Payment unsuccessful - your payment card account is not debited."
-msgstr "Плаћање неупешно - рачун Ваше платне картице није задужен"
+msgstr "Трансакција неуспешна. Рачун Ваше платне картице није задужен, најчешћи узрок неуспешног плаћања може бити погрешно унет број картице, датум истека, сигурносни код или лимит картице. Покушајте поново или контактирајте Вашу банку."
 
 #: inc/ajax-functions.php:52 inc/kopa-class.php:380
 msgid "Please check CC number and selected CC type."
