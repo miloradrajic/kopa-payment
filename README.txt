@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.1.13 =
+* Validation library updated to v1.21.0
+
 = 1.1.12 =
 * Hidden additional error messages when test environment is active 
 
