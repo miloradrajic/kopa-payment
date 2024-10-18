@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.1.14 =
+* Updated execution for custom_kopa_payment_endpoint to hook wp_loaded and set priority to 999. Bugfix for permalink plugins that overwrote this custom endpoint.  
+
 = 1.1.13 =
 * Validation library updated to v1.21.0
 

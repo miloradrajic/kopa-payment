@@ -1,7 +1,7 @@
 <?php
 
 // Register custom endpoint
-function custom_endpoint()
+function custom_kopa_payment_endpoint()
 {
   add_rewrite_rule('^kopa-payment-data/accept-order/([^/]+)/?', 'index.php?accept_order_id=$matches[1]', 'top');
   add_filter('query_vars', function ($vars) {
@@ -9,11 +9,11 @@ function custom_endpoint()
     return $vars;
   });
 }
-add_action('init', 'custom_endpoint');
+add_action('wp_loaded', 'custom_kopa_payment_endpoint', 999);
 
 
 // Handle POST requests to the custom endpoint
-function handle_custom_endpoint($wp)
+function handle_kopa_payment_endpoint($wp)
 {
   // Check if the 'accept_order_id' query variable is set
   if (array_key_exists('accept_order_id', $wp->query_vars) && !empty($wp->query_vars['accept_order_id'])) {
@@ -218,7 +218,7 @@ function handle_custom_endpoint($wp)
     }
   }
 }
-add_action('parse_request', 'handle_custom_endpoint');
+add_action('parse_request', 'handle_kopa_payment_endpoint');
 
 function paymentCheckup($order, $orderDetailsKopa, $physicalProducts, $delay = false)
 {
