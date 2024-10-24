@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.14
+ * Version:           1.1.15
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -130,3 +130,26 @@ function modifyOrderOnUpdate($orderId)
   }
 }
 add_action('save_post_shop_order', 'modifyOrderOnUpdate');
+
+function display_custom_notice()
+{
+  if (isset($_SESSION['custom_notice'])) {
+    $notice = $_SESSION['custom_notice'];
+    // Display the notice using WooCommerce's wc_add_notice()
+    wc_add_notice($notice, 'error');
+    // Unset the notice from the session after displaying it
+    unset($_SESSION['custom_notice']);
+  }
+}
+add_action('woocommerce_before_checkout_form', 'display_custom_notice');
+
+function flushKopaRevriteRulesOnRedirectPageTypeChange($old_value, $value, $option)
+{
+  if (isset($old_value['kopa_api_redirect_page_type']) && isset($value['kopa_api_redirect_page_type'])) {
+    if ($old_value['kopa_api_redirect_page_type'] !== $value['kopa_api_redirect_page_type']) {
+      // If the value has changed, flush rewrite rules
+      flush_rewrite_rules();
+    }
+  }
+}
+add_action('update_option_woocommerce_kopa-payment_settings', 'flushKopaRevriteRulesOnRedirectPageTypeChange', 10, 3);

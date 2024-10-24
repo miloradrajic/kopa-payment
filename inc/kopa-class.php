@@ -18,6 +18,8 @@ class KOPA_Payment extends WC_Payment_Gateway
     add_action('woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'kopa_validate_and_trim_url']);
+    add_action('woocommerce_update_options_kopa-payment_' . $this->id, [$this, 'custom_flush_rewrite_rules_after_save']);
+
     // add_filter('woocommerce_settings_save_' . $this->id, [$this,'kopa_validate_and_trim_url']);
     $this->getErrorsIfSettingsFieldsEmpty();
     if (!empty($this->errors)) {
@@ -25,6 +27,12 @@ class KOPA_Payment extends WC_Payment_Gateway
     }
   }
 
+  function custom_flush_rewrite_rules_after_save()
+  {
+    echo '<pre>' . print_r('FLUSHED', true) . '</pre>';
+    flush_rewrite_rules();
+    die;
+  }
   private function get_plugin_version()
   {
     if (!function_exists('get_plugin_data')) {
@@ -140,9 +148,26 @@ class KOPA_Payment extends WC_Payment_Gateway
           'default' => '',
           'desc_tip' => false,
         ],
+        'title_redirect_methods' => array(
+          'title' => __('Redirecting methods:', 'kopa-payment'), // Title between inputs
+          'type' => 'title',
+        ),
+        'kopa_api_redirect_page_type' => [
+          'title' => 'Choose redirecting method',
+          'type' => 'select',
+          'class' => 'wc-enhanced-select',
+          'label' => '',
+          'description' => __('In case of conflicts on redirection after payment, use REST API redirection, but check if REST API is not blocked.', 'kopa-payment') . ' <a target="_blank" href="' . rest_url('kopa-payment/v1/test') . '">' . __('REST API check here', 'kopa-payment') . '</a>',
+          'default' => 'regular',
+          'desc_tip' => false,
+          'options' => [
+            'regular' => __('Regular redirect', 'kopa-payment'),
+            'rest' => __('REST API Redirect', 'kopa-payment'),
+          ],
+        ],
         'title_payment_methods' => array(
           'title' => __('Banking payment methods:', 'kopa-payment'), // Title between inputs
-          'type'  => 'title',
+          'type' => 'title',
         ),
         'kopa_api_payment_methods_api' => [
           'title' => '',
@@ -191,7 +216,8 @@ class KOPA_Payment extends WC_Payment_Gateway
           'save_cc' => __('Saving CC', 'kopa-payment'),
         ),
       ];
-    };
+    }
+    ;
   }
 
   /**
@@ -203,11 +229,11 @@ class KOPA_Payment extends WC_Payment_Gateway
       $url = trim($_POST[$this->plugin_id . $this->id . '_kopa_server_url']);
       if (filter_var($url, FILTER_VALIDATE_URL) == false) {
         add_action('admin_notices', function () {
-?>
+          ?>
           <div class="notice notice-error">
             <p><?php _e('Invalid URL for KOPA server URL', 'kopa-payment'); ?></p>
           </div>
-        <?php
+          <?php
         });
       }
     }
@@ -216,11 +242,11 @@ class KOPA_Payment extends WC_Payment_Gateway
       $urlTest = trim($_POST[$this->plugin_id . $this->id . '_kopa_server_test_url']);
       if (filter_var($urlTest, FILTER_VALIDATE_URL) == false) {
         add_action('admin_notices', function () {
-        ?>
+          ?>
           <div class="notice notice-error">
             <p><?php _e('Invalid URL for KOPA server test URL', 'kopa-payment'); ?></p>
           </div>
-      <?php
+          <?php
         });
       }
     }
@@ -242,7 +268,7 @@ class KOPA_Payment extends WC_Payment_Gateway
           <?php _e('Test mode is active', 'kopa-payment'); ?>
         </div>
       </div>
-    <?php
+      <?php
 
     }
 
@@ -250,7 +276,7 @@ class KOPA_Payment extends WC_Payment_Gateway
       isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_logos_on_checkout']) &&
       get_option('woocommerce_kopa-payment_settings')['kopa_enable_logos_on_checkout'] == 'yes'
     ) {
-    ?>
+      ?>
       <div id="kopaPaymentIconsWrapper">
         <div id="kopaPaymentIcons" class="cardLogosRow">
           <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/LogoKarticeBrendovi_Dina.png" alt="dina">
@@ -280,7 +306,7 @@ class KOPA_Payment extends WC_Payment_Gateway
           </a>
         </div>
       </div>
-    <?php
+      <?php
     }
     $userHaveSavedCcClass = '';
     if (is_user_logged_in()) {
@@ -294,12 +320,12 @@ class KOPA_Payment extends WC_Payment_Gateway
         woocommerce_form_field(
           'kopa_use_saved_cc',
           array(
-            'type'        => 'radio',
-            'class'       => array('input-text'),
-            'label'       => __('Use saved credit cards', 'kopa-payment'),
-            'options'     => $ccOptions,
-            'default'     => 'new',
-            'required'    => true
+            'type' => 'radio',
+            'class' => array('input-text'),
+            'label' => __('Use saved credit cards', 'kopa-payment'),
+            'options' => $ccOptions,
+            'default' => 'new',
+            'required' => true
           )
         );
       }
@@ -378,7 +404,8 @@ class KOPA_Payment extends WC_Payment_Gateway
     ?>
     <h4><?php echo __('Payment details', 'kopa-payment'); ?></h4>
     <p><strong><?php echo __('Payment total:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsTotal"></span></p>
-    <p><strong><?php echo __('Payment description:', 'kopa-payment'); ?></strong> <span id="kopaPaymentDetailsReferenceId"></span></p>
+    <p><strong><?php echo __('Payment description:', 'kopa-payment'); ?></strong> <span
+        id="kopaPaymentDetailsReferenceId"></span></p>
     <div class="kopaPciDssIcon">
       <a href="https://tp.rs/certificates/" target="_blank">
         <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/pci-dss.svg" alt="id-check">
@@ -387,7 +414,7 @@ class KOPA_Payment extends WC_Payment_Gateway
         <img class="logo-image" src="<?php echo KOPA_PLUGIN_URL; ?>/images/tp-rs.svg" alt="Tehnološko partnerstvo">
       </a>
     </div>
-  <?php
+    <?php
   }
 
   /**
@@ -429,7 +456,8 @@ class KOPA_Payment extends WC_Payment_Gateway
 
     if ($kopa_cc_type == 'dynamic' && $kopaUseSavedCcId == false) {
       $cardTypeCheck = detectCreditCardType($kopa_cc_number, $_POST['kopa_cc_type']);
-      if (!$cardTypeCheck) $errors[] = __('Please check CC number and selected CC type.', 'kopa-payment');
+      if (!$cardTypeCheck)
+        $errors[] = __('Please check CC number and selected CC type.', 'kopa-payment');
       $kopa_cc_type = $cardTypeCheck;
     }
     // Performing validation of custom payment fields
@@ -442,7 +470,8 @@ class KOPA_Payment extends WC_Payment_Gateway
       if (empty($kopa_cc_number)) {
         $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
       } else {
-        if (validateCreditCard($kopa_cc_number) == false) $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
+        if (validateCreditCard($kopa_cc_number) == false)
+          $errors[] = __('Please fill in a valid credit card number.', 'kopa-payment');
       }
       if (empty($kopa_cc_exparation_date)) {
         $errors[] = __('Please fill in a valid credit card exparation date.', 'kopa-payment');
@@ -532,10 +561,10 @@ class KOPA_Payment extends WC_Payment_Gateway
           return;
         }
         return [
-          'result'    => 'success',
-          'messages'  => __('Starting 3D incognito payment', 'kopa-payment'),
-          'htmlCode'  => $htmlCode,
-          'orderId'   => $kopaOrderId,
+          'result' => 'success',
+          'messages' => __('Starting 3D incognito payment', 'kopa-payment'),
+          'htmlCode' => $htmlCode,
+          'orderId' => $kopaOrderId,
         ];
       }
     } else {
@@ -548,7 +577,7 @@ class KOPA_Payment extends WC_Payment_Gateway
       // Check for CC Type, if amex or dina use API payment
       if (in_array($kopa_cc_type, ['dina', 'amex'])) {
         // Start API payment
-        $apiPaymentStatus =  $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
+        $apiPaymentStatus = $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
 
         if ($apiPaymentStatus['result'] == 'success') {
           // API PAYMENT SUCCESS
@@ -600,10 +629,10 @@ class KOPA_Payment extends WC_Payment_Gateway
 
         $order->save();
         return [
-          'result'    => 'success',
-          'messages'  => __('Starting 3D payment', 'kopa-payment'),
-          'htmlCode'  => $htmlCode,
-          'orderId'   => $kopaOrderId,
+          'result' => 'success',
+          'messages' => __('Starting 3D payment', 'kopa-payment'),
+          'htmlCode' => $htmlCode,
+          'orderId' => $kopaOrderId,
         ];
       } else {
         // Init Moto payment
@@ -676,7 +705,7 @@ class KOPA_Payment extends WC_Payment_Gateway
   private function generateHtmlFor3DPaymentForm($bankDetails, $cardNumber, $cardExpDate, $alias, $ccv, $orderId)
   {
     ob_start()
-  ?>
+      ?>
     <form method="post" action="<?php echo $bankDetails['bankUrl']; ?>" id="paymentform" target="_self">
       <input type="hidden" name="clientid" value="<?php echo $bankDetails['payload']['clientid']; ?>" />
       <input type="hidden" name="storetype" value="<?php echo $bankDetails['payload']['storetype']; ?>" />
@@ -701,13 +730,30 @@ class KOPA_Payment extends WC_Payment_Gateway
       <input type="hidden" name="Ecom_Payment_Card_ExpDate_Year" value="<?php echo substr($cardExpDate, -2); ?>">
       <input type="hidden" name="Ecom_Payment_Card_ExpDate_Month" value="<?php echo substr($cardExpDate, 0, 2); ?>">
       <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
-      <input type="hidden" name="resURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId); ?>">
-      <input type="hidden" name="redirectURL" value="<?php echo get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId); ?>">
+      <input type="hidden" name="resURL" value="<?php echo $this->getResponseUrl($orderId); ?>">
+      <input type="hidden" name="redirectURL" value="<?php echo $this->getRedirectUrl($orderId); ?>">
     </form>
-<?php
+    <?php
     return ob_get_clean();
   }
 
+  public function getRedirectUrl($orderId)
+  {
+    if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'regular') {
+      return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
+    } else if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'rest') {
+      return rest_url('kopa-payment/v1/payment-redirect/' . $orderId);
+    }
+  }
+
+  public function getResponseUrl($orderId)
+  {
+    if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'regular') {
+      return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
+    } else if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'rest') {
+      return rest_url('kopa-payment/v1/payment-data/accept-order/' . $orderId);
+    }
+  }
   /**
    * Check if any of the products in cart is physical
    */
