@@ -29,9 +29,7 @@ class KOPA_Payment extends WC_Payment_Gateway
 
   function custom_flush_rewrite_rules_after_save()
   {
-    echo '<pre>' . print_r('FLUSHED', true) . '</pre>';
     flush_rewrite_rules();
-    die;
   }
   private function get_plugin_version()
   {
@@ -426,9 +424,15 @@ class KOPA_Payment extends WC_Payment_Gateway
     $paymentMethod = '';
 
     $kopaOrderId = $_POST['kopaIdReferenceId'];
-    update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
+    // update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
 
     $order = wc_get_order($orderId);
+    if (!$order) {
+      // Handle the case where the order doesn't exist
+      error_log('Order not found for ID: ' . $orderId);
+      return;
+    }
+    $order->update_meta_data('kopaIdReferenceId', $kopaOrderId);
     $_SESSION['orderId'] = $orderId;
     $_SESSION['kopaOrderId'] = $kopaOrderId;
     $physicalProducts = $this->isPhysicalProducts($order);

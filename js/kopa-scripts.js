@@ -1,4 +1,3 @@
-console.log('asdfasdf', typeof jq)
 if (typeof $ === 'undefined') {
   $ = jQuery.noConflict();
 }
@@ -171,14 +170,17 @@ $(document).ready(async function() {
       if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
         $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
       }
-      let cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
-      let cardDetails = await getCardDetails(cardId);
-      let is3dAuth = $.parseJSON(cardDetails).card.is3dAuth;
-
-      if(is3dAuth !== true){
-        $('#kopa_ccv_field').show();
-      }else{
-        $('#kopa_ccv_field').hide();
+      const cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
+      const cardDetails = await getCardDetails(cardId);
+      if (cardDetails) {
+        const is3dAuth = cardDetails.is3dAuth;
+        if(is3dAuth !== true){
+          $('#kopa_ccv_field').show();
+        }else{
+          $('#kopa_ccv_field').hide();
+        }
+      } else {
+        console.error("Failed to retrieve card details");
       }
     }
     
@@ -273,8 +275,7 @@ $(document).ready(async function() {
         // Payment with saved card
         try {
           const cardId = $('input[name="kopa_use_saved_cc"]:checked').val();
-          const cardDetailsResponse = await getCardDetails(cardId);
-          const cardParsed = $.parseJSON(cardDetailsResponse).card;
+          const cardParsed = await getCardDetails(cardId);
 
           const cardAlias = $('label[for="kopa_use_saved_cc_'+cardId+'"]').text();
           const cardNo = cardParsed.cardNo;
@@ -387,6 +388,7 @@ $(document).ready(async function() {
  * @returns 
  */
 function encodeCcDetails(ccNumber, ccExpDate, CCV, secretKey) {
+  console.log('encodeCcDetails', ccNumber, ccExpDate, CCV, secretKey)
   const ccEncoded = CryptoJS.AES.encrypt(JSON.stringify(ccNumber), secretKey).toString();
   const ccExpDateEncoded = CryptoJS.AES.encrypt(JSON.stringify(ccExpDate), secretKey).toString();
   const ccvEncoded = CryptoJS.AES.encrypt(JSON.stringify(CCV), secretKey).toString();
@@ -428,12 +430,11 @@ async function getPiKey() {
         dataType: 'json',
       },
     });
-    const decoded = $.parseJSON(response);
-    if (decoded.success) {
-      return decoded.key;
+    if (response.success) {
+      return response.data.key;
     } else {
       // Display error message
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.message + '</li></ul>');
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.data.message + '</li></ul>');
     }
   } catch (error) {
     // Handle AJAX or JSON parsing error
@@ -460,12 +461,11 @@ async function getCardType(ccNumber, ccType){
         ccType
       },
     });
-    const decoded = $.parseJSON(response);
 
-    if(decoded.cardType) {
-      return { 'success': true, 'cardType': decoded.cardType };
+    if(response.data.cardType) {
+      return { 'success': true, 'cardType': response.data.cardType };
     } else {
-      return { 'success': false, 'message': decoded.message };
+      return { 'success': false, 'message': response.data.message };
     }
   } catch (error) {
     // Handle AJAX or JSON parsing error.message
@@ -479,24 +479,25 @@ async function getCardType(ccNumber, ccType){
  * @returns json
  */
 async function getCardDetails(ccId){
-  return $.ajax({
-    type: 'POST',
-    url: ajax_checkout_params.ajaxurl,
-    data: {
-      action: 'get_card_details',
-      security: ajax_checkout_params.security,
-      dataType: 'json',
-      ccId,
-    },
-    success: function (response) {
-      try{
-        const resDecoded =  $.parseJSON(response);
-        return resDecoded.card;
-      } catch(e) {
-        // not valid JSON
+  try {
+    const response = await $.ajax({
+      type: 'POST',
+      url: ajax_checkout_params.ajaxurl,
+      data: {
+        action: 'get_card_details',
+        security: ajax_checkout_params.security,
+        dataType: 'json',
+        ccId,
       }
-    }
-  });
+    });
+    if (!response.success) throw new Error("Card details could not be fetched");
+    const card = response.data && response.data.card;
+    if (!card) throw new Error("Card details not found in response");
+    return card;
+  } catch (error) {
+    console.error(error.message)
+    return null;
+  } 
 }
 
 /**
@@ -519,7 +520,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
       },
     });
     if (response.success) {
-      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + decoded.response + '</li></ul>');
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.data.message + '</li></ul>');
     }
   } catch (error) {
     // Handle AJAX or JSON parsing error

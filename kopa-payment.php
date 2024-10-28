@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.15
+ * Version:           1.1.16
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -117,6 +117,9 @@ add_action('template_redirect', 'redirect_unpaid_order_to_checkout');
 function modifyOrderOnUpdate($orderId)
 {
   $order = wc_get_order($orderId);
+  if (!$order) {
+    return; // Exit if order is not found
+  }
   $payment_method = $order->get_payment_method();
   // Check if payment method is not "Kopa payment"
   if ($payment_method !== 'kopa-payment') {
@@ -131,7 +134,11 @@ function modifyOrderOnUpdate($orderId)
 }
 add_action('save_post_shop_order', 'modifyOrderOnUpdate');
 
-function display_custom_notice()
+/**
+ * Custom notice was added when redirecting with REST API, because WC session cant be used
+ * @return void
+ */
+function displayCustomNotice()
 {
   if (isset($_SESSION['custom_notice'])) {
     $notice = $_SESSION['custom_notice'];
@@ -141,8 +148,15 @@ function display_custom_notice()
     unset($_SESSION['custom_notice']);
   }
 }
-add_action('woocommerce_before_checkout_form', 'display_custom_notice');
+add_action('woocommerce_before_checkout_form', 'displayCustomNotice');
 
+/**
+ * When changing redirecting type from "REST API" to "Regular", it is needed to flush rewrite rules automatically
+ * @param string $old_value
+ * @param string $value
+ * @param mixed $option
+ * @return void
+ */
 function flushKopaRevriteRulesOnRedirectPageTypeChange($old_value, $value, $option)
 {
   if (isset($old_value['kopa_api_redirect_page_type']) && isset($value['kopa_api_redirect_page_type'])) {

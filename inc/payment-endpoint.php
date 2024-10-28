@@ -33,11 +33,13 @@ function handle_kopa_payment_endpoint($wp)
       // Saving transaction details
       if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        $kopaOrderId = $order->get_meta('kopaIdReferenceId');
         // Check if OrderId and kopa reference id match
         if ($data['OrderId'] === $kopaOrderId) {
           // Update transaction meta data
-          update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+          $order->update_meta_data('kopaOrderPaymentData', $data);
 
           // Check for payment transaction details on KOPA
           $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
@@ -54,12 +56,19 @@ function handle_kopa_payment_endpoint($wp)
           echo 'OK';
           exit;
         } else {
-          update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+          // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+          //   'sentData' => $data,
+          //   'message' => 'kopaId Not the same',
+          //   'kopaId' => $kopaOrderId,
+          //   'orderId' => $orderId
+          // ]));
+          $order->update_meta_data('kopaOrderPaymentData', json_encode([
             'sentData' => $data,
             'message' => 'kopaId Not the same',
             'kopaId' => $kopaOrderId,
             'orderId' => $orderId
           ]));
+
         }
         echo 'ERROR';
         exit;
@@ -73,7 +82,8 @@ function handle_kopa_payment_endpoint($wp)
         !isDebugActive(Debug::AFTER_PAYMENT)
       ) {
         $authResult = $_GET['authResult'];
-        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        $kopaOrderId = $order->get_meta('kopaIdReferenceId');
         if (!empty($order)) {
           if ($authResult == 'AUTHORISED') {
             wp_redirect($order->get_checkout_order_received_url());
@@ -95,7 +105,9 @@ function handle_kopa_payment_endpoint($wp)
             $order->update_status('pending');
             $order->save();
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url() . $orderId . '/?pay_for_order=true&key=' . get_post_meta($orderId, '_order_key', true));
+            $orderKey = $order->get_meta('_order_key');
+
+            wp_redirect(wc_get_checkout_url() . $orderId . '/?pay_for_order=true&key=' . $orderKey);
             exit;
           }
           if ($authResult == 'REFUSED') {
@@ -116,8 +128,10 @@ function handle_kopa_payment_endpoint($wp)
               true
             );
             $order->save();
+            $orderKey = $order->get_meta('_order_key');
+
             // Redirect to the checkout page
-            wp_redirect(wc_get_checkout_url() . '/' . $orderId . '/?pay_for_order=true&key=' . get_post_meta($orderId, '_order_key', true));
+            wp_redirect(wc_get_checkout_url() . '/' . $orderId . '/?pay_for_order=true&key=' . $orderKey);
             exit;
           }
         }
@@ -127,8 +141,11 @@ function handle_kopa_payment_endpoint($wp)
 
       if (isDebugActive(Debug::AFTER_PAYMENT)) {
         $kopaCurl = new KopaCurl();
-        $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
-        $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
+        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+        $kopaOrderId = $order->get_meta('kopaIdReferenceId');
+
+        // $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
+        $kopaTransactionDetails = $order->get_meta('kopaOrderPaymentData');
 
         echo 'order<pre>' . print_r($orderId, true) . '</pre>';
         echo 'REQUEST_METHOD<pre>' . print_r($_SERVER['REQUEST_METHOD'], true) . '</pre>';
@@ -234,9 +251,10 @@ function handle_kopa_payment_rest_redirect($data)
     !isDebugActive(Debug::AFTER_PAYMENT)
   ) {
     $authResult = $_GET['authResult'];
-    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
     if (!empty($orderId)) {
       $order = wc_get_order($orderId);
+      // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+      $kopaOrderId = $order->get_meta('kopaIdReferenceId');
 
       if (!$order) {
         $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-866 <br>';
@@ -245,7 +263,8 @@ function handle_kopa_payment_rest_redirect($data)
         $_SESSION['custom_notice'] = $notice;
 
         // Get the order payment key
-        $orderPayKey = get_post_meta($orderId, '_order_key', true);
+        // $orderPayKey = get_post_meta($orderId, '_order_key', true);
+        $orderPayKey = $order->get_meta('_order_key');
 
         // Construct the query parameters
         $redirectParams = array(
@@ -289,7 +308,8 @@ function handle_kopa_payment_rest_redirect($data)
         $order->save();
 
         // Get the order payment key
-        $orderPayKey = get_post_meta($orderId, '_order_key', true);
+        // $orderPayKey = get_post_meta($orderId, '_order_key', true);
+        $orderPayKey = $order->get_meta('_order_key');
 
         // Construct the query parameters
         $redirectParams = array(
@@ -307,8 +327,12 @@ function handle_kopa_payment_rest_redirect($data)
   }
 
   if (isDebugActive(Debug::AFTER_PAYMENT)) {
-    $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
-    $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
+    $order = wc_get_order($orderId);
+
+    // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+    $kopaOrderId = $order->get_meta('kopaIdReferenceId');
+    // $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
+    $kopaTransactionDetails = $order->get_meta('kopaOrderPaymentData');
     $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
     echo 'order<pre>' . print_r($orderId, true) . '</pre>';
@@ -334,11 +358,14 @@ function handle_kopa_payment_rest_endpoint($data)
   $jsonData = file_get_contents('php://input');
   $data = json_decode($jsonData, true);
 
-  $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+  // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
+  $kopaOrderId = $order->get_meta('kopaIdReferenceId');
+
   // Check if OrderId and kopa reference id match
   if ($data['OrderId'] == $kopaOrderId) {
     // Update transaction meta data
-    update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+    // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+    $order->update_meta_data('kopaOrderPaymentData', $data);
 
     // Check for payment transaction details on KOPA
     $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
@@ -352,12 +379,19 @@ function handle_kopa_payment_rest_endpoint($data)
     }
     return new WP_REST_Response('Data received: Success transaction', 200);
   } else {
-    update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+    // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
+    //   'sentData' => $data,
+    //   'message' => 'kopaId Not the same',
+    //   'kopaId' => $kopaOrderId,
+    //   'orderId' => $orderId
+    // ]));
+    $order->update_meta_data('kopaOrderPaymentData', json_encode([
       'sentData' => $data,
       'message' => 'kopaId Not the same',
       'kopaId' => $kopaOrderId,
       'orderId' => $orderId
     ]));
+
   }
   return new WP_REST_Response('ERROR-OU409: Data for this order could not be recieved', 409);
 }

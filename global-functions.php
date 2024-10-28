@@ -167,16 +167,6 @@ function isDebugActive(string $debug)
  * UNIT PRICE DISPLAY
  */
 
-// Show product unit price on the Thank You Page, Emails, and order view in My Account.
-// function ecommercehints_return_unit_price( $product ) {
-//   $unit_price = wc_price($product->get_price());
-//   if (!empty($unit_price )) {
-//     return $unit_price;
-//   } else {
-//     return '';
-//   }
-// }
-
 add_filter('woocommerce_cart_item_name', 'checkoutSingleItemAddUnitPrice', 10, 3);
 function checkoutSingleItemAddUnitPrice($itemName, $item, $itemKey)
 {
@@ -196,28 +186,16 @@ function displayUnitPriceOnOrderRecievedPage($itemName, $item, $itemKey)
   return $itemName . ' - ' . $unit_price;
 }
 
-
-// Show unit price on Email
-// add_filter( 'woocommerce_order_formatted_line_subtotal', 'orderShowSubtotal', 10, 3 );
-// function orderShowSubtotal( $subtotal, $item, $order ){
-//   if(empty( is_wc_endpoint_url('order-received') )){
-//     $product = $item->get_product();
-//     return ecommercehints_return_unit_price( $product );
-//   }else{
-//     return $subtotal;
-//   }
-// }
-
 /**
  * UNIT PRICE DISPLAY END
  */
 
 
-add_action('init', 'load_kopa_textdomain');
 
 /*
  * Function that will load translations from the language files in the /languages folder in the root folder of the plugin.
  */
+add_action('init', 'load_kopa_textdomain');
 function load_kopa_textdomain()
 {
   load_plugin_textdomain('kopa-payment', false, basename(dirname(__FILE__)) . '/languages');

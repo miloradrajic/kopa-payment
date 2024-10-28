@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.1.16 =
+* Updated saving function to work with High-Performance Order Storage in Woocommerce, updated ajax functions.
+
 = 1.1.15 =
 * Updated option for choosing posting endpoint to be regular redirect or via REST api, and moved updating order status functions to bank data posting event.  
 

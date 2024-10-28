@@ -77,24 +77,29 @@ function addKopaOrderIdOnEmailTemplate($order, $sent_to_admin, $plain_text, $ema
       ?>
       <h2
         style="color:#7f54b3;display:block;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif;font-size:18px;font-weight:bold;line-height:130%;margin:0 0 18px;text-align:left">
-        <?php __('Transaction details', 'kopa-payment') ?></h2>
+        <?php __('Transaction details', 'kopa-payment') ?>
+      </h2>
       <table cellspacing="0" cellpadding="6" border="1"
         style="margin-bottom:20px;color:#636363;border:1px solid #e5e5e5;vertical-align:middle;width:100%;font-family:'Helvetica Neue',Helvetica,Roboto,Arial,sans-serif"
         width="100%">
         <tr>
           <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left">
-            <?php _e('KOPA Reference ID:', 'kopa-payment') ?></td>
+            <?php _e('KOPA Reference ID:', 'kopa-payment') ?>
+          </td>
           <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left">
-            <?php echo esc_html($kopaReferenceId); ?></td>
+            <?php echo esc_html($kopaReferenceId); ?>
+          </td>
         </tr>
         <?php
         foreach ($paymentDataSerialized as $key => $tranData) {
           ?>
           <tr>
             <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left">
-              <?php echo $key; ?></td>
+              <?php echo $key; ?>
+            </td>
             <td style="color:#636363;border:1px solid #e5e5e5;vertical-align:middle;padding:12px;text-align:left">
-              <?php echo $tranData; ?></td>
+              <?php echo $tranData; ?>
+            </td>
           </tr>
           <?php
         } ?>
@@ -162,12 +167,15 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
    */
   function display_custom_column_value($column, $post_id)
   {
+    $order = wc_get_order($post_id);
     if ($column === 'kopaIdReferenceId') {
-      $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
+      // $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
+      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId');
       echo $kopaIdReferenceId;
     }
     if ($column === 'kopaPaymentMethod') {
-      $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
+      // $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
+      $kopaPaymentMethod = $order->get_meta('kopaTranType');
       echo $kopaPaymentMethod;
     }
   }
@@ -189,7 +197,11 @@ function custom_column_sorting($query)
 }
 add_action('pre_get_posts', 'custom_column_sorting');
 
-
+/**
+ * Serialization of payment data before displaying it
+ * @param mixed $paymentData
+ * @return array
+ */
 function serializeTransactionDetails($paymentData)
 {
   $serializedData = [];
