@@ -169,12 +169,10 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
   {
     $order = wc_get_order($post_id);
     if ($column === 'kopaIdReferenceId') {
-      // $kopaIdReferenceId = get_post_meta($post_id, 'kopaIdReferenceId', true);
       $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId');
       echo $kopaIdReferenceId;
     }
     if ($column === 'kopaPaymentMethod') {
-      // $kopaPaymentMethod = get_post_meta($post_id, 'kopaTranType', true);
       $kopaPaymentMethod = $order->get_meta('kopaTranType');
       echo $kopaPaymentMethod;
     }

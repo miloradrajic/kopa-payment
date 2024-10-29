@@ -433,6 +433,7 @@ class KOPA_Payment extends WC_Payment_Gateway
       return;
     }
     $order->update_meta_data('kopaIdReferenceId', $kopaOrderId);
+    $order->save();
     $_SESSION['orderId'] = $orderId;
     $_SESSION['kopaOrderId'] = $kopaOrderId;
     $physicalProducts = $this->isPhysicalProducts($order);
@@ -630,7 +631,6 @@ class KOPA_Payment extends WC_Payment_Gateway
 
         $paymentMethod = '3d';
         $order->update_meta_data('kopa_payment_method', $paymentMethod);
-
         $order->save();
         return [
           'result' => 'success',
@@ -693,6 +693,7 @@ class KOPA_Payment extends WC_Payment_Gateway
             __('Order has failed CC transaction', 'kopa-payment'),
             true
           );
+          $order->save();
           return false;
         }
       }
@@ -827,9 +828,10 @@ class KOPA_Payment extends WC_Payment_Gateway
     );
 
     $order->update_meta_data('kopaOrderPaymentData', $apiPaymentResult);
-    $order->save();
+
     if ($apiPaymentResult['success'] == true && $apiPaymentResult['response'] == 'Approved') {
       $order->update_meta_data('kopaTranType', 'api_payment_success');
+      $order->save();
       return [
         'result' => 'success',
         'messages' => __('API payment success', 'kopa-payment'),
@@ -839,6 +841,7 @@ class KOPA_Payment extends WC_Payment_Gateway
       if ($apiPaymentResult['transaction']['errorCode'] == 'CORE-2507') {
         // Order has already successful transaction
         $order->update_meta_data('kopaTranType', 'api_payment_success');
+        $order->save();
         return [
           'result' => 'success',
           'messages' => __('API payment success', 'kopa-payment'),
@@ -862,6 +865,7 @@ class KOPA_Payment extends WC_Payment_Gateway
         __('Order has failed CC transaction', 'kopa-payment'),
         true
       );
+      $order->save();
       return [
         'result' => 'failure',
         'message' => __('Error with starting API payment', 'kopa-payment'),

@@ -677,7 +677,6 @@ class KopaCurl
     }
     $order = wc_get_order($orderId);
     $kopaOrderId = $order->get_meta('kopaIdReferenceId');
-    // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
 
     $loginResult = $this->loginUserByAdmin($userId);
     $orderDetails = $this->serverUrl . '/api/payment/void';
@@ -708,9 +707,6 @@ class KopaCurl
     $order = wc_get_order($orderId);
     $custom_meta_field = $order->get_meta('kopa_payment_method');
     $kopaOrderId = $order->get_meta('kopaIdReferenceId');
-
-    // $custom_meta_field = get_post_meta($orderId, 'kopa_payment_method', true);
-    // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
 
     // Check if order payment was done with KOPA system
     if (empty($custom_meta_field)) {
@@ -783,9 +779,11 @@ class KopaCurl
       $returnData = $this->voidLastStepOnOrder($orderId, $userId);
       if ($returnData['success'] == true) {
         $order->update_meta_data('kopaTranType', 'void_success');
+        $order->save();
         return ['success' => 'true', 'response' => __('Canceled payment with KOPA system', 'kopa-payment')];
       } else {
         $order->update_meta_data('kopaTranType', 'void_failed');
+        $order->save();
         return ['success' => 'false', 'response' => __('Failed voiding payment with KOPA system', 'kopa-payment')];
       }
     }
@@ -794,6 +792,7 @@ class KopaCurl
     if (isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'Refund') {
       // Already refunded
       $order->update_meta_data('kopaTranType', 'refund_success');
+      $order->save();
       return ['success' => 'true', 'response' => __('Already refunded with KOPA', 'kopa-payment')];
     }
 
@@ -801,6 +800,7 @@ class KopaCurl
     if (isset($orderDetails['trantype']) && $orderDetails['trantype'] == 'Void') {
       // Already refunded
       $order->update_meta_data('kopaTranType', 'void_success');
+      $order->save();
       return ['success' => 'true', 'response' => __('Already voided with KOPA', 'kopa-payment')];
     }
 
@@ -809,14 +809,17 @@ class KopaCurl
       $refundResult = $this->refund($kopaOrderId, $userId, $orderId);
       if ($refundResult['success'] == true && $refundResult['response'] == 'Approved') {
         $order->update_meta_data('kopaTranType', 'refund_success');
+        $order->save();
         return ['success' => 'true', 'response' => __('Refunded completed on KOPA system', 'kopa-payment')];
       }
       if ($refundResult['response'] == 'Error' && $refundResult['transaction']['errorCode'] == 'CORE-2504') {
         $order->update_meta_data('kopaTranType', 'refund_success');
+        $order->save();
         return ['success' => 'true', 'response' => __('Already refunded with KOPA system', 'kopa-payment')];
       }
     }
     $order->update_meta_data('kopaTranType', 'refund_failed');
+    $order->save();
     return ['success' => 'false', 'response' => __('There was a problem with KOPA refund process', 'kopa-payment')];
   }
 

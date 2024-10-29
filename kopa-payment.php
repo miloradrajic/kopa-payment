@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.16
+ * Version:           1.1.17
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -167,3 +167,52 @@ function flushKopaRevriteRulesOnRedirectPageTypeChange($old_value, $value, $opti
   }
 }
 add_action('update_option_woocommerce_kopa-payment_settings', 'flushKopaRevriteRulesOnRedirectPageTypeChange', 10, 3);
+
+// Register custom endpoint
+function custom_kopa_payment_endpoint()
+{
+  add_rewrite_rule('^kopa-payment-data/accept-order/([^/]+)/?', 'index.php?accept_order_id=$matches[1]', 'top');
+  add_filter('query_vars', function ($vars) {
+    $vars[] = 'accept_order_id';
+    return $vars;
+  });
+}
+add_action('init', 'custom_kopa_payment_endpoint', 999);
+
+function custom_kopa_payment_rest_endpoint()
+{
+  register_rest_route('kopa-payment/v1', '/payment-data/accept-order/(?P<id>\d+)', array(
+    'methods' => 'POST',
+    'callback' => 'handle_kopa_payment_rest_endpoint',
+    'permission_callback' => '__return_true',
+    'args' => [
+      'id' => [
+        'required' => true, // ID is required
+        'validate_callback' => function ($param, $request, $key) {
+          return is_numeric($param); // Make sure ID is a number
+        },
+        'sanitize_callback' => 'absint', // Sanitize ID as an integer
+      ],
+    ]
+  ));
+  register_rest_route('kopa-payment/v1', '/test', array(
+    'methods' => 'GET',
+    'callback' => 'handle_test_endpoint',
+    'permission_callback' => '__return_true',
+  ));
+  register_rest_route('kopa-payment/v1', '/payment-redirect/(?P<id>\d+)', array(
+    'methods' => 'GET',
+    'callback' => 'handle_kopa_payment_rest_redirect',
+    'permission_callback' => '__return_true',
+    'args' => [
+      'id' => [
+        'required' => true, // ID is required
+        'validate_callback' => function ($param, $request, $key) {
+          return is_numeric($param); // Make sure ID is a number
+        },
+        'sanitize_callback' => 'absint', // Sanitize ID as an integer
+      ],
+    ]
+  ));
+}
+add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint');

@@ -1,17 +1,4 @@
 <?php
-
-// Register custom endpoint
-function custom_kopa_payment_endpoint()
-{
-  add_rewrite_rule('^kopa-payment-data/accept-order/([^/]+)/?', 'index.php?accept_order_id=$matches[1]', 'top');
-  add_filter('query_vars', function ($vars) {
-    $vars[] = 'accept_order_id';
-    return $vars;
-  });
-}
-add_action('init', 'custom_kopa_payment_endpoint', 999);
-
-
 // Handle POST requests to the custom endpoint
 function handle_kopa_payment_endpoint($wp)
 {
@@ -33,14 +20,13 @@ function handle_kopa_payment_endpoint($wp)
       // Saving transaction details
       if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
         $kopaOrderId = $order->get_meta('kopaIdReferenceId');
         // Check if OrderId and kopa reference id match
         if ($data['OrderId'] === $kopaOrderId) {
           // Update transaction meta data
           // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
           $order->update_meta_data('kopaOrderPaymentData', $data);
-
+          $order->save();
           // Check for payment transaction details on KOPA
           $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
@@ -68,7 +54,7 @@ function handle_kopa_payment_endpoint($wp)
             'kopaId' => $kopaOrderId,
             'orderId' => $orderId
           ]));
-
+          $order->save();
         }
         echo 'ERROR';
         exit;
@@ -82,7 +68,6 @@ function handle_kopa_payment_endpoint($wp)
         !isDebugActive(Debug::AFTER_PAYMENT)
       ) {
         $authResult = $_GET['authResult'];
-        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
         $kopaOrderId = $order->get_meta('kopaIdReferenceId');
         if (!empty($order)) {
           if ($authResult == 'AUTHORISED') {
@@ -141,10 +126,7 @@ function handle_kopa_payment_endpoint($wp)
 
       if (isDebugActive(Debug::AFTER_PAYMENT)) {
         $kopaCurl = new KopaCurl();
-        // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
         $kopaOrderId = $order->get_meta('kopaIdReferenceId');
-
-        // $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
         $kopaTransactionDetails = $order->get_meta('kopaOrderPaymentData');
 
         echo 'order<pre>' . print_r($orderId, true) . '</pre>';
@@ -196,46 +178,6 @@ function handle_kopa_payment_endpoint($wp)
 }
 add_action('parse_request', 'handle_kopa_payment_endpoint');
 
-
-
-function custom_kopa_payment_rest_endpoint()
-{
-  register_rest_route('kopa-payment/v1', '/payment-data/accept-order/(?P<id>\d+)', array(
-    'methods' => 'POST',
-    'callback' => 'handle_kopa_payment_rest_endpoint',
-    'permission_callback' => '__return_true',
-    'args' => [
-      'id' => [
-        'required' => true, // ID is required
-        'validate_callback' => function ($param, $request, $key) {
-          return is_numeric($param); // Make sure ID is a number
-        },
-        'sanitize_callback' => 'absint', // Sanitize ID as an integer
-      ],
-    ]
-  ));
-  register_rest_route('kopa-payment/v1', '/test', array(
-    'methods' => 'GET',
-    'callback' => 'handle_test_endpoint',
-    'permission_callback' => '__return_true',
-  ));
-  register_rest_route('kopa-payment/v1', '/payment-redirect/(?P<id>\d+)', array(
-    'methods' => 'GET',
-    'callback' => 'handle_kopa_payment_rest_redirect',
-    'permission_callback' => '__return_true',
-    'args' => [
-      'id' => [
-        'required' => true, // ID is required
-        'validate_callback' => function ($param, $request, $key) {
-          return is_numeric($param); // Make sure ID is a number
-        },
-        'sanitize_callback' => 'absint', // Sanitize ID as an integer
-      ],
-    ]
-  ));
-}
-add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint', 999);
-
 function handle_test_endpoint()
 {
   return new WP_REST_Response('REST API working correctly', 200);
@@ -253,7 +195,6 @@ function handle_kopa_payment_rest_redirect($data)
     $authResult = $_GET['authResult'];
     if (!empty($orderId)) {
       $order = wc_get_order($orderId);
-      // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
       $kopaOrderId = $order->get_meta('kopaIdReferenceId');
 
       if (!$order) {
@@ -263,7 +204,6 @@ function handle_kopa_payment_rest_redirect($data)
         $_SESSION['custom_notice'] = $notice;
 
         // Get the order payment key
-        // $orderPayKey = get_post_meta($orderId, '_order_key', true);
         $orderPayKey = $order->get_meta('_order_key');
 
         // Construct the query parameters
@@ -308,7 +248,6 @@ function handle_kopa_payment_rest_redirect($data)
         $order->save();
 
         // Get the order payment key
-        // $orderPayKey = get_post_meta($orderId, '_order_key', true);
         $orderPayKey = $order->get_meta('_order_key');
 
         // Construct the query parameters
@@ -328,10 +267,7 @@ function handle_kopa_payment_rest_redirect($data)
 
   if (isDebugActive(Debug::AFTER_PAYMENT)) {
     $order = wc_get_order($orderId);
-
-    // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
     $kopaOrderId = $order->get_meta('kopaIdReferenceId');
-    // $kopaTransactionDetails = get_post_meta($orderId, 'kopaOrderPaymentData', true);
     $kopaTransactionDetails = $order->get_meta('kopaOrderPaymentData');
     $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
@@ -358,7 +294,6 @@ function handle_kopa_payment_rest_endpoint($data)
   $jsonData = file_get_contents('php://input');
   $data = json_decode($jsonData, true);
 
-  // $kopaOrderId = get_post_meta($orderId, 'kopaIdReferenceId', true);
   $kopaOrderId = $order->get_meta('kopaIdReferenceId');
 
   // Check if OrderId and kopa reference id match
@@ -366,7 +301,7 @@ function handle_kopa_payment_rest_endpoint($data)
     // Update transaction meta data
     // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
     $order->update_meta_data('kopaOrderPaymentData', $data);
-
+    $order->save();
     // Check for payment transaction details on KOPA
     $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
 
@@ -391,7 +326,7 @@ function handle_kopa_payment_rest_endpoint($data)
       'kopaId' => $kopaOrderId,
       'orderId' => $orderId
     ]));
-
+    $order->save();
   }
   return new WP_REST_Response('ERROR-OU409: Data for this order could not be recieved', 409);
 }

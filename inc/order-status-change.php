@@ -5,8 +5,6 @@ function kopaRefundActionCallback($order_id, $voidStatus = false)
 {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  // $order_id = $order->get_id();
-  // $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
   $custom_metadata = $order->get_meta('kopa_payment_method');
   // Check if the custom metadata exists and if payment was done with MOTO or API payment
   if (!empty($custom_metadata)) {
@@ -59,15 +57,12 @@ function kopaPostAuthOnOrderCompleted($order_id)
 {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  // $kopaPaymentMethod = get_post_meta($order_id, 'kopa_payment_method', true);
   $kopaPaymentMethod = $order->get_meta('kopa_payment_method');
-  // $kopaOrderId = get_post_meta($order_id, 'kopaIdReferenceId', true);
   $kopaOrderId = $order->get_meta('kopaIdReferenceId');
   $note = '';
 
   // If this is automatic status change, this check will be triggered
   // If product vas virtual or downloadable, it would automatically get status COMPLETED
-  // $physicalProduct = get_post_meta($order->ID, 'isPhysicalProducts', true);
   $physicalProduct = $order->get_meta('isPhysicalProducts');
 
   if (!empty($physicalProduct) && $physicalProduct == 'false') {
@@ -83,8 +78,8 @@ function kopaPostAuthOnOrderCompleted($order_id)
 
     if ($postAuthResult === 'Order not found') {
       $note = __('Order could not be found on KOPA ' . $kopaOrderId . ' - with payment method: ' . $kopaPaymentMethod, 'kopa-payment');
-      delete_post_meta($order_id, 'kopaIdReferenceId');
-      delete_post_meta($order_id, 'kopa_payment_method');
+      $order->delete_meta_data('kopaIdReferenceId');
+      $order->delete_meta_data('kopa_payment_method');
       $order->add_order_note($note);
       $order->save();
       return;
@@ -98,7 +93,6 @@ function kopaPostAuthOnOrderCompleted($order_id)
       // If there was a problem changing status to PostAuth
 
       // Get the previous order status
-      // $previous_status = get_post_meta($order_id, '_previous_order_status', true);
       $previous_status = $order->get_meta('_previous_order_status');
 
       if (!empty($previous_status)) {
@@ -129,7 +123,6 @@ function kopaCancelFunction($order_id)
 {
   $order = wc_get_order($order_id);
   $user_id = $order->get_user_id();
-  // $custom_metadata = get_post_meta($order_id, 'kopa_payment_method', true);
   $custom_metadata = $order->get_meta('kopa_payment_method');
   // Check if the custom metadata exists and if payment was done with KOPA
   if (!empty($custom_metadata)) {
@@ -178,5 +171,6 @@ function savePreviousOrderStatus($orderId, $old_status, $new_status)
   // update_post_meta($order_id, '_previous_order_status', $old_status);
   $order = wc_get_order($orderId);
   $order->update_meta_data('_previous_order_status', $old_status);
+  $order->save();
 }
 add_action('woocommerce_order_status_changed', 'savePreviousOrderStatus', 10, 3);
