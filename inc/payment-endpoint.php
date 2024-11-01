@@ -35,11 +35,11 @@ function handle_kopa_payment_endpoint($wp)
 
           // successPayment is false, meaning that transaction was unsuccessful
           if ($successPayment === false) {
-            echo 'FAILED TRANSACTION';
+            echo 'OK. FAILED TRANSACTION';
             exit;
           }
 
-          echo 'OK';
+          echo 'OK. SUCCESS TRANSACTION';
           exit;
         } else {
           // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
