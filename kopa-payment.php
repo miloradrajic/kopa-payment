@@ -216,3 +216,28 @@ function custom_kopa_payment_rest_endpoint()
   ));
 }
 add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint');
+
+add_action('add_meta_boxes', 'kopaFiscalizationSection');
+function kopaFiscalizationSection()
+{
+  add_meta_box(
+    'kopa_fiscalization_metabox',           // Unique ID for the metabox
+    __('Kopa Fiscalization', 'kopa-payment'), // Title of the metabox
+    'custom_order_metabox_content',   // Callback function to display content
+    'shop_order',                     // Post type to display the metabox on
+    'normal',                           // Context: 'side' for the left column
+    'default'                         // Priority
+  );
+}
+
+function custom_order_metabox_content($post)
+{
+  // Optional: Use nonce for verification
+  wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
+
+  // Get any existing meta data for display or editing
+  $custom_data = get_post_meta($post->ID, '_custom_order_data', true);
+
+  echo '<p><label for="custom_order_field">' . __('Custom Field:', 'your-text-domain') . '</label></p>';
+  echo '<input type="text" id="custom_order_field" name="custom_order_field" value="' . esc_attr($custom_data) . '" style="width:100%;">';
+}

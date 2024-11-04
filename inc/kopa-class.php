@@ -191,6 +191,41 @@ class KOPA_Payment extends WC_Payment_Gateway
           'default' => 'no',
           'desc_tip' => false,
         ],
+        // Toggle Fiscalization Checkbox
+        'kopa_enable_fiscalization' => [
+          'title' => '',
+          'type' => 'checkbox',
+          'label' => __('Enable Kopa fiscalization', 'kopa-payment'),
+          'description' => __('Enable fiscalization for orders paid with Kopa payment plugin.', 'kopa-payment'),
+          'default' => 'no',
+          'desc_tip' => false,
+        ],
+
+        // Additional fields to be toggled
+        'kopa_fiscalization_cashier' => [
+          'title' => __('Cashier', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Cashier name displayed on the bill.', 'kopa-payment'),
+          'default' => get_bloginfo('name'),
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
+        'kopa_fiscalization_auth_id' => [
+          'title' => __('Auth ID', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Tax Administration Auth Id', 'kopa-payment'),
+          'default' => '',
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
+        'kopa_fiscalization_internal_id' => [
+          'title' => __('Kopa Internal ID', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Kopa internal fiscalization Id', 'kopa-payment'),
+          'default' => '',
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
         'instructions' => [
           'title' => __('', 'kopa-payment'),
           'type' => 'title',
