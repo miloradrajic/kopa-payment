@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.1.18 =
+* Bugfixing for accepting already successfull transaction details
+
 = 1.1.17 =
 * Bugfixing, changed execution of registerin REST API endpoints
 

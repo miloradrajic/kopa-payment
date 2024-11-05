@@ -42,12 +42,6 @@ function handle_kopa_payment_endpoint($wp)
           echo 'OK. SUCCESS TRANSACTION';
           exit;
         } else {
-          // update_post_meta($orderId, 'kopaOrderPaymentData', json_encode([
-          //   'sentData' => $data,
-          //   'message' => 'kopaId Not the same',
-          //   'kopaId' => $kopaOrderId,
-          //   'orderId' => $orderId
-          // ]));
           $order->update_meta_data('kopaOrderPaymentData', json_encode([
             'sentData' => $data,
             'message' => 'kopaId Not the same',
@@ -342,7 +336,10 @@ function paymentSuccessCheckup($order, $orderDetailsKopa, $physicalProducts)
 {
   // Check on KOPA system if order was actually paid and has no errors
   if (
-    isset($orderDetailsKopa['response']) && $orderDetailsKopa['response'] == 'Approved' &&
+    isset($orderDetailsKopa['response']) && (
+      $orderDetailsKopa['response'] == 'Approved' ||
+      ($orderDetailsKopa['response'] == 'Error' && $orderDetailsKopa['errMsg'] == 'Order has already successful transaction.')
+    ) &&
     isset($orderDetailsKopa['trantype']) && in_array($orderDetailsKopa['trantype'], ['Auth', 'PreAuth', 'PostAuth']) &&
     isset($orderDetailsKopa['transaction']) && !empty($orderDetailsKopa['transaction']) &&
     isset($orderDetailsKopa['transaction']['errorCode']) && empty($orderDetailsKopa['transaction']['errorCode'])
