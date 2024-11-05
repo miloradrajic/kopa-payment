@@ -45,16 +45,41 @@ add_action('wp_enqueue_scripts', 'enqueue_kopa_scripts');
 function kopaCustomOrderScripts($hook)
 {
   // Only enqueue on the WooCommerce Kopa payment settings page
-  if ($hook !== 'woocommerce_page_wc-settings') {
+  if ($hook !== 'woocommerce_page_wc-settings' && $hook !== 'post.php') {
     return;
   }
-  $orderScriptVersion = md5_file(KOPA_PLUGIN_URL . 'js/kopa-admin-order-custom-scripts.js');
-  wp_enqueue_script(
-    'kopa_custom_admin_order_scrips',
-    KOPA_PLUGIN_URL . 'js/kopa-admin-order-custom-scripts.js',
-    ['jquery'],
-    $orderScriptVersion,
-    true
-  );
+
+  // Woocommerce payment settings page script
+  if ($hook === 'woocommerce_page_wc-settings') {
+    $wcSettingsScriptVersion = md5_file(KOPA_PLUGIN_URL . 'js/kopa-admin-payment-settings-scripts.js');
+    wp_enqueue_script(
+      'kopa_custom_admin_order_scrips',
+      KOPA_PLUGIN_URL . 'js/kopa-admin-payment-settings-scripts.js',
+      ['jquery'],
+      $wcSettingsScriptVersion,
+      true
+    );
+  }
+
+  // Woocommerce order preview styles
+  if ($hook === 'post.php') {
+    $orderStyleVersion = md5_file(KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css');
+    wp_enqueue_style('kopa-admin-styles', KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css', '', $orderStyleVersion);
+
+    // Woocommerce order preview script
+    $orderScriptVersion = md5_file(KOPA_PLUGIN_URL . 'js/kopa-admin-order-preview-scripts.js');
+    wp_enqueue_script(
+      'kopa_custom_admin_order_scrips',
+      KOPA_PLUGIN_URL . 'js/kopa-admin-order-preview-scripts.js',
+      ['jquery'],
+      $orderScriptVersion,
+      true
+    );
+    wp_localize_script('kopa_custom_admin_order_scrips', 'orderKopaParam', array(
+      'ajaxurl' => admin_url('admin-ajax.php'),
+      'security' => wp_create_nonce('ajax-my-account-nonce'),
+      'invalidQuantityForRefund' => __('Invalid refund quantity', 'kopa-payment'),
+    ));
+  }
 }
 add_action('admin_enqueue_scripts', 'kopaCustomOrderScripts');

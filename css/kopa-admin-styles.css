@@ -1,0 +1,25 @@
+/* REFUNDING STYLES */
+
+button.button.refund-items {
+  display: none !important;
+}
+
+.relative {
+  position: relative;
+}
+
+.kopaRefundItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kopaInvalidRefundQuantityValue {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  color: white;
+  background-color: rgba(192, 43, 43, 0.671);
+  padding: 1px 5px;
+}
+/* REFUNDING END STYLES */

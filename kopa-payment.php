@@ -220,24 +220,60 @@ add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint');
 add_action('add_meta_boxes', 'kopaFiscalizationSection');
 function kopaFiscalizationSection()
 {
-  add_meta_box(
-    'kopa_fiscalization_metabox',           // Unique ID for the metabox
-    __('Kopa Fiscalization', 'kopa-payment'), // Title of the metabox
-    'custom_order_metabox_content',   // Callback function to display content
-    'shop_order',                     // Post type to display the metabox on
-    'normal',                           // Context: 'side' for the left column
-    'default'                         // Priority
-  );
+  if (
+    isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
+    get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
+  ) {
+    add_meta_box(
+      'kopa_fiscalization_metabox',           // Unique ID for the metabox
+      __('Kopa Fiscalization Partial Refund', 'kopa-payment'), // Title of the metabox
+      'custom_order_metabox_content',   // Callback function to display content
+      'shop_order',                       // Post type to display the metabox on
+      'normal',                          // Context: 'side' for the left column
+      'default'                         // Priority
+    );
+  }
 }
 
 function custom_order_metabox_content($post)
 {
   // Optional: Use nonce for verification
   wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
+  $order = wc_get_order($post->ID);
 
-  // Get any existing meta data for display or editing
-  $custom_data = get_post_meta($post->ID, '_custom_order_data', true);
+  $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
+  $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+  $fiscalizationDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderFiscalizationData'));
+  $currency_symbol = get_woocommerce_currency_symbol();
+  if (
+    !empty($paymentDataSerialized) &&
+    !empty($kopaReferenceId)
+    // !empty($fiscalizationDataSerialized)
+  ) {
+    $alreadyRefunded = $order->get_meta('partialyRefundedItems');
 
-  echo '<p><label for="custom_order_field">' . __('Custom Field:', 'your-text-domain') . '</label></p>';
-  echo '<input type="text" id="custom_order_field" name="custom_order_field" value="' . esc_attr($custom_data) . '" style="width:100%;">';
+    echo '<div class="kopaRefundItemWrapper">';
+    foreach ($order->get_items() as $itemId => $item) {
+      $product_name = $item->get_name(); // Product name
+      $quantity = $item->get_quantity(); // Quantity of this item
+      $total = $item->get_total(); // Line total for this item
+      echo '<div class="kopaRefundItem" data-prod-id=' . $itemId . ' data-prod-price=' . $total . ' >';
+      echo '<span>' . __('Product Name', 'kopa-payment') . ': ' . $product_name . '</span>';
+      echo '<span>' . __('Quantity', 'kopa-payment') . ': ' . $quantity . '</span>';
+      echo '<span>' . __('Total', 'kopa-payment') . ': ' . wc_price($total) . '</span>';
+      echo '<span>' . __('Already refunded', 'kopa-payment') . ': 
+        <input id="kopa_already_refunded_' . $itemId . '" type="number" readonly class="kopaAlreadyRefunded" value="0"/></span>';
+      echo '<span class="relative">' . __('Refund quantity', 'kopa-payment') . ': 
+        <input class="kopaRefundQuantity" type="number" min="0" max="' . $quantity . '"name="kopa_refund_item[' . $itemId . ']" value="0"/></span>';
+      echo '<span>' . __('Total for refund', 'kopa-payment') . ':</br><span class="kopaItemRefundTotal">0</span> ' . $currency_symbol . '</span>';
+      echo '</div>';
+    }
+    echo '</div>';
+    echo '<p><label for="custom_order_field">' . __('Custom Field:', 'your-text-domain') . '</label></p>';
+    echo '<input type="text" id="custom_order_field" name="custom_order_field" value="' . 'test' . '" style="width:100%;">';
+  } else {
+    echo '<div class="inline-notice">
+      <p>' . __('Order hasn\'t been fiscalized with Kopa', 'kopa-payment') . '</p>
+    </div>';
+  }
 }
