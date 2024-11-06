@@ -72,7 +72,7 @@ function kopaPostAuthOnOrderCompleted($order_id)
   }
 
   // Check if the custom metadata exists and if payment was done with MOTO or API payment
-  if (!empty($kopaPaymentMethod)) {
+  if (!empty($kopaPaymentMethod) && !empty($kopaOrderId)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
 
