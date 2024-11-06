@@ -639,7 +639,7 @@ class KopaCurl
         // Log event
         kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $decodedReturn['errMsg']);
       }
-    } elseif ($returnData === 'Order not found') {
+    } elseif ($returnData === 'Order not found' || $returnData === 'Order is already in PostAuth') {
       $decodedReturn = $returnData;
     }
 
@@ -851,5 +851,36 @@ class KopaCurl
     return $returnDataDecoded;
   }
 
+  /**
+   * *
+   * @param mixed $fiscalizationData
+   * @return mixed
+   */
+  public function fiscalization($fiscalizationData)
+  {
+    if ($this->isInitialized() == false) {
+      $this->curlInit();
+    }
+
+    $loginResult = $this->loginUserByAdmin(0);
+    $fiscalizationUrl = $this->serverUrl . '/api/fiscalization/v2/invoice';
+    $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token'];
+    $data = json_encode($fiscalizationData);
+    $returnData = $this->post($fiscalizationUrl, $data);
+    $this->close();
+    array_pop($this->headers);
+
+    $decodedReturn = json_decode($returnData, true);
+    if ($decodedReturn !== null && json_last_error() === JSON_ERROR_NONE) {
+      if ($decodedReturn['response'] == 'Error') {
+        // Log event
+        // kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $decodedReturn['errMsg']);
+      }
+    } elseif ($returnData === 'Order not found') {
+      $decodedReturn = $returnData;
+    }
+
+    return $decodedReturn;
+  }
 }
 ?>
