@@ -72,7 +72,7 @@ function kopaPostAuthOnOrderCompleted($order_id)
   }
 
   // Check if the custom metadata exists and if payment was done with MOTO or API payment
-  if (!empty($kopaPaymentMethod)) {
+  if (!empty($kopaPaymentMethod) && !empty($kopaOrderId)) {
     $kopaCurl = new KopaCurl();
     $postAuthResult = $kopaCurl->postAuth($order_id, $user_id);
 
@@ -88,15 +88,13 @@ function kopaPostAuthOnOrderCompleted($order_id)
     if ($postAuthResult === 'Order is already in PostAuth') {
       $note = __('Order is already in PostAuth status', 'kopa-payment');
       $order->add_order_note($note);
-      $order->save();
-      return;
     }
+
     // If PostAuth is successfully changed on KOPA system
     if (
       ($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved') ||
       $postAuthResult === 'Order is already in PostAuth'
-    ) {
-      // Add an order note
+    ) {      // Add an order note
       $note = __('Order has been completed on KOPA system.', 'kopa-payment');
       $order->add_order_note($note);
     } else {
