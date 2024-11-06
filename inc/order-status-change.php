@@ -84,9 +84,17 @@ function kopaPostAuthOnOrderCompleted($order_id)
       $order->save();
       return;
     }
+
+    if ($postAuthResult === 'Order is already in PostAuth') {
+      $note = __('Order is already in PostAuth status', 'kopa-payment');
+      $order->add_order_note($note);
+    }
+
     // If PostAuth is successfully changed on KOPA system
-    if ($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved') {
-      // Add an order note
+    if (
+      ($postAuthResult['success'] == true && $postAuthResult['response'] == 'Approved') ||
+      $postAuthResult === 'Order is already in PostAuth'
+    ) {      // Add an order note
       $note = __('Order has been completed on KOPA system.', 'kopa-payment');
       $order->add_order_note($note);
     } else {
