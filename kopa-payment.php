@@ -78,6 +78,7 @@ function check_for_woocommerce()
   require_once KOPA_PLUGIN_PATH . '/inc/log-functions.php';
   require_once KOPA_PLUGIN_PATH . '/inc/kopa-reference-id.php';
   require_once KOPA_PLUGIN_PATH . '/inc/payment-endpoint.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/fiscalization.php';
 
   // Adding custom payment method
   function addKopaPaymentGateway($gateways)
@@ -226,7 +227,7 @@ function kopaFiscalizationSection()
   ) {
     add_meta_box(
       'kopa_fiscalization_metabox',           // Unique ID for the metabox
-      __('Kopa Fiscalization Partial Refund', 'kopa-payment'), // Title of the metabox
+      __('Kopa Fiscalization', 'kopa-payment'), // Title of the metabox
       'custom_order_metabox_content',   // Callback function to display content
       'shop_order',                       // Post type to display the metabox on
       'normal',                          // Context: 'side' for the left column
@@ -244,6 +245,37 @@ function custom_order_metabox_content($post)
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
   $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
   $fiscalizationDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderFiscalizationData'));
+
+
+  $invoiceType = $order->get_meta('kopaFiscalizationType');
+  $invoiceNumber = $order->get_meta('kopaFiscalizationInvoiceNumber');
+  $verificationUrl = $order->get_meta('kopaFiscalizationVerificationUrl');
+
+  $invoiceRefundNumber = $order->get_meta('kopaFiscalizationRefundNumber');
+  $verificationUrlRefund = $order->get_meta('kopaFiscalizationRefundVerificationUrl');
+
+  echo '<div class="fiscalizationStatusWrapper">';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization status', 'kopa-payment') . '</h4><p>' . $invoiceType . '</p>';
+  echo '</div>';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization invoice number', 'kopa-payment') . '</h4><p>' . $invoiceNumber . '</p>';
+  echo '</div>';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization invoice verification URL', 'kopa-payment') . '</h4>
+      <p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
+  echo '</div>';
+  if ($invoiceType == 'refund_success') {
+    echo '<div class="fiscalizationStatus">';
+    echo '<h4>' . __('Fiscalization refund number', 'kopa-payment') . '</h4><p>' . $invoiceNumber . '</p>';
+    echo '</div>';
+    echo '<div class="fiscalizationStatus">';
+    echo '<h4>' . __('Fiscalization refund verification URL', 'kopa-payment') . '</h4>
+      <p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify refund', 'kopa-payment') . '</a></p>';
+    echo '</div>';
+  }
+  echo '</div>';
+
   $currency_symbol = get_woocommerce_currency_symbol();
   if (
     !empty($paymentDataSerialized) &&

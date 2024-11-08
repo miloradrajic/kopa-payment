@@ -200,7 +200,16 @@ class KOPA_Payment extends WC_Payment_Gateway
           'default' => 'no',
           'desc_tip' => false,
         ],
-
+        'title_kopa_fiscalization' => array(
+          'title' => __('Fiscalization tutorial:', 'kopa-payment'), // Title between inputs
+          'type' => 'title',
+          'description' => '<b>' . __('Before activating fiscalization, if you are in the VAT system, it is necessary to enable taxes in WooCommerce > Settings > Enable taxes.', 'kopa-payment') . '</b>' .
+            '<p>' . __('If you are NOT in the VAT system, the rate "A" will be used, which applies to entities not registered as VAT payers for all goods and services processed through the fiscal cash register.', 'kopa-payment') . '</p>' .
+            '<p>' . __('Then check the tax settings in WooCommerce > Settings > Tax.', 'kopa-payment') . '</p>' .
+            '<p>' . __('Basic tax rates for fiscalization will initially be added and can be reviewed in WooCommerce > Settings > Tax > Standard Rates | Reduced Rate Rates | Zero Rate Rates.', 'kopa-payment') . '</p>' .
+            '<p>' . __('If you have additional tax rates, you need to apply the KOPA tax rates to products for successful fiscalization. If the rates are not correctly set, a rate of 20% will automatically be applied to the fiscal receipt.', 'kopa-payment') . '</p>' .
+            '<p>' . __('The standard KOPA 20% rate will be applied to each product unless otherwise specified in the product settings.', 'kopa-payment') . '</p>'
+        ),
         // Additional fields to be toggled
         'kopa_fiscalization_cashier' => [
           'title' => __('Cashier', 'kopa-payment'),

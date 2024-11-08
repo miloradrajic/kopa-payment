@@ -1,4 +1,11 @@
 /* REFUNDING STYLES */
+.fiscalizationStatusWrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #acacac;
+  flex-wrap: wrap;
+}
 
 button.button.refund-items {
   display: none !important;
