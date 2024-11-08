@@ -17,7 +17,7 @@ function kopaFiscalizationOnOrderCompleted($orderId)
     !empty($kopaFiscalizationAuthId) &&
     !empty($kopaFiscalizationInternalAuth) &&
     $kopaOrderTranType !== 'refund_success' &&
-    !in_array($kopaFiscalizationType, ['invoice_success', 'refund_success', 'refund_failed'])
+    (empty($kopaFiscalizationType) || $kopaFiscalizationType == 'invoice_failed')
   ) {
     $fiscalizationData = prepareDataForFiscalization($order);
     $kopaCurl = new KopaCurl();
@@ -68,7 +68,7 @@ function kopaFiscalizationOnOrderCompleted($orderId)
         $order->update_meta_data('kopaFiscalizationType', 'invoice_failed');
         // Add an order note
         $order->add_order_note(
-          __('Kopa fiscalization failed.', 'kopa-payment'),
+          __('Kopa fiscalization failed.', 'kopa-payment') . ' - ' . $fiscalizationResult['message'],
           true
         );
       }
@@ -76,7 +76,7 @@ function kopaFiscalizationOnOrderCompleted($orderId)
 
     // Save changes
     $order->save();
-    die;
+    return;
   }
 }
 
@@ -97,27 +97,31 @@ function kopaFiscalizationRefund($orderId)
       $kopaFiscalizationAuthId
     );
     // Add an order note
-    $order->add_order_note(
-      __('Fiscalization refund sent.', 'kopa-payment'),
-      true
-    );
+
     if (
       isset($fiscalizationResult['success']) &&
       !empty($fiscalizationResult['success']) &&
       $fiscalizationResult['success'] == true
     ) {
+      $order->add_order_note(
+        __('Fiscalization refund sent.', 'kopa-payment'),
+        true
+      );
       $order->update_meta_data('kopaFiscalizationType', 'refund_success');
       $order->update_meta_data('kopaFiscalizationRefundNumber', $fiscalizationResult['invoiceNumber']);
       $order->update_meta_data('kopaFiscalizationRefundVerificationUrl', $fiscalizationResult['verificationUrl']);
       // Add an order note
+    } else {
+      $order->update_meta_data('kopaFiscalizationType', 'refund_failed');
       $order->add_order_note(
-        __('Kopa fiscalization success.', 'kopa-payment'),
+        __('Fiscalization refund error. Something went wrong', 'kopa-payment'),
         true
       );
     }
-    // Save changes
+    // Save notes on order
     $order->save();
   }
+  return;
 }
 
 
@@ -143,9 +147,11 @@ function prepareDataForFiscalization($order)
     $productId = $item_id;
     $productName = $item->get_name();
     $quantity = $item->get_quantity();
-    // $unitPrice = $item->get_total() / $quantity; // unit price calculated from total
-    $unitPrice = $product->get_price();
 
+    // Unit price including tax
+    $unitPrice = wc_get_price_including_tax($product);
+
+    // Total amount (already includes tax)
     $totalAmount = $item->get_total();
 
     // Add item details to the items array
@@ -294,16 +300,17 @@ function getProductTaxLabel($product)
     // Get the product's tax class (empty for standard rate)
     $tax_class = $product->get_tax_class();
     if ($testModeActive) {
+      // A, B, F, E, T, Ж
       switch ($tax_class) {
         case '':
           // Standard rate
-          $label = 'B';
+          $label = 'A';
           break;
         case 'reduced-rate':
           $label = 'F';
           break;
         case 'zero-rate':
-          $label = 'E';
+          $label = 'B';
           break;
       }
     } else {
