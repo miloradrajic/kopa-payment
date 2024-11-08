@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.2.0 =
+* Added fiskalization
+
 = 1.1.19 =
 * Bugfixing for accepting already changes postAuth transaction type on completing order
 
