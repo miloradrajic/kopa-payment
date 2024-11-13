@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.19
+ * Version:           1.1.20
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -177,7 +177,7 @@ function custom_kopa_payment_endpoint()
     return $vars;
   });
 }
-add_action('init', 'custom_kopa_payment_endpoint', 999);
+add_action('init', 'custom_kopa_payment_endpoint', 9999);
 
 function custom_kopa_payment_rest_endpoint()
 {
@@ -215,4 +215,4 @@ function custom_kopa_payment_rest_endpoint()
     ]
   ));
 }
-add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint');
+add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint', 9999);
