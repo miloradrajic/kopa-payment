@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.1.20
+ * Version:           1.2.01
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -78,6 +78,7 @@ function check_for_woocommerce()
   require_once KOPA_PLUGIN_PATH . '/inc/log-functions.php';
   require_once KOPA_PLUGIN_PATH . '/inc/kopa-reference-id.php';
   require_once KOPA_PLUGIN_PATH . '/inc/payment-endpoint.php';
+  require_once KOPA_PLUGIN_PATH . '/inc/fiscalization.php';
 
   // Adding custom payment method
   function addKopaPaymentGateway($gateways)
@@ -416,3 +417,96 @@ function handle_bank_post_request_on_checkout_page()
 }
 
 add_action('template_redirect', 'handle_bank_post_request_on_checkout_page');
+
+
+add_action('add_meta_boxes', 'kopaFiscalizationSection');
+function kopaFiscalizationSection()
+{
+  if (
+    isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
+    get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
+  ) {
+    add_meta_box(
+      'kopa_fiscalization_metabox',           // Unique ID for the metabox
+      __('Kopa Fiscalization', 'kopa-payment'), // Title of the metabox
+      'custom_order_metabox_content',   // Callback function to display content
+      'shop_order',                       // Post type to display the metabox on
+      'normal',                          // Context: 'side' for the left column
+      'default'                         // Priority
+    );
+  }
+}
+
+function custom_order_metabox_content($post)
+{
+  // Optional: Use nonce for verification
+  wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
+  $order = wc_get_order($post->ID);
+
+  $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
+  $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+  $fiscalizationDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderFiscalizationData'));
+
+  $invoiceType = $order->get_meta('kopaFiscalizationType');
+  $invoiceNumber = $order->get_meta('kopaFiscalizationInvoiceNumber');
+  $verificationUrl = $order->get_meta('kopaFiscalizationVerificationUrl');
+
+  $invoiceRefundNumber = $order->get_meta('kopaFiscalizationRefundNumber');
+  $verificationUrlRefund = $order->get_meta('kopaFiscalizationRefundVerificationUrl');
+
+  echo '<div class="fiscalizationStatusWrapper">';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization status', 'kopa-payment') . '</h4><p>' . $invoiceType . '</p>';
+  echo '</div>';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization invoice number', 'kopa-payment') . '</h4><p>' . $invoiceNumber . '</p>';
+  echo '</div>';
+  echo '<div class="fiscalizationStatus">';
+  echo '<h4>' . __('Fiscalization invoice verification URL', 'kopa-payment') . '</h4>
+      <p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
+  echo '</div>';
+  if ($invoiceType == 'refund_success') {
+    echo '<div class="fiscalizationStatus">';
+    echo '<h4>' . __('Fiscalization refund number', 'kopa-payment') . '</h4><p>' . $invoiceRefundNumber . '</p>';
+    echo '</div>';
+    echo '<div class="fiscalizationStatus">';
+    echo '<h4>' . __('Fiscalization refund verification URL', 'kopa-payment') . '</h4>
+      <p><a href="' . $verificationUrlRefund . '" target="_blank">' . __('Verify refund', 'kopa-payment') . '</a></p>';
+    echo '</div>';
+  }
+  echo '</div>';
+  /*
+    $currency_symbol = get_woocommerce_currency_symbol();
+    if (
+      !empty($paymentDataSerialized) &&
+      !empty($kopaReferenceId)
+      // !empty($fiscalizationDataSerialized)
+    ) {
+      $alreadyRefunded = $order->get_meta('partialyRefundedItems');
+
+      echo '<div class="kopaRefundItemWrapper">';
+      foreach ($order->get_items() as $itemId => $item) {
+        $product_name = $item->get_name(); // Product name
+        $quantity = $item->get_quantity(); // Quantity of this item
+        $total = $item->get_total(); // Line total for this item
+        echo '<div class="kopaRefundItem" data-prod-id=' . $itemId . ' data-prod-price=' . $total . ' >';
+        echo '<span>' . __('Product Name', 'kopa-payment') . ': ' . $product_name . '</span>';
+        echo '<span>' . __('Quantity', 'kopa-payment') . ': ' . $quantity . '</span>';
+        echo '<span>' . __('Total', 'kopa-payment') . ': ' . wc_price($total) . '</span>';
+        echo '<span>' . __('Already refunded', 'kopa-payment') . ': 
+          <input id="kopa_already_refunded_' . $itemId . '" type="number" readonly class="kopaAlreadyRefunded" value="0"/></span>';
+        echo '<span class="relative">' . __('Refund quantity', 'kopa-payment') . ': 
+          <input class="kopaRefundQuantity" type="number" min="0" max="' . $quantity . '"name="kopa_refund_item[' . $itemId . ']" value="0"/></span>';
+        echo '<span>' . __('Total for refund', 'kopa-payment') . ':</br><span class="kopaItemRefundTotal">0</span> ' . $currency_symbol . '</span>';
+        echo '</div>';
+      }
+      echo '</div>';
+      echo '<p><label for="custom_order_field">' . __('Custom Field:', 'your-text-domain') . '</label></p>';
+      echo '<input type="text" id="custom_order_field" name="custom_order_field" value="' . 'test' . '" style="width:100%;">';
+    } else {
+      echo '<div class="inline-notice">
+        <p>' . __('Order hasn\'t been fiscalized with Kopa', 'kopa-payment') . '</p>
+      </div>';
+    }
+  */
+}

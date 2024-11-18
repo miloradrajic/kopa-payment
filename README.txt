@@ -29,9 +29,14 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 3. Activate the plugin through the "Plugins" menu in WordPress
 
 == Changelog ==
+= 1.2.01 =
+* Enableing checkout post request for bank transfers
+
+= 1.2.0 =
+* Added fiskalization
 
 = 1.1.20 =
-* Changed execution priority for registerin rewrite rules for bank results
+* Changed execution priority for registering rewrite rules for bank results
 
 = 1.1.19 =
 * Bugfixing for accepting already changes postAuth transaction type on completing order

@@ -193,6 +193,50 @@ class KOPA_Payment extends WC_Payment_Gateway
           'default' => 'no',
           'desc_tip' => false,
         ],
+        // Toggle Fiscalization Checkbox
+        'kopa_enable_fiscalization' => [
+          'title' => '',
+          'type' => 'checkbox',
+          'label' => __('Enable Kopa fiscalization', 'kopa-payment'),
+          'description' => __('Enable fiscalization for orders paid with Kopa payment plugin.', 'kopa-payment'),
+          'default' => 'no',
+          'desc_tip' => false,
+        ],
+        'title_kopa_fiscalization' => array(
+          'title' => __('Fiscalization tutorial:', 'kopa-payment'), // Title between inputs
+          'type' => 'title',
+          'description' => '<b>' . __('Before activating fiscalization, if you are in the VAT system, it is necessary to enable taxes in WooCommerce > Settings > Enable taxes.', 'kopa-payment') . '</b>' .
+            '<p>' . __('If you are NOT in the VAT system, the rate "A" will be used, which applies to entities not registered as VAT payers for all goods and services processed through the fiscal cash register.', 'kopa-payment') . '</p>' .
+            '<p>' . __('Then check the tax settings in WooCommerce > Settings > Tax.', 'kopa-payment') . '</p>' .
+            '<p>' . __('Basic tax rates for fiscalization will initially be added and can be reviewed in WooCommerce > Settings > Tax > Standard Rates | Reduced Rate Rates | Zero Rate Rates.', 'kopa-payment') . '</p>' .
+            '<p>' . __('If you have additional tax rates, you need to apply the KOPA tax rates to products for successful fiscalization. If the rates are not correctly set, a rate of 20% will automatically be applied to the fiscal receipt.', 'kopa-payment') . '</p>' .
+            '<p>' . __('The standard KOPA 20% rate will be applied to each product unless otherwise specified in the product settings.', 'kopa-payment') . '</p>'
+        ),
+        // Additional fields to be toggled
+        'kopa_fiscalization_cashier' => [
+          'title' => __('Cashier', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Cashier name displayed on the bill.', 'kopa-payment'),
+          'default' => get_bloginfo('name'),
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
+        'kopa_fiscalization_auth_id' => [
+          'title' => __('Auth ID', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Tax Administration Auth Id', 'kopa-payment'),
+          'default' => '',
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
+        'kopa_fiscalization_internal_id' => [
+          'title' => __('Kopa Internal ID', 'kopa-payment'),
+          'type' => 'text',
+          'description' => __('Kopa internal fiscalization Id', 'kopa-payment'),
+          'default' => '',
+          'desc_tip' => false,
+          'class' => 'toggle-additional-fields', // CSS class for JavaScript
+        ],
         'instructions' => [
           'title' => __('', 'kopa-payment'),
           'type' => 'title',
