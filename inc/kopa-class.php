@@ -783,8 +783,8 @@ class KOPA_Payment extends WC_Payment_Gateway
       <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
       <input type="hidden" name="resURL" value="<?php echo $this->getResponseUrl($orderId); ?>">
       <input type="hidden" name="redirectURL" value="<?php echo $this->getRedirectUrl($orderId); ?>">
-      <!-- <input type="hidden" name="exemptionFlag" value="6">
-      <input type="hidden" name="exemptionSubflag" value="C"> -->
+      <input type="hidden" name="exemptionFlag" value="6">
+      <input type="hidden" name="exemptionSubflag" value="C">
     </form>
     <?php
     return ob_get_clean();
