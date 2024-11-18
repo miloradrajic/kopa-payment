@@ -216,3 +216,203 @@ function custom_kopa_payment_rest_endpoint()
   ));
 }
 add_action('rest_api_init', 'custom_kopa_payment_rest_endpoint', 9999);
+
+/**
+ * *Used for posting transaction data on checkout page
+ * @param mixed $vars
+ * @return mixed
+ */
+function register_order_id_query_var($vars)
+{
+  $vars[] = 'kopa_accept_order';
+  $vars[] = 'kopa_order_redirect';
+  $vars[] = 'authResult';
+
+  return $vars;
+}
+add_filter('query_vars', 'register_order_id_query_var');
+
+
+/**
+ * Using checkout page to receive bank transfer data
+ * @return void
+ */
+function handle_bank_post_request_on_checkout_page()
+{
+  $acceptedOrderId = get_query_var('kopa_accept_order', null);
+  $redirectOrderId = get_query_var('kopa_order_redirect', null);
+  $authResult = get_query_var('authResult', null);
+
+  if (empty($acceptedOrderId) && empty($redirectOrderId))
+    return;
+
+  // Handle redirect
+  if (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    isset($authResult) &&
+    !empty($authResult) &&
+    !isDebugActive(debug: Debug::AFTER_PAYMENT)
+  ) {
+    // echo '<pre>' . print_r('asdf', true) . '</pre>';
+    // exit;
+    $orderId = explode('?', $redirectOrderId)[0];
+    $order = wc_get_order($orderId);
+
+    if (!$order) {
+      $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' ECO-262 <br>';
+      wc_add_notice($notice, 'error');
+      wp_redirect(wc_get_checkout_url());
+      exit;
+    }
+    $kopaOrderId = $order->get_meta('kopaIdReferenceId');
+    $redirectDone = $order->get_meta('kopaRedirectDone');
+
+    if ($redirectDone == true) {
+      // Redirect to Thank You page was already done, and should not be done again
+      // Add a notice
+      wc_add_notice('Already done redirection', 'error');
+      wp_redirect(wc_get_cart_url());
+      exit;
+    } else {
+      // Update order meta for kopa order, so it can only once be redirected to thankyou page
+      $order->update_meta_data('kopaRedirectDone', 'true');
+      $order->save();
+    }
+
+    if ($authResult == 'AUTHORISED') {
+      wp_redirect($order->get_checkout_order_received_url());
+      exit;
+    }
+    $kopaClass = new KOPA_Payment();
+    $kopaCurl = new KopaCurl();
+    $userId = $order->get_user_id();
+
+    $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+    if ($authResult == 'CANCELLED') {
+      $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-886 <br>';
+
+      if (
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+        get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+      ) {
+        $notice .= json_encode($orderDetailsKopa);
+      }
+      // Add a notice
+      wc_add_notice($notice, 'error');
+
+      $order->update_status('pending');
+      $order->save();
+      // Redirect to the checkout page
+      $orderKey = $order->get_meta('_order_key');
+
+      wp_redirect(wc_get_checkout_url() . $orderId . '/?pay_for_order=true&key=' . $orderKey);
+      exit;
+    }
+    if ($authResult == 'REFUSED') {
+      $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
+
+      if (
+        !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+        get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+      ) {
+        $notice .= __('Your payment was refused.', 'kopa-payment') . '<br>' . json_encode($orderDetailsKopa);
+      }
+      // Add a notice
+      wc_add_notice($notice, 'error');
+
+      $order->update_status('pending');
+      $order->add_order_note(
+        __('Order has failed CC transaction', 'kopa-payment'),
+        true
+      );
+      $order->save();
+      $orderKey = $order->get_meta('_order_key');
+
+      // Redirect to the checkout page
+      wp_redirect(wc_get_checkout_url() . '/' . $orderId . '/?pay_for_order=true&key=' . $orderKey);
+      exit;
+    }
+  }
+
+  // Handle recieve data
+  // Ensure it's a POST request
+  if ($acceptedOrderId) {
+    // Get WooCommerce checkout URL
+    $checkout_url = parse_url(wc_get_checkout_url(), PHP_URL_PATH); // Path only
+    $request_url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); // Path only
+
+    // echo '$checkout_url<pre>' . print_r($checkout_url, true) . '</pre>';
+    // echo '$request_url<pre>' . print_r($request_url, true) . '</pre>';
+    // echo 'TEST : <pre>' . print_r((strpos($request_url, $checkout_url) === false &&
+    //   strpos($checkout_url, $request_url) === false), true) . '</pre>';
+    // exit;
+    // Check if the request is targeting the checkout page
+    if (
+      strpos($request_url, $checkout_url) === false &&
+      strpos($checkout_url, $request_url) === false
+    ) {
+      return;
+    }
+
+    // Validate and process the order
+    $order = wc_get_order($acceptedOrderId);
+    if (!$order) {
+      header('Content-Type: application/json');
+      echo json_encode(['error' => 'Order not found.']);
+      http_response_code(404);
+      exit;
+    }
+    // TODO add functionality here for processing bank transfer data
+    $kopaClass = new KOPA_Payment();
+    $kopaCurl = new KopaCurl();
+
+    $userId = $order->get_user_id();
+    $physicalProducts = $kopaClass->isPhysicalProducts($order);
+
+    // Retrieve JSON data from the request
+    $jsonData = file_get_contents('php://input');
+    $data = json_decode($jsonData, true);
+
+    $kopaOrderId = $order->get_meta('kopaIdReferenceId');
+
+    // Check if OrderId and kopa reference id match
+    if ($data['OrderId'] == $kopaOrderId) {
+      // Update transaction meta data
+      // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
+      $order->update_meta_data('kopaOrderPaymentData', $data);
+      $order->save();
+      // Check for payment transaction details on KOPA
+      $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+
+      // Update Status on order and return transaction status BOOLEAN
+      $successPayment = paymentSuccessCheckup($order, $orderDetailsKopa, $physicalProducts);
+
+      // successPayment is false, meaning that transaction was unsuccessful
+      if ($successPayment === false) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Data received: Failed transaction']);
+        http_response_code(200);
+        exit;
+      }
+      header('Content-Type: application/json');
+      echo json_encode(['success' => true, 'message' => 'Data received: Success transaction']);
+      http_response_code(200);
+      exit;
+    } else {
+      $order->update_meta_data('kopaOrderPaymentData', json_encode([
+        'sentData' => $data,
+        'message' => 'kopaId Not the same',
+        'kopaId' => $kopaOrderId,
+        'orderId' => $acceptedOrderId
+      ]));
+      $order->save();
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'message' => 'Transaction processed.']);
+    http_response_code(200);
+    exit;
+  }
+}
+
+add_action('template_redirect', 'handle_bank_post_request_on_checkout_page');

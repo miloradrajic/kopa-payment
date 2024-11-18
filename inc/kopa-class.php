@@ -18,7 +18,7 @@ class KOPA_Payment extends WC_Payment_Gateway
     add_action('woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'kopa_validate_and_trim_url']);
-    add_action('woocommerce_update_options_kopa-payment_' . $this->id, [$this, 'custom_flush_rewrite_rules_after_save']);
+    add_action('woocommerce_update_options_kopa-payment_' . $this->id, [$this, 'kopa_flush_rewrite_rules']);
 
     // add_filter('woocommerce_settings_save_' . $this->id, [$this,'kopa_validate_and_trim_url']);
     $this->getErrorsIfSettingsFieldsEmpty();
@@ -27,7 +27,7 @@ class KOPA_Payment extends WC_Payment_Gateway
     }
   }
 
-  function custom_flush_rewrite_rules_after_save()
+  function kopa_flush_rewrite_rules()
   {
     flush_rewrite_rules();
   }
@@ -161,6 +161,8 @@ class KOPA_Payment extends WC_Payment_Gateway
           'options' => [
             'regular' => __('Regular redirect', 'kopa-payment'),
             'rest' => __('REST API Redirect', 'kopa-payment'),
+            'file' => __('Plugin file', 'kopa-payment'),
+            'checkout' => __('Checkout', 'kopa-payment'),
           ],
         ],
         'title_payment_methods' => array(
@@ -744,19 +746,39 @@ class KOPA_Payment extends WC_Payment_Gateway
 
   public function getRedirectUrl($orderId)
   {
-    if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'regular') {
-      return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
-    } else if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'rest') {
-      return rest_url('kopa-payment/v1/payment-redirect/' . $orderId);
+    $endpointType = get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'];
+    switch ($endpointType) {
+      case 'regular':
+        return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
+        break;
+      case 'rest':
+        return rest_url('kopa-payment/v1/payment-redirect/' . $orderId);
+        break;
+      case 'file':
+        return plugins_url('kopa-payment-master/endpoints/order-redirect/' . $orderId, dirname(__DIR__));
+        break;
+      case 'checkout':
+        return wc_get_checkout_url() . '?kopa_order_redirect=' . $orderId;
+        break;
     }
   }
 
   public function getResponseUrl($orderId)
   {
-    if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'regular') {
-      return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
-    } else if (get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'] === 'rest') {
-      return rest_url('kopa-payment/v1/payment-data/accept-order/' . $orderId);
+    $endpointType = get_option('woocommerce_kopa-payment_settings')['kopa_api_redirect_page_type'];
+    switch ($endpointType) {
+      case 'regular':
+        return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
+        break;
+      case 'rest':
+        return rest_url('kopa-payment/v1/payment-data/accept-order/' . $orderId);
+        break;
+      case 'file':
+        return plugins_url('kopa-payment-master/endpoints/accept-order/' . $orderId, dirname(__DIR__));
+        break;
+      case 'checkout':
+        return wc_get_checkout_url() . '?kopa_accept_order=' . $orderId;
+        break;
     }
   }
   /**

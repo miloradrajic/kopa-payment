@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteRule ^accept-order/([0-9]+)$ accept-order.php?id=$1 [QSA,L,PT]
+
+RewriteRule ^order-redirect/([0-9]+)$ order-redirect.php?id=$1 [QSA,L,PT]
