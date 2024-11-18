@@ -440,11 +440,11 @@ function kopaFiscalizationSection()
   }
 }
 
-function custom_order_metabox_content($order)
+function custom_order_metabox_content($post)
 {
   // Optional: Use nonce for verification
   // wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
-  // $order = wc_get_order($post->ID);
+  $order = wc_get_order($post->ID);
 
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
   $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
