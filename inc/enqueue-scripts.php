@@ -45,7 +45,7 @@ add_action('wp_enqueue_scripts', 'enqueue_kopa_scripts');
 function kopaCustomOrderScripts($hook)
 {
   // Only enqueue on the WooCommerce Kopa payment settings page
-  if ($hook !== 'woocommerce_page_wc-settings' && $hook !== 'post.php') {
+  if ($hook !== 'woocommerce_page_wc-settings' && $hook !== 'post.php' && $hook !== 'woocommerce_page_wc-orders') {
     return;
   }
 
@@ -62,7 +62,7 @@ function kopaCustomOrderScripts($hook)
   }
 
   // Woocommerce order preview styles
-  if ($hook === 'post.php') {
+  if ($hook === 'post.php' || $hook == 'woocommerce_page_wc-orders') {
     $orderStyleVersion = md5_file(KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css');
     wp_enqueue_style('kopa-admin-styles', KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css', '', $orderStyleVersion);
 

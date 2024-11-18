@@ -213,17 +213,17 @@ function checkAndAddStandardTaxRate()
 
   // Check if any standard tax rates are already set
   $standard_rate_exists = $wpdb->get_var(
-    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = '' AND tax_rate_name = 'KOPA 20%'"
+    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = '' AND tax_rate_name = 'PDV 20%'"
   );
 
   // Check if any reduced-rate tax rates are set
   $reduced_rate_exists = $wpdb->get_var(
-    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = 'reduced-rate' AND tax_rate_name = 'KOPA 10%'"
+    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = 'reduced-rate' AND tax_rate_name = 'PDV 10%'"
   );
 
   // Check if any zero-rate tax rates are set
   $zero_rate_exists = $wpdb->get_var(
-    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = 'zero-rate' AND tax_rate_name = 'KOPA 0%'"
+    "SELECT COUNT(*) FROM {$wpdb->prefix}woocommerce_tax_rates WHERE tax_rate_class = 'zero-rate' AND tax_rate_name = 'PDV 0%'"
   );
 
   // If no standard tax rate is found, add a new one
@@ -232,7 +232,7 @@ function checkAndAddStandardTaxRate()
       'tax_rate_country' => '',       // Apply to all countries
       'tax_rate_state' => '',         // Apply to all states
       'tax_rate' => '20.0000',        // 20% tax rate
-      'tax_rate_name' => 'KOPA 20%',
+      'tax_rate_name' => 'PDV 20%',
       'tax_rate_priority' => 1,
       'tax_rate_compound' => 0,
       'tax_rate_shipping' => 0,       // Do not apply to shipping
@@ -248,7 +248,7 @@ function checkAndAddStandardTaxRate()
       'tax_rate_country' => '',       // Apply to all countries
       'tax_rate_state' => '',         // Apply to all states
       'tax_rate' => '10.0000',        // 10% tax rate
-      'tax_rate_name' => 'Reduced 10%',
+      'tax_rate_name' => 'PDV 10%',
       'tax_rate_priority' => 1,
       'tax_rate_compound' => 0,
       'tax_rate_shipping' => 0,       // Do not apply to shipping
@@ -264,7 +264,7 @@ function checkAndAddStandardTaxRate()
       'tax_rate_country' => '',       // Apply to all countries
       'tax_rate_state' => '',         // Apply to all states
       'tax_rate' => '0.0000',         // 0% tax rate
-      'tax_rate_name' => 'Zero Rate',
+      'tax_rate_name' => 'PDV 0%',
       'tax_rate_priority' => 1,
       'tax_rate_compound' => 0,
       'tax_rate_shipping' => 0,       // Do not apply to shipping

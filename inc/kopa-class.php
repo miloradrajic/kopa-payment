@@ -210,7 +210,7 @@ class KOPA_Payment extends WC_Payment_Gateway
             '<p>' . __('Then check the tax settings in WooCommerce > Settings > Tax.', 'kopa-payment') . '</p>' .
             '<p>' . __('Basic tax rates for fiscalization will initially be added and can be reviewed in WooCommerce > Settings > Tax > Standard Rates | Reduced Rate Rates | Zero Rate Rates.', 'kopa-payment') . '</p>' .
             '<p>' . __('If you have additional tax rates, you need to apply the KOPA tax rates to products for successful fiscalization. If the rates are not correctly set, a rate of 20% will automatically be applied to the fiscal receipt.', 'kopa-payment') . '</p>' .
-            '<p>' . __('The standard KOPA 20% rate will be applied to each product unless otherwise specified in the product settings.', 'kopa-payment') . '</p>'
+            '<p>' . __('The standard PDV 20% rate will be applied to each product unless otherwise specified in the product settings.', 'kopa-payment') . '</p>'
         ),
         // Additional fields to be toggled
         'kopa_fiscalization_cashier' => [

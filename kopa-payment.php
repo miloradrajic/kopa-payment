@@ -418,7 +418,7 @@ function handle_bank_post_request_on_checkout_page()
 
 add_action('template_redirect', 'handle_bank_post_request_on_checkout_page');
 
-
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 add_action('add_meta_boxes', 'kopaFiscalizationSection');
 function kopaFiscalizationSection()
 {
@@ -426,22 +426,25 @@ function kopaFiscalizationSection()
     isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
     get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
   ) {
+    $screen = class_exists('\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController') && wc_get_container()->get(CustomOrdersTableController::class)->custom_orders_table_usage_is_enabled()
+      ? wc_get_page_screen_id('shop-order')
+      : 'shop_order';
     add_meta_box(
       'kopa_fiscalization_metabox',           // Unique ID for the metabox
       __('Kopa Fiscalization', 'kopa-payment'), // Title of the metabox
       'custom_order_metabox_content',   // Callback function to display content
-      'shop_order',                       // Post type to display the metabox on
+      $screen,                          // Post type to display the metabox on
       'normal',                          // Context: 'side' for the left column
       'default'                         // Priority
     );
   }
 }
 
-function custom_order_metabox_content($post)
+function custom_order_metabox_content($order)
 {
   // Optional: Use nonce for verification
-  wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
-  $order = wc_get_order($post->ID);
+  // wp_nonce_field('save_custom_order_metabox_data', 'custom_order_metabox_nonce');
+  // $order = wc_get_order($post->ID);
 
   $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
   $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
@@ -462,16 +465,20 @@ function custom_order_metabox_content($post)
   echo '<h4>' . __('Fiscalization invoice number', 'kopa-payment') . '</h4><p>' . $invoiceNumber . '</p>';
   echo '</div>';
   echo '<div class="fiscalizationStatus">';
-  echo '<h4>' . __('Fiscalization invoice verification URL', 'kopa-payment') . '</h4>
-      <p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
+  echo '<h4>' . __('Fiscalization invoice verification URL', 'kopa-payment') . '</h4>';
+  if ($verificationUrl) {
+    echo '<p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
+  }
   echo '</div>';
   if ($invoiceType == 'refund_success') {
     echo '<div class="fiscalizationStatus">';
     echo '<h4>' . __('Fiscalization refund number', 'kopa-payment') . '</h4><p>' . $invoiceRefundNumber . '</p>';
     echo '</div>';
     echo '<div class="fiscalizationStatus">';
-    echo '<h4>' . __('Fiscalization refund verification URL', 'kopa-payment') . '</h4>
-      <p><a href="' . $verificationUrlRefund . '" target="_blank">' . __('Verify refund', 'kopa-payment') . '</a></p>';
+    echo '<h4>' . __('Fiscalization refund verification URL', 'kopa-payment') . '</h4>';
+    if ($verificationUrlRefund) {
+      echo '<p><a href="' . $verificationUrlRefund . '" target="_blank">' . __('Verify refund', 'kopa-payment') . '</a></p>';
+    }
     echo '</div>';
   }
   echo '</div>';
