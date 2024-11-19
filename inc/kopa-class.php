@@ -661,11 +661,17 @@ class KOPA_Payment extends WC_Payment_Gateway
         ];
       }
 
-      if ($savedCard['is3dAuth'] == false) {
-        // Init 3D payment
+      $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+      if (
+        $savedCard['is3dAuth'] == false &&
+        (
+          (!isset($bankDetails['payload']['flaging']) || $bankDetails['payload']['flaging'] == false) ||
+          (!isset($savedCard['traceId']) || !empty($savedCard['traceId']))
+        )
+      ) {
+        // Init 3D payment no flaging for CIT and MIT
         $decodedCCNumber = $_POST['ccNumber'];
         $decodedExpDate = $_POST['ccExpDate'];
-        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
         $htmlCode = $this->generateHtmlFor3DPaymentForm(
           $bankDetails,
           $decodedCCNumber,
@@ -674,7 +680,10 @@ class KOPA_Payment extends WC_Payment_Gateway
           $_POST['kopa_ccv'],
           $orderId
         );
-
+        if (isDebugActive(Debug::BEFORE_PAYMENT)) {
+          echo '<pre>' . print_r($htmlCode, true) . '</pre>';
+          return;
+        }
         $paymentMethod = '3d';
         $order->update_meta_data('kopa_payment_method', $paymentMethod);
         $order->save();
@@ -684,7 +693,75 @@ class KOPA_Payment extends WC_Payment_Gateway
           'htmlCode' => $htmlCode,
           'orderId' => $kopaOrderId,
         ];
-      } else {
+      } else if (
+        $savedCard['is3dAuth'] == true &&
+        isset($bankDetails['payload']['flaging']) &&
+        $bankDetails['payload']['flaging'] == true &&
+        isset($savedCard['traceId']) &&
+        !empty($savedCard['traceId'])
+      ) {
+        // Init 3DS MIT transaction with traceId
+        $motoPaymentResult = $this->curl->motoPayment(
+          $savedCard,
+          $kopaUseSavedCcId,
+          $orderTotalAmount,
+          $physicalProducts,
+          $kopaOrderId,
+          $savedCard['traceId']
+        );
+
+        $paymentMethod = 'mit';
+        $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
+
+        if ($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved') {
+          // MOTO MIT PAYMENT SUCCESS
+          $order->payment_complete();
+          $paymentMethod = 'mit';
+          $order->update_meta_data('kopa_payment_method', $paymentMethod);
+          $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
+
+          // Add an order note
+          $note = __('Order has been paid with KOPA system', 'kopa-payment');
+          $order->add_order_note($note);
+
+          if ($physicalProducts == true) {
+            // Change the order status to 'processing'
+            $order->update_meta_data('isPhysicalProducts', 'true');
+            $order->update_status('processing');
+          } else {
+            // Change the order status to 'completed'
+            $order->update_meta_data('isPhysicalProducts', 'false');
+            $order->update_status('completed');
+          }
+          $order->update_meta_data('kopaTranType', 'moto_success');
+          $order->save();
+          return [
+            'result' => 'success',
+            'messages' => __('Starting moto payment', 'kopa-payment'),
+            'redirect' => $this->get_return_url($order),
+          ];
+        } else {
+          // MOTO MIT PAYMENT FAILED
+          $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
+
+          if (
+            !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
+            get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
+          ) {
+            $notice .= $motoPaymentResult['errMsg'];
+          }
+          // Add a notice
+          wc_add_notice($notice, 'error');
+
+          $order->add_order_note(
+            __('Order has failed CC transaction', 'kopa-payment'),
+            true
+          );
+          $order->save();
+          return false;
+        }
+
+      } else if ($savedCard['is3dAuth'] == true) {
         // Init Moto payment
         $motoPaymentResult = $this->curl->motoPayment(
           $savedCard,

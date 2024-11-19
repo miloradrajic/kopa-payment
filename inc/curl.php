@@ -538,7 +538,7 @@ class KopaCurl
   /**
    * MOTO payment
    */
-  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId)
+  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId = null)
   {
     if ($this->isInitialized() == false) {
       $this->curlInit();
@@ -557,8 +557,13 @@ class KopaCurl
         'physicalProduct' => $physicalProduct,
         'oid' => $kopaOrderId,
         'ccv' => null,
+        'traceId' => $traceId,
       ]
     );
+    if (isDebugActive(Debug::BEFORE_PAYMENT)) {
+      echo 'MOTO Data<pre>' . print_r($data, true) . '</pre>';
+      return;
+    }
     $returnData = $this->post($motoPaymentUrl, $data);
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();

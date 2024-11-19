@@ -418,6 +418,7 @@ function handle_bank_post_request_on_checkout_page()
 add_action('template_redirect', 'handle_bank_post_request_on_checkout_page');
 
 // add_action('add_meta_boxes', 'kopaFiscalizationSection');
+// use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 // function kopaFiscalizationSection()
 // {
 //   if (
