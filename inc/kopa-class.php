@@ -47,7 +47,7 @@ class KOPA_Payment extends WC_Payment_Gateway
   {
     $active_gateways = array();
     foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
-      if ($gateway->settings['enabled'] == 'yes') {
+      if (isset($gateway->settings['enabled']) && $gateway->settings['enabled'] == 'yes') {
         $active_gateways[] = $gateway->id;
       }
     }

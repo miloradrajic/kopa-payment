@@ -252,7 +252,7 @@ function handle_bank_post_request_on_checkout_page()
     $_SERVER['REQUEST_METHOD'] === 'GET' &&
     isset($authResult) &&
     !empty($authResult) &&
-    !isDebugActive(debug: Debug::AFTER_PAYMENT)
+    !isDebugActive(Debug::AFTER_PAYMENT)
   ) {
     // echo '<pre>' . print_r('asdf', true) . '</pre>';
     // exit;
