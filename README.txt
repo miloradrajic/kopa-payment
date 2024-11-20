@@ -29,6 +29,10 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 3. Activate the plugin through the "Plugins" menu in WordPress
 
 == Changelog ==
+
+= 1.2.02 =
+* Added fiscalization debug options, removed REST API and custom files for transaction details POST
+
 = 1.2.01 =
 * Enableing checkout post request for bank transfers
 

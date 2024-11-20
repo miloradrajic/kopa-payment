@@ -128,8 +128,14 @@ add_filter('woocommerce_shop_order_search_fields', 'extendOrdersSearchWithKopaRe
  */
 function add_custom_column($columns)
 {
-  $columns['kopaIdReferenceId'] = 'KOPA ID';
-  $columns['kopaPaymentMethod'] = 'KOPA Payment status';
+  $columns['kopaIdReferenceId'] = __('KOPA ID', 'kopa-payment');
+  $columns['kopaPaymentMethod'] = __('KOPA Payment status', 'kopa-payment');
+  if (
+    isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
+    get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
+  ) {
+    $columns['kopaFiscalizationStatus'] = __('KOPA Fiscalization status', 'kopa-payment');
+  }
   return $columns;
 }
 add_filter('manage_edit-shop_order_columns', 'add_custom_column');
@@ -151,13 +157,20 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
 
   function display_custom_column_value_new($column, $order)
   {
-    if ($column === 'kopaIdReferenceId') {
-      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
-      echo $kopaIdReferenceId;
-    }
-    if ($column === 'kopaPaymentMethod') {
-      $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
-      echo $kopaPaymentMethod;
+    switch ($column) {
+      case 'kopaIdReferenceId':
+        $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
+        echo $kopaIdReferenceId;
+        break;
+      case 'kopaPaymentMethod':
+        $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
+        echo $kopaPaymentMethod;
+        break;
+      case 'kopaFiscalizationStatus':
+        $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
+        echo $kopaFiscalizationStatus;
+        break;
+
     }
   }
   add_action('woocommerce_shop_order_list_table_custom_column', 'display_custom_column_value_new', 10, 2);
