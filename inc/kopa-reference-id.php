@@ -168,9 +168,7 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
         break;
       case 'kopaFiscalizationStatus':
         $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
-        $kopaFiscalizationVerificationUrl = $order->get_meta('kopaFiscalizationVerificationUrl', true);
-        echo $kopaFiscalizationStatus . '.<br>.';
-        echo $kopaFiscalizationVerificationUrl;
+        echo $kopaFiscalizationStatus;
         break;
 
     }
@@ -183,13 +181,20 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
   function display_custom_column_value($column, $post_id)
   {
     $order = wc_get_order($post_id);
-    if ($column === 'kopaIdReferenceId') {
-      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId');
-      echo $kopaIdReferenceId;
-    }
-    if ($column === 'kopaPaymentMethod') {
-      $kopaPaymentMethod = $order->get_meta('kopaTranType');
-      echo $kopaPaymentMethod;
+    switch ($column) {
+      case 'kopaIdReferenceId':
+        $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
+        echo $kopaIdReferenceId;
+        break;
+      case 'kopaPaymentMethod':
+        $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
+        echo $kopaPaymentMethod;
+        break;
+      case 'kopaFiscalizationStatus':
+        $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
+        echo $kopaFiscalizationStatus;
+        break;
+
     }
   }
   add_action('manage_shop_order_posts_custom_column', 'display_custom_column_value', 10, 2);
