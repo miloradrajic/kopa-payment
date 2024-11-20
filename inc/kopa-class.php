@@ -693,89 +693,36 @@ class KOPA_Payment extends WC_Payment_Gateway
           'htmlCode' => $htmlCode,
           'orderId' => $kopaOrderId,
         ];
-      } else if (
-        $savedCard['is3dAuth'] == true &&
-        isset($bankDetails['payload']['flaging']) &&
-        $bankDetails['payload']['flaging'] == true &&
-        isset($savedCard['traceId']) &&
-        !empty($savedCard['traceId'])
-      ) {
-        // Init 3DS MIT transaction with traceId
-        $motoPaymentResult = $this->curl->motoPayment(
-          $savedCard,
-          $kopaUseSavedCcId,
-          $orderTotalAmount,
-          $physicalProducts,
-          $kopaOrderId,
-          $savedCard['traceId']
-        );
-
-        $paymentMethod = 'mit';
-        $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
-
-        if ($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved') {
-          // MOTO MIT PAYMENT SUCCESS
-          $order->payment_complete();
-          $paymentMethod = 'mit';
-          $order->update_meta_data('kopa_payment_method', $paymentMethod);
-          $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
-
-          // Add an order note
-          $note = __('Order has been paid with KOPA system', 'kopa-payment');
-          $order->add_order_note($note);
-
-          if ($physicalProducts == true) {
-            // Change the order status to 'processing'
-            $order->update_meta_data('isPhysicalProducts', 'true');
-            $order->update_status('processing');
-          } else {
-            // Change the order status to 'completed'
-            $order->update_meta_data('isPhysicalProducts', 'false');
-            $order->update_status('completed');
-          }
-          $order->update_meta_data('kopaTranType', 'moto_success');
-          $order->save();
-          return [
-            'result' => 'success',
-            'messages' => __('Starting moto payment', 'kopa-payment'),
-            'redirect' => $this->get_return_url($order),
-          ];
-        } else {
-          // MOTO MIT PAYMENT FAILED
-          $notice = __('Payment unsuccessful - your payment card account is not debited.', 'kopa-payment') . ' EC-843 <br>';
-
-          if (
-            !isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode']) ||
-            get_option('woocommerce_kopa-payment_settings')['kopa_enable_test_mode'] == 'no'
-          ) {
-            $notice .= $motoPaymentResult['errMsg'];
-          }
-          // Add a notice
-          wc_add_notice($notice, 'error');
-
-          $order->add_order_note(
-            __('Order has failed CC transaction', 'kopa-payment'),
-            true
-          );
-          $order->save();
-          return false;
-        }
-
       } else if ($savedCard['is3dAuth'] == true) {
+        $traceId = null;
+        $paymentMethod = 'moto';
+
+        if (
+          $savedCard['is3dAuth'] == true &&
+          isset($bankDetails['payload']['flaging']) &&
+          $bankDetails['payload']['flaging'] == true &&
+          isset($savedCard['traceId']) &&
+          !empty($savedCard['traceId'])
+        ) {
+          // MIT Transaction data
+          $traceId = $savedCard['traceId'];
+          $paymentMethod = 'mit';
+        }
         // Init Moto payment
         $motoPaymentResult = $this->curl->motoPayment(
           $savedCard,
           $kopaUseSavedCcId,
           $orderTotalAmount,
           $physicalProducts,
-          $kopaOrderId
+          $kopaOrderId,
+          $traceId
         );
         $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
 
         if ($motoPaymentResult['success'] == true && $motoPaymentResult['response'] == 'Approved') {
           // MOTO PAYMENT SUCCESS
           $order->payment_complete();
-          $paymentMethod = 'moto';
+
           $order->update_meta_data('kopa_payment_method', $paymentMethod);
           $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
 
@@ -872,16 +819,12 @@ class KOPA_Payment extends WC_Payment_Gateway
     switch ($endpointType) {
       case 'regular':
         return get_home_url(get_current_blog_id(), 'kopa-payment-data/accept-order/' . $orderId);
-        break;
       case 'rest':
         return rest_url('kopa-payment/v1/payment-redirect/' . $orderId);
-        break;
       case 'file':
         return plugins_url('kopa-payment-master/endpoints/order-redirect/' . $orderId, dirname(__DIR__));
-        break;
       case 'checkout':
         return wc_get_checkout_url() . '?kopa_order_redirect=' . $orderId;
-        break;
     }
   }
 

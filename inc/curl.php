@@ -538,7 +538,7 @@ class KopaCurl
   /**
    * MOTO payment
    */
-  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId = null)
+  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId)
   {
     if ($this->isInitialized() == false) {
       $this->curlInit();
@@ -557,6 +557,8 @@ class KopaCurl
         'physicalProduct' => $physicalProduct,
         'oid' => $kopaOrderId,
         'ccv' => null,
+        'exemptionFlag' => '6',
+        'exemptionSubflag' => 'C',
         'traceId' => $traceId,
       ]
     );
