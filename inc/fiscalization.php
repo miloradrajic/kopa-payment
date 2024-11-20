@@ -58,7 +58,7 @@ function kopaFiscalizationOnOrderCompleted($orderId)
               break;
 
             case 1: // Refund
-              $order->update_meta_data('kopaFiscalizationType', 'refund_success');
+              $order->update_meta_data('kopaFiscalizationType', 'refund_invoice_success');
               break;
           }
         }
@@ -107,12 +107,12 @@ function kopaFiscalizationRefund($orderId)
         __('Fiscalization refund sent.', 'kopa-payment'),
         true
       );
-      $order->update_meta_data('kopaFiscalizationType', 'refund_success');
+      $order->update_meta_data('kopaFiscalizationType', 'refund_invoice_success');
       $order->update_meta_data('kopaFiscalizationRefundNumber', $fiscalizationResult['invoiceNumber']);
       $order->update_meta_data('kopaFiscalizationRefundVerificationUrl', $fiscalizationResult['verificationUrl']);
       // Add an order note
     } else {
-      $order->update_meta_data('kopaFiscalizationType', 'refund_failed');
+      $order->update_meta_data('kopaFiscalizationType', 'refund_invoice_failed');
       $order->add_order_note(
         __('Fiscalization refund error. Something went wrong', 'kopa-payment'),
         true

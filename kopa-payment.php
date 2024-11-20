@@ -470,7 +470,7 @@ function custom_order_metabox_content($post)
     echo '<p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
   }
   echo '</div>';
-  if ($invoiceType == 'refund_success') {
+  if ($invoiceType == 'refund_invoice_success') {
     echo '<div class="fiscalizationStatus">';
     echo '<h4>' . __('Fiscalization refund number', 'kopa-payment') . '</h4><p>' . $invoiceRefundNumber . '</p>';
     echo '</div>';

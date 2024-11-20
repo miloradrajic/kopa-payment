@@ -157,20 +157,17 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
 
   function display_custom_column_value_new($column, $order)
   {
-    switch ($column) {
-      case 'kopaIdReferenceId':
-        $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
-        echo $kopaIdReferenceId;
-        break;
-      case 'kopaPaymentMethod':
-        $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
-        echo $kopaPaymentMethod;
-        break;
-      case 'kopaFiscalizationStatus':
-        $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
-        echo $kopaFiscalizationStatus;
-        break;
-
+    if ($column === 'kopaIdReferenceId') {
+      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId');
+      echo $kopaIdReferenceId;
+    }
+    if ($column === 'kopaPaymentMethod') {
+      $kopaPaymentMethod = $order->get_meta('kopaTranType');
+      echo $kopaPaymentMethod;
+    }
+    if ($column === 'kopaFiscalizationStatus') {
+      $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
+      echo $kopaFiscalizationStatus;
     }
   }
   add_action('woocommerce_shop_order_list_table_custom_column', 'display_custom_column_value_new', 10, 2);
@@ -181,20 +178,17 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
   function display_custom_column_value($column, $post_id)
   {
     $order = wc_get_order($post_id);
-    switch ($column) {
-      case 'kopaIdReferenceId':
-        $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId', true);
-        echo $kopaIdReferenceId;
-        break;
-      case 'kopaPaymentMethod':
-        $kopaPaymentMethod = $order->get_meta('kopaTranType', true);
-        echo $kopaPaymentMethod;
-        break;
-      case 'kopaFiscalizationStatus':
-        $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
-        echo $kopaFiscalizationStatus;
-        break;
-
+    if ($column === 'kopaIdReferenceId') {
+      $kopaIdReferenceId = $order->get_meta('kopaIdReferenceId');
+      echo $kopaIdReferenceId;
+    }
+    if ($column === 'kopaPaymentMethod') {
+      $kopaPaymentMethod = $order->get_meta('kopaTranType');
+      echo $kopaPaymentMethod;
+    }
+    if ($column === 'kopaFiscalizationStatus') {
+      $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
+      echo $kopaFiscalizationStatus;
     }
   }
   add_action('manage_shop_order_posts_custom_column', 'display_custom_column_value', 10, 2);
