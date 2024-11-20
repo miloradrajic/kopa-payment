@@ -168,7 +168,9 @@ if (WC_CUSTOM_ORDERS_TABLE === 'yes') {
         break;
       case 'kopaFiscalizationStatus':
         $kopaFiscalizationStatus = $order->get_meta('kopaFiscalizationType', true);
-        echo $kopaFiscalizationStatus;
+        $kopaFiscalizationVerificationUrl = $order->get_meta('kopaFiscalizationVerificationUrl', true);
+        echo $kopaFiscalizationStatus . '.<br>.';
+        echo $kopaFiscalizationVerificationUrl;
         break;
 
     }
