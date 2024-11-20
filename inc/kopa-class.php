@@ -155,7 +155,7 @@ class KOPA_Payment extends WC_Payment_Gateway
           'type' => 'select',
           'class' => 'wc-enhanced-select',
           'label' => '',
-          'description' => __('In case of conflicts on redirection after payment, use REST API redirection, but check if REST API is not blocked.', 'kopa-payment') . ' <a target="_blank" href="' . rest_url('kopa-payment/v1/test') . '">' . __('REST API check here', 'kopa-payment') . '</a>',
+          // 'description' => __('In case of conflicts on redirection after payment, use REST API redirection, but check if REST API is not blocked.', 'kopa-payment') . ' <a target="_blank" href="' . rest_url('kopa-payment/v1/test') . '">' . __('REST API check here', 'kopa-payment') . '</a>',
           'default' => 'checkout',
           'desc_tip' => false,
           'options' => [
