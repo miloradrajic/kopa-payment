@@ -661,46 +661,43 @@ class KOPA_Payment extends WC_Payment_Gateway
         ];
       }
 
-      $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
-      if (
-        $savedCard['is3dAuth'] == false &&
-        (
+      if ($savedCard['is3dAuth'] == false) {
+        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+        if (
           (!isset($bankDetails['payload']['flaging']) || $bankDetails['payload']['flaging'] == false) ||
           (!isset($savedCard['traceId']) || !empty($savedCard['traceId']))
-        )
-      ) {
-        // Init 3D payment no flaging for CIT and MIT
-        $decodedCCNumber = $_POST['ccNumber'];
-        $decodedExpDate = $_POST['ccExpDate'];
-        $htmlCode = $this->generateHtmlFor3DPaymentForm(
-          $bankDetails,
-          $decodedCCNumber,
-          $decodedExpDate,
-          $kopaCcAlias,
-          $_POST['kopa_ccv'],
-          $orderId
-        );
-        if (isDebugActive(Debug::BEFORE_PAYMENT)) {
-          echo '<pre>' . print_r($htmlCode, true) . '</pre>';
-          return;
+        ) {
+          // Init 3D payment no flaging for CIT and MIT
+          $decodedCCNumber = $_POST['ccNumber'];
+          $decodedExpDate = $_POST['ccExpDate'];
+          $htmlCode = $this->generateHtmlFor3DPaymentForm(
+            $bankDetails,
+            $decodedCCNumber,
+            $decodedExpDate,
+            $kopaCcAlias,
+            $_POST['kopa_ccv'],
+            $orderId
+          );
+          if (isDebugActive(Debug::BEFORE_PAYMENT)) {
+            echo '<pre>' . print_r($htmlCode, true) . '</pre>';
+            return;
+          }
+          $paymentMethod = '3d';
+          $order->update_meta_data('kopa_payment_method', $paymentMethod);
+          $order->save();
+          return [
+            'result' => 'success',
+            'messages' => __('Starting 3D payment', 'kopa-payment'),
+            'htmlCode' => $htmlCode,
+            'orderId' => $kopaOrderId,
+          ];
         }
-        $paymentMethod = '3d';
-        $order->update_meta_data('kopa_payment_method', $paymentMethod);
-        $order->save();
-        return [
-          'result' => 'success',
-          'messages' => __('Starting 3D payment', 'kopa-payment'),
-          'htmlCode' => $htmlCode,
-          'orderId' => $kopaOrderId,
-        ];
       } else if ($savedCard['is3dAuth'] == true) {
         $traceId = null;
         $paymentMethod = 'moto';
 
         if (
           $savedCard['is3dAuth'] == true &&
-          isset($bankDetails['payload']['flaging']) &&
-          $bankDetails['payload']['flaging'] == true &&
           isset($savedCard['traceId']) &&
           !empty($savedCard['traceId'])
         ) {
@@ -739,7 +736,7 @@ class KOPA_Payment extends WC_Payment_Gateway
             $order->update_meta_data('isPhysicalProducts', 'false');
             $order->update_status('completed');
           }
-          $order->update_meta_data('kopaTranType', 'moto_success');
+          $order->update_meta_data('kopaTranType', $paymentMethod . '_success');
           $order->save();
           return [
             'result' => 'success',
@@ -807,8 +804,14 @@ class KOPA_Payment extends WC_Payment_Gateway
       <input type="hidden" name="cv2" value="<?php echo $ccv; ?>">
       <input type="hidden" name="resURL" value="<?php echo $this->getResponseUrl($orderId); ?>">
       <input type="hidden" name="redirectURL" value="<?php echo $this->getRedirectUrl($orderId); ?>">
-      <input type="hidden" name="exemptionFlag" value="6">
-      <input type="hidden" name="exemptionSubflag" value="C">
+      <?php
+      if (
+        isset($bankDetails['payload']['flaging']) &&
+        $bankDetails['payload']['flaging'] == true
+      ) { ?>
+        <input type="hidden" name="exemptionFlag" value="6">
+        <input type="hidden" name="exemptionSubflag" value="C">
+      <?php } ?>
     </form>
     <?php
     return ob_get_clean();

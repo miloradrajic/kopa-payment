@@ -5,7 +5,7 @@ $(document).ready(async function() {
     let ccId = $(this).data('cc-id');
     if (confirm(ajax_my_account_params.confirmCardDelete + '?')) {
       let cardDeleteResponse = await deleteCard(ccId);
-      if($.parseJSON(cardDeleteResponse).success == true) {
+      if(cardDeleteResponse.success === true) {
         location.reload(true);
       }
     }
@@ -29,8 +29,8 @@ async function deleteCard(ccId){
     },
     success: function (response) {
       try{
-        const resDecoded =  $.parseJSON(response);
-        return resDecoded.card;
+        // console.log(response)
+        return response;
       } catch(e) {
         // not valid JSON
       }
