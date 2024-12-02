@@ -51,28 +51,25 @@ function kopaCustomOrderScripts($hook)
 
   // Woocommerce payment settings page script
   if ($hook === 'woocommerce_page_wc-settings') {
-    $wcSettingsScriptVersion = md5_file(KOPA_PLUGIN_URL . 'js/kopa-admin-payment-settings-scripts.js');
     wp_enqueue_script(
       'kopa_custom_admin_order_scrips',
       KOPA_PLUGIN_URL . 'js/kopa-admin-payment-settings-scripts.js',
       ['jquery'],
-      $wcSettingsScriptVersion,
+      '',
       true
     );
   }
 
   // Woocommerce order preview styles
   if ($hook === 'post.php' || $hook == 'woocommerce_page_wc-orders') {
-    $orderStyleVersion = md5_file(KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css');
-    wp_enqueue_style('kopa-admin-styles', KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css', '', $orderStyleVersion);
+    wp_enqueue_style('kopa-admin-styles', KOPA_PLUGIN_URL . 'css/kopa-admin-styles.css');
 
     // Woocommerce order preview script
-    $orderScriptVersion = md5_file(KOPA_PLUGIN_URL . 'js/kopa-admin-order-preview-scripts.js');
     wp_enqueue_script(
       'kopa_custom_admin_order_scrips',
       KOPA_PLUGIN_URL . 'js/kopa-admin-order-preview-scripts.js',
       ['jquery'],
-      $orderScriptVersion,
+      '',
       true
     );
     wp_localize_script('kopa_custom_admin_order_scrips', 'orderKopaParam', array(

@@ -184,25 +184,6 @@ function prepareDataForFiscalization($order)
   ];
 }
 
-// Hook into WooCommerce kopa-payment saving action
-add_action('woocommerce_update_options_payment_gateways_kopa-payment', 'check_and_set_tax_on_fiscalization_enable');
-/**
- * This will check if there are any tax rates, and add default ones that custommer can use on product
- * Tax rate are later used for fiscalization
- * @return void
- */
-function check_and_set_tax_on_fiscalization_enable()
-{
-  if (
-    isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
-    get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
-  ) {
-    // echo 'ENABLED<pre>' . print_r('kopa_enable_fiscalization', true) . '</pre>';
-    // Run the tax rate setup function
-    checkAndAddStandardTaxRate();
-  }
-}
-
 /**
  * Adding default tax rates for products that will be used in fiscalization
  * @return void

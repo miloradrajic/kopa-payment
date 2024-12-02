@@ -538,35 +538,43 @@ class KopaCurl
   /**
    * MOTO payment
    */
-  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId)
+  public function motoPayment($card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId, $flagingActive, $installments)
   {
     if ($this->isInitialized() == false) {
       $this->curlInit();
     }
     $motoPaymentUrl = $this->serverUrl . '/api/payment/moto';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken'];
-    $data = json_encode(
-      [
-        'alias' => $card['alias'],
-        'expirationDate' => $card['expirationDate'],
-        'type' => $card['type'],
-        'cardNo' => $card['cardNo'],
-        'cardId' => $cardId,
-        'userId' => $_SESSION['kopaUserId'],
-        'amount' => $amount,
-        'physicalProduct' => $physicalProduct,
-        'oid' => $kopaOrderId,
-        'ccv' => null,
-        'exemptionFlag' => '6',
-        'exemptionSubflag' => 'C',
-        'traceId' => $traceId,
-      ]
-    );
+    $data = [
+      'alias' => $card['alias'],
+      'expirationDate' => $card['expirationDate'],
+      'type' => $card['type'],
+      'cardNo' => $card['cardNo'],
+      'cardId' => $cardId,
+      'userId' => $_SESSION['kopaUserId'],
+      'amount' => $amount,
+      'physicalProduct' => $physicalProduct,
+      'oid' => $kopaOrderId,
+      'ccv' => null,
+    ];
+
+    if ($flagingActive == true) {
+      $data['exemptionFlag'] = '6';
+      $data['exemptionSubflag'] = 'C';
+      $data['traceId'] = $traceId;
+    }
+    if ($installments > 0) {
+      if ($flagingActive == true)
+        $data['exemptionSubflag'] = 'I';
+      $data['instalment'] = $installments;
+    }
+
+    $dataEncoded = json_encode($data);
     if (isDebugActive(Debug::BEFORE_PAYMENT)) {
-      echo 'MOTO Data<pre>' . print_r($data, true) . '</pre>';
+      echo 'MOTO Data<pre>' . print_r($dataEncoded, true) . '</pre>';
       return;
     }
-    $returnData = $this->post($motoPaymentUrl, $data);
+    $returnData = $this->post($motoPaymentUrl, $dataEncoded);
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
     array_pop($this->headers);
@@ -647,6 +655,76 @@ class KopaCurl
         kopaMessageLog(__METHOD__, $orderId, $userId, $loginResult['userId'], $decodedReturn['errMsg']);
       }
     } elseif ($returnData === 'Order not found' || $returnData === 'Order is already in PostAuth') {
+      $decodedReturn = $returnData;
+    }
+
+    return $decodedReturn;
+  }
+
+
+  /**
+   * 
+   * Getting merchant details about installments and grace period
+   * 
+   */
+  public function getMerchantDetails($userId = 0)
+  {
+    if ($this->isInitialized() == false) {
+      $this->curlInit();
+    }
+
+    $loginResult = $this->loginUserByAdmin($userId);
+    $merchantDetailsUrl = $this->serverUrl . '/api/merchant/details';
+    $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token'];
+
+    $returnData = $this->get($merchantDetailsUrl);
+    $this->close();
+    array_pop($this->headers);
+
+    $decodedReturn = json_decode($returnData, true);
+    if ($decodedReturn !== null && json_last_error() === JSON_ERROR_NONE) {
+      if (isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error') {
+        // Log event
+        kopaMessageLog(__METHOD__, '', $userId, $loginResult['userId'], $decodedReturn['errMsg']);
+      }
+    } else {
+      $decodedReturn = $returnData;
+    }
+
+    return $decodedReturn;
+  }
+
+
+  /**
+   * 
+   * Checking if card supporsts installments payment
+   * 
+   */
+  public function checkCcBinNumberForInstallments($bin, $userId = 0)
+  {
+    if ($this->isInitialized() == false) {
+      $this->curlInit();
+    }
+
+    $loginResult = $this->loginUserByAdmin($userId);
+    $merchantDetailsUrl = $this->serverUrl . '/api/payment/check_installments';
+    $this->headers[] = 'Authorization: Bearer ' . $loginResult['access_token'];
+    $data = json_encode(
+      [
+        'bin' => $bin,
+      ]
+    );
+    $returnData = $this->post($merchantDetailsUrl, $data);
+    $this->close();
+    array_pop($this->headers);
+
+    $decodedReturn = json_decode($returnData, true);
+    if ($decodedReturn !== null && json_last_error() === JSON_ERROR_NONE) {
+      if (isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error') {
+        // Log event
+        kopaMessageLog(__METHOD__, '', $userId, $loginResult['userId'], $decodedReturn['errMsg']);
+      }
+    } else {
       $decodedReturn = $returnData;
     }
 

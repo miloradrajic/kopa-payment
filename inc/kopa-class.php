@@ -2,7 +2,7 @@
 class KOPA_Payment extends WC_Payment_Gateway
 {
   private $curl; // Declare the $curl property
-  public $errors, $pluginVersion;
+  public $errors, $pluginVersion, $merchantDetails;
   public function __construct()
   {
     $this->id = 'kopa-payment';
@@ -15,12 +15,16 @@ class KOPA_Payment extends WC_Payment_Gateway
     $this->title = $this->get_option('title');
     $this->curl = new KopaCurl();
     $this->errors = [];
+    $this->merchantDetails = $this->curl->getMerchantDetails();
+    add_action('wp_enqueue_scripts', function (): void {
+      wp_localize_script('ajax-checkout', 'merchantDetails', ['installments' => ($this->merchantDetails['installments']) ? 'true' : 'false']);
+    });
     add_action('woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'kopa_validate_and_trim_url']);
+    add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'check_and_set_tax_on_fiscalization_enable']);
     add_action('woocommerce_update_options_kopa-payment_' . $this->id, [$this, 'kopa_flush_rewrite_rules']);
 
-    // add_filter('woocommerce_settings_save_' . $this->id, [$this,'kopa_validate_and_trim_url']);
     $this->getErrorsIfSettingsFieldsEmpty();
     if (!empty($this->errors)) {
       add_action('admin_notices', [$this, 'warningsPrint']);
@@ -375,18 +379,6 @@ class KOPA_Payment extends WC_Payment_Gateway
       }
     }
     echo '<div class="kopaCcPaymentInput ' . $userHaveSavedCcClass . '">';
-    // woocommerce_form_field( 
-    //   'kopa_cc_type', array(
-    //   'type'        => 'radio',
-    //   'class'       => array('input-text'),
-    //   'label'       => __('CC Type', 'kopa-payment'),
-    //   'options'     => array(
-    //                     'dynamic' => 'Master Card, Visa, American Express',
-    //                     'dina' => 'Dina'
-    //                   ),
-    //   'default' => 'dynamic'
-    //   ), 
-    // );
     woocommerce_form_field(
       'kopa_cc_number',
       array(
@@ -421,6 +413,32 @@ class KOPA_Payment extends WC_Payment_Gateway
         'clear' => true,
       )
     );
+    if ($this->merchantDetails['installments'] == true) {
+      if (
+        isset($this->merchantDetails['installmentsPlan']) &&
+        !empty($this->merchantDetails['installmentsPlan']) &&
+        isset($this->merchantDetails['installmentsPlan']['acceptedInstalmentsNumber']) &&
+        !empty($this->merchantDetails['installmentsPlan']['acceptedInstalmentsNumber'])
+      ) {
+        $installmentsPlan = $this->merchantDetails['installmentsPlan']['acceptedInstalmentsNumber'];
+        $installmentsPlanFixed = ['0' => 0];
+
+        foreach ($installmentsPlan as $value) {
+          $installmentsPlanFixed[$value] = $value;
+        }
+        woocommerce_form_field(
+          'kopa_installments',
+          array(
+            'type' => 'select',
+            'class' => array('input-select', 'hidden'),
+            'label' => __('Installments', 'kopa-payment'),
+            'options' => $installmentsPlanFixed,
+            'default' => 0,
+            'required' => false
+          )
+        );
+      }
+    }
     if (is_user_logged_in()) {
       echo '<div class="kopaCcPaymentInput ' . $userHaveSavedCcClass . '">';
       woocommerce_form_field(
@@ -468,6 +486,12 @@ class KOPA_Payment extends WC_Payment_Gateway
   {
     // Use a payment gateway or API to process the payment.
     $paymentMethod = '';
+
+    $installments = 0;
+
+    if (isset($_POST['kopa_installments'])) {
+      $installments = (int) $_POST['kopa_installments'];
+    }
 
     $kopaOrderId = $_POST['kopaIdReferenceId'];
     // update_post_meta($orderId, 'kopaIdReferenceId', $kopaOrderId);
@@ -593,7 +617,8 @@ class KOPA_Payment extends WC_Payment_Gateway
           $_POST['kopa_cc_exparation_date'],
           $kopaCcAlias,
           $_POST['kopa_ccv'],
-          $orderId
+          $orderId,
+          $installments
         );
         $paymentMethod = '3d';
         $order->update_meta_data('kopa_payment_method', $paymentMethod);
@@ -676,7 +701,8 @@ class KOPA_Payment extends WC_Payment_Gateway
             $decodedExpDate,
             $kopaCcAlias,
             $_POST['kopa_ccv'],
-            $orderId
+            $orderId,
+            $installments
           );
           if (isDebugActive(Debug::BEFORE_PAYMENT)) {
             echo '<pre>' . print_r($htmlCode, true) . '</pre>';
@@ -693,18 +719,22 @@ class KOPA_Payment extends WC_Payment_Gateway
           ];
         }
       } else if ($savedCard['is3dAuth'] == true) {
+        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+
         $traceId = null;
         $paymentMethod = 'moto';
 
         if (
-          $savedCard['is3dAuth'] == true &&
           isset($savedCard['traceId']) &&
-          !empty($savedCard['traceId'])
+          !empty($savedCard['traceId']) &&
+          isset($bankDetails['payload']['flaging']) &&
+          $bankDetails['payload']['flaging'] == true
         ) {
           // MIT Transaction data
           $traceId = $savedCard['traceId'];
           $paymentMethod = 'mit';
         }
+
         // Init Moto payment
         $motoPaymentResult = $this->curl->motoPayment(
           $savedCard,
@@ -712,7 +742,9 @@ class KOPA_Payment extends WC_Payment_Gateway
           $orderTotalAmount,
           $physicalProducts,
           $kopaOrderId,
-          $traceId
+          $traceId,
+          $bankDetails['payload']['flaging'],
+          $installments
         );
         $order->update_meta_data('kopaOrderPaymentData', $motoPaymentResult);
 
@@ -774,8 +806,15 @@ class KOPA_Payment extends WC_Payment_Gateway
   /**
    * Generating data for sending to 3D payment proccess
    */
-  private function generateHtmlFor3DPaymentForm($bankDetails, $cardNumber, $cardExpDate, $alias, $ccv, $orderId)
-  {
+  private function generateHtmlFor3DPaymentForm(
+    $bankDetails,
+    $cardNumber,
+    $cardExpDate,
+    $alias,
+    $ccv,
+    $orderId,
+    $installments
+  ) {
     ob_start()
       ?>
     <form method="post" action="<?php echo $bankDetails['bankUrl']; ?>" id="paymentform" target="_self">
@@ -810,7 +849,14 @@ class KOPA_Payment extends WC_Payment_Gateway
         $bankDetails['payload']['flaging'] == true
       ) { ?>
         <input type="hidden" name="exemptionFlag" value="6">
-        <input type="hidden" name="exemptionSubflag" value="C">
+        <?php if ($installments > 0) { ?>
+          <input type="hidden" name="exemptionSubflag" value="I">
+        <?php } else { ?>
+          <input type="hidden" name="exemptionSubflag" value="C">
+        <?php } ?>
+      <?php } ?>
+      <?php if ($installments > 0) { ?>
+        <input type="hidden" name="instalment" value=<?php echo $installments ?>>
       <?php } ?>
     </form>
     <?php
@@ -1003,6 +1049,22 @@ class KOPA_Payment extends WC_Payment_Gateway
       ) {
         $this->errors[] = 'Kopa test merchant ID cannot be empty!';
       }
+    }
+  }
+
+  /**
+   * This will check if there are any tax rates, and add default ones that custommer can use on product
+   * Tax rate are later used for fiscalization
+   * @return void
+   */
+  function check_and_set_tax_on_fiscalization_enable()
+  {
+    if (
+      isset(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization']) &&
+      get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'] == 'yes'
+    ) {
+      // Run the tax rate setup function
+      checkAndAddStandardTaxRate();
     }
   }
 }

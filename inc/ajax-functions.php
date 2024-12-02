@@ -118,34 +118,33 @@ function getSavedCardDetails()
 }
 add_action('wp_ajax_get_card_details', 'getSavedCardDetails');
 
+/**
+ * Check if CC is allowed payment with installments
+ * @return wp_send_json_success | wp_send_json_error
+ */
+function checkCartInstallmentsSupport()
+{
+  include_once KOPA_PLUGIN_PATH . '/inc/curl.php';
+  $kopaCurl = new KopaCurl();
 
-// function complete3dPayment(){
-//   // Check the nonce for security
-//   check_ajax_referer('ajax-checkout-nonce', 'security');
-//   // Check if the request is an AJAX request
-//   if (isset($_POST['orderId']) && is_numeric($_POST['orderId']) && defined('DOING_AJAX') && DOING_AJAX) {
-//     // Get the order ID from the AJAX request
-//     $orderId = $_POST['orderId'];
-//     // Set the order status to "processing"
-//     $order = wc_get_order($orderId);
-//     $order->update_status('processing');
+  // Check the nonce for security
+  check_ajax_referer('ajax-checkout-nonce', 'security');
+  if (!isset($_POST['bin']) || empty($_POST['bin'])) {
+    wp_send_json_error(['message' => __('No BIN provided', 'kopa-payment')]);
+    exit;
+  }
+  $cardBin = $_POST['bin'];
+  $suportInstallments = $kopaCurl->checkCcBinNumberForInstallments($cardBin);
 
-//     // Add an order note
-//     $note = __('Order has been paid with KOPA system', 'kopa-payment');
-//     $order->add_order_note($note);
-//     // Save changes
-//     $order->save();
-//     // Redirect to the thank you page
-//     $redirect_url = $order->get_checkout_order_received_url();
-//     wp_send_json_success(['redirect' => $redirect_url, 'message' => __('Order has been completed', 'kopa-payment')]);
-//     exit;
-//   }
+  if ($suportInstallments) {
+    wp_send_json_success($suportInstallments);
+  } else {
+    wp_send_json_error(['message' => __('Error getting installments details', 'kopa-payment')]);
+  }
 
-//   wp_send_json_success(['success' => false, 'message' => __('Order could not be completed', 'kopa-payment')]);
-//   exit;
-// }
-// add_action('wp_ajax_complete_3d_payment', 'complete3dPayment');
-// add_action('wp_ajax_nopriv_complete_3d_payment', 'complete3dPayment');
+  exit;
+}
+add_action('wp_ajax_get_card_installments_support', 'checkCartInstallmentsSupport');
 
 /**
  * Saving error logs

@@ -2,8 +2,6 @@ if (typeof $ === 'undefined') {
   $ = jQuery.noConflict();
 }
 
-
-
 $(document).ready(async function() {
   const kopaIdReferenceId = generateUUID();
   // Format CC number 
@@ -23,6 +21,16 @@ $(document).ready(async function() {
     // Update the input field with the formatted value
     $(this).val(formattedValue);
   });
+
+  if(merchantDetails.installments === 'true'){
+    $("body").on("blur", "#kopa_cc_number", async function() {
+      if ($(this).val().length >= 19) {
+        const supportInstallments = await checkIfCcSupporstInstallments($(this).val().replace(/\s+/g, '').substring(0, 8));
+        // console.log('supportInstallments', supportInstallments);
+        showInstallments(supportInstallments);
+      }
+    });
+  }
   
   // Handle the keydown event to capture the backspace key
   $("body").on("keydown", "#kopa_cc_number", function(e) {
@@ -166,6 +174,7 @@ $(document).ready(async function() {
     if($('input[name="kopa_use_saved_cc"]:checked').val() == 'new'){
       $('.kopaCcPaymentInput.optionalNewCcInputs').removeClass('optionalNewCcInputs');
       $('#kopa_ccv_field').show();
+      showInstallments(false);
     }else{
       if(!$('.kopaCcPaymentInput').hasClass("optionalNewCcInputs")) {
         $('.kopaCcPaymentInput').addClass("optionalNewCcInputs");
@@ -178,6 +187,16 @@ $(document).ready(async function() {
           $('#kopa_ccv_field').show();
         }else{
           $('#kopa_ccv_field').hide();
+        }
+
+        console.log('merchantDetails ',merchantDetails.installments)
+        console.log('cardDetails.installments ',cardDetails.installments)
+        console.log('IF condition ',merchantDetails.installments === 'true' && cardDetails.installments === true)
+
+        if(merchantDetails.installments === 'true' && cardDetails.installments === true){
+          showInstallments(true);
+        }else{
+          showInstallments(false);
         }
       } else {
         console.error("Failed to retrieve card details");
@@ -439,6 +458,40 @@ async function getPiKey() {
   } catch (error) {
     // Handle AJAX or JSON parsing error
     $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+  }
+}
+
+async function checkIfCcSupporstInstallments(bin) {
+  try {
+    const response = await $.ajax({
+      type: 'POST',
+      url: ajax_checkout_params.ajaxurl,
+      data: {
+        action: 'get_card_installments_support',
+        security: ajax_checkout_params.security,
+        dataType: 'json',
+        bin
+      },
+    });
+
+    if (response.success) {
+      return response.data.installments;
+    } else {
+      // Display error message
+      $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + response.data.message + '</li></ul>');
+    }
+  } catch (error) {
+    // Handle AJAX or JSON parsing error
+    $('.woocommerce-NoticeGroup-checkout').html('<ul class="woocommerce-error"><li>' + error.message + '</li></ul>');
+  }
+}
+
+function showInstallments(supportInstallments){
+  if(supportInstallments){
+    $('#kopa_installments_field').removeClass('hidden');
+  }else{
+    $('#kopa_installments_field').addClass('hidden');
+    $('#kopa_installments').val('0').change();
   }
 }
 
