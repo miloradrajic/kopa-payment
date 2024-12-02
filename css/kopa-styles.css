@@ -81,3 +81,7 @@ div#kopaPaymentIcons.securityLogosRow img {
   cursor: no-drop;
   pointer-events: none;
 }
+
+select#kopa_installments {
+  padding: 14px;
+}
