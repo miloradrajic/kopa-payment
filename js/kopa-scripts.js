@@ -22,7 +22,7 @@ $(document).ready(async function() {
     $(this).val(formattedValue);
   });
 
-  if(merchantDetails.installments === 'true'){
+  if(merchantDetails.installments === 'true' && merchantDetails.totalAmount > merchantDetails.minInstalmentsAmount){
     $("body").on("blur", "#kopa_cc_number", async function() {
       if ($(this).val().length >= 19) {
         const supportInstallments = await checkIfCcSupporstInstallments($(this).val().replace(/\s+/g, '').substring(0, 8));
@@ -582,7 +582,7 @@ async function logErrorOnOrderPayment(orderId, errorMessage, kopaOrderId){
 }
 
 function updateOrderTotalForKopaPaymentDetails(){
-  var orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();
+  const orderTotal = $('body').find('.order-total .woocommerce-Price-amount.amount').html();
   $('body').find('#kopaPaymentDetailsTotal').html(orderTotal);
 }
 

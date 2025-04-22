@@ -206,6 +206,7 @@ class KopaCurl
       echo 'LOGIN';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
+      echo 'Merchant details<pre>' . print_r($this->getMerchantDetails(), true) . '</pre>';
       echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';
     }
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
@@ -502,7 +503,7 @@ class KopaCurl
   /**
    * Get bank details for payment
    */
-  public function getBankDetails($orderId, $amount, $physicalProduct)
+  public function getBankDetails($orderId, $amount, $physicalProduct, $instalment = 0)
   {
     if ($this->isInitialized() == false) {
       $this->curlInit();
@@ -510,16 +511,19 @@ class KopaCurl
     $bankDetailsUrl = $this->serverUrl . '/api/payment/bank_details';
     $this->headers[] = 'Authorization: Bearer ' . $_SESSION['kopaAccessToken'];
 
-    $data = json_encode(
-      [
-        'oid' => $orderId,
-        'amount' => $amount,
-        'physicalProduct' => $physicalProduct,
-        'userId' => $_SESSION['kopaUserId']
-      ]
-    );
+    $data = [
+      'oid' => $orderId,
+      'amount' => $amount,
+      'physicalProduct' => $physicalProduct,
+      'userId' => $_SESSION['kopaUserId'],
+    ];
 
-    $returnData = $this->post($bankDetailsUrl, $data);
+    if ($instalment > 0) {
+      $data['instalment'] = $instalment;
+    }
+
+    $dataEncoded = json_encode($data);
+    $returnData = $this->post($bankDetailsUrl, $dataEncoded);
     $decodedReturn = json_decode($returnData, true);
     $httpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
     $this->close();
@@ -528,7 +532,7 @@ class KopaCurl
 
     if (isset($decodedReturn['response']) && $decodedReturn['response'] == 'Error') {
       // Retry function if invalid JWT
-      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getBankDetails'), $orderId, $amount, $physicalProduct);
+      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'getBankDetails'), $orderId, $amount, $physicalProduct, $instalment);
     }
 
     $returnDataDecoded = json_decode($returnData, true);
@@ -582,7 +586,7 @@ class KopaCurl
     $decodedReturn = json_decode($returnData, true);
     if ($decodedReturn['response'] == 'Error') {
       // Retry function if invalid JWT
-      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'motoPayment'), $card, $cardId, $amount, $physicalProduct, $kopaOrderId);
+      $this->retryFunctionIfInvalidJwt($httpCode, $returnData, array($this, 'motoPayment'), $card, $cardId, $amount, $physicalProduct, $kopaOrderId, $traceId, $flagingActive, $installments);
     }
 
     $returnDataDecoded = json_decode($returnData, true);

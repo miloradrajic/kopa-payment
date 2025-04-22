@@ -149,10 +149,11 @@ function prepareDataForFiscalization($order)
     $quantity = $item->get_quantity();
 
     // Unit price including tax
-    $unitPrice = wc_get_price_including_tax($product);
+    $unitPrice = round(wc_get_price_including_tax($product), 2);
 
     // Total amount (already includes tax)
-    $totalAmount = $item->get_total();
+    // $totalAmount = $item->get_total();
+    $totalAmountIncludingTax = round($unitPrice * $quantity, 2);
 
     // Add item details to the items array
     $items[] = [
@@ -161,7 +162,7 @@ function prepareDataForFiscalization($order)
       "unitLabel" => "kom",
       "quantity" => $quantity,
       "unitPrice" => $unitPrice,
-      "totalAmount" => $totalAmount,
+      "totalAmount" => round($totalAmountIncludingTax, 2),
       "labels" => getProductTaxLabel($product),
     ];
   }
@@ -170,7 +171,7 @@ function prepareDataForFiscalization($order)
     "orderId" => $order->get_meta('kopaIdReferenceId'),
     "payment" => [
       [
-        "amount" => $orderTotal,
+        "amount" => round($orderTotal, 2),
         "paymentType" => 2
       ]
     ],

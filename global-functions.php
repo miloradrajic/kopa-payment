@@ -9,9 +9,9 @@ function detectCreditCardType($cardNumber, $sentType = 'dynamic')
     'visa' => '/^4\d{12}(\d{3})?$/',
     'master' => '/^5[1-5]\d{14}$/',
     'amex' => '/^3[47]\d{13}$/',
-    'discover' => '/^6(?:011|5\d{2})\d{12}$/',
-    'diners' => '/^3(?:0[0-5]|[68]\d)\d{11}$/',
-    'jbc' => '/^(?:2131|1800|35\d{3})\d{11}$/',
+    // 'discover' => '/^6(?:011|5\d{2})\d{12}$/',
+    // 'diners' => '/^3(?:0[0-5]|[68]\d)\d{11}$/',
+    // 'jbc' => '/^(?:2131|1800|35\d{3})\d{11}$/',
   );
 
   // Check the card number against each pattern
@@ -167,16 +167,16 @@ function isDebugActive(string $debug)
  * UNIT PRICE DISPLAY
  */
 
-add_filter('woocommerce_cart_item_name', 'checkoutSingleItemAddUnitPrice', 10, 3);
-function checkoutSingleItemAddUnitPrice($itemName, $item, $itemKey)
-{
-  if (is_cart()) {
-    echo $itemName;
-  } else {
-    $unit_price = wc_price(get_post_meta($item['product_id'], '_price', true));
-    echo $itemName . ' - ' . $unit_price;
-  }
-}
+// add_filter('woocommerce_cart_item_name', 'checkoutSingleItemAddUnitPrice', 10, 3);
+// function checkoutSingleItemAddUnitPrice($itemName, $item, $itemKey)
+// {
+//   if (is_cart()) {
+//     echo $itemName;
+//   } else {
+//     $unit_price = wc_price(get_post_meta($item['product_id'], '_price', true));
+//     echo $itemName . ' - ' . $unit_price;
+//   }
+// }
 
 // Adding unit price on thank you page
 add_filter('woocommerce_order_item_name', 'displayUnitPriceOnOrderRecievedPage', 10, 3);

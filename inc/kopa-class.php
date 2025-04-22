@@ -17,7 +17,15 @@ class KOPA_Payment extends WC_Payment_Gateway
     $this->errors = [];
     $this->merchantDetails = $this->curl->getMerchantDetails();
     add_action('wp_enqueue_scripts', function (): void {
-      wp_localize_script('ajax-checkout', 'merchantDetails', ['installments' => ($this->merchantDetails['installments']) ? 'true' : 'false']);
+      wp_localize_script(
+        'ajax-checkout',
+        'merchantDetails',
+        [
+          'totalAmount' => WC()->cart->get_total('edit'),
+          'installments' => ($this->merchantDetails['installments']) ? 'true' : 'false',
+          'minInstalmentsAmount' => ($this->merchantDetails['installmentsPlan']['minInstalmentsAmount']) ? $this->merchantDetails['installmentsPlan']['minInstalmentsAmount'] : 0,
+        ]
+      );
     });
     add_action('woocommerce_before_checkout_form', [$this, 'userLoginKopa']);
     add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
@@ -610,7 +618,13 @@ class KOPA_Payment extends WC_Payment_Gateway
         }
       } else {
         // 3d incognito cc payment
-        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+        $bankDetails = $this->curl->getBankDetails(
+          $kopaOrderId,
+          $orderTotalAmount,
+          $physicalProducts,
+          $installments
+        );
+
         $htmlCode = $this->generateHtmlFor3DPaymentForm(
           $bankDetails,
           str_replace(' ', '', $_POST['kopa_cc_number']),
@@ -687,7 +701,13 @@ class KOPA_Payment extends WC_Payment_Gateway
       }
 
       if ($savedCard['is3dAuth'] == false) {
-        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+        $bankDetails = $this->curl->getBankDetails(
+          $kopaOrderId,
+          $orderTotalAmount,
+          $physicalProducts,
+          $installments
+        );
+
         if (
           (!isset($bankDetails['payload']['flaging']) || $bankDetails['payload']['flaging'] == false) ||
           (!isset($savedCard['traceId']) || !empty($savedCard['traceId']))
@@ -719,7 +739,12 @@ class KOPA_Payment extends WC_Payment_Gateway
           ];
         }
       } else if ($savedCard['is3dAuth'] == true) {
-        $bankDetails = $this->curl->getBankDetails($kopaOrderId, $orderTotalAmount, $physicalProducts);
+        $bankDetails = $this->curl->getBankDetails(
+          $kopaOrderId,
+          $orderTotalAmount,
+          $physicalProducts,
+          $installments
+        );
 
         $traceId = null;
         $paymentMethod = 'moto';
@@ -856,7 +881,7 @@ class KOPA_Payment extends WC_Payment_Gateway
         <?php } ?>
       <?php } ?>
       <?php if ($installments > 0) { ?>
-        <input type="hidden" name="instalment" value=<?php echo $installments ?>>
+        <input type="hidden" name="instalment" value="<?php echo $installments ?>">
       <?php } ?>
     </form>
     <?php
