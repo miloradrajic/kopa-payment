@@ -5,7 +5,7 @@
  *
  * Plugin Name: KOPA Payment
  * Description: Add a KOPA payment method with credit cards to WooCommerce.
- * Version:           1.2.2
+ * Version:           1.2.3
  * Requires PHP:      7.4
  * Requires at least: 6.0
  * Author:            Tehnološko Partnerstvo
@@ -252,7 +252,7 @@ function handle_bank_post_request_on_checkout_page()
     $_SERVER['REQUEST_METHOD'] === 'GET' &&
     isset($authResult) &&
     !empty($authResult) &&
-    !isDebugActive(debug: Debug::AFTER_PAYMENT)
+    !isDebugActive(Debug::AFTER_PAYMENT)
   ) {
     // echo '<pre>' . print_r('asdf', true) . '</pre>';
     // exit;
@@ -417,8 +417,9 @@ function handle_bank_post_request_on_checkout_page()
 
 add_action('template_redirect', 'handle_bank_post_request_on_checkout_page');
 
-add_action('add_meta_boxes', 'kopaFiscalizationSection');
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+
+add_action('add_meta_boxes', 'kopaFiscalizationSection');
 function kopaFiscalizationSection()
 {
   if (
@@ -469,7 +470,7 @@ function custom_order_metabox_content($post)
     echo '<p><a href="' . $verificationUrl . '" target="_blank">' . __('Verify fiscalization', 'kopa-payment') . '</a></p>';
   }
   echo '</div>';
-  if ($invoiceType == 'refund_success') {
+  if ($invoiceType == 'refund_invoice_success') {
     echo '<div class="fiscalizationStatus">';
     echo '<h4>' . __('Fiscalization refund number', 'kopa-payment') . '</h4><p>' . $invoiceRefundNumber . '</p>';
     echo '</div>';
@@ -481,6 +482,27 @@ function custom_order_metabox_content($post)
     echo '</div>';
   }
   echo '</div>';
+
+  if (isDebugActive(Debug::FISCALIZATION)) {
+    $kopaReferenceId = $order->get_meta('kopaIdReferenceId');
+    $paymentDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderPaymentData'));
+    $fiscalizationDataSerialized = serializeTransactionDetails($order->get_meta('kopaOrderFiscalizationData'));
+    $kopaPaymentMethod = $order->get_meta('kopa_payment_method');
+    $kopaFiscalizationAuthId = get_option('woocommerce_kopa-payment_settings')['kopa_fiscalization_auth_id'];
+    $kopaFiscalizationInternalAuth = get_option('woocommerce_kopa-payment_settings')['kopa_fiscalization_internal_id'];
+    $kopaOrderTranType = $order->get_meta('kopaTranType');
+
+    echo 'kopaPaymentMethod<pre>' . print_r($kopaPaymentMethod, true) . '</pre>';
+    echo 'kopaOrderId<pre>' . print_r($kopaReferenceId, true) . '</pre>';
+    echo 'kopa_enable_fiscalization<pre>' . print_r(get_option('woocommerce_kopa-payment_settings')['kopa_enable_fiscalization'], true) . '</pre>';
+    echo 'kopaFiscalizationAuthId<pre>' . print_r($kopaFiscalizationAuthId, true) . '</pre>';
+    echo 'kopaFiscalizationInternalAuth<pre>' . print_r($kopaFiscalizationInternalAuth, true) . '</pre>';
+    echo 'kopaOrderTranType<pre>' . print_r($kopaOrderTranType, true) . '</pre>';
+    echo 'kopaFiscalizationType<pre>' . print_r($invoiceType, true) . '</pre>';
+    echo 'paymentDataSerialized<pre>' . print_r($paymentDataSerialized, true) . '</pre>';
+    echo 'fiscalizationDataSerialized<pre>' . print_r($fiscalizationDataSerialized, true) . '</pre>';
+    echo '<div class="button">Test Fiscalization</div>';
+  }
   /*
     $currency_symbol = get_woocommerce_currency_symbol();
     if (

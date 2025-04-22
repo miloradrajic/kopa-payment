@@ -145,6 +145,7 @@ class Debug
 {
   const BEFORE_PAYMENT = 'before_payment';
   const AFTER_PAYMENT = 'after_payment';
+  const FISCALIZATION = 'fiscalization';
   const SAVE_CC = 'save_cc';
   const NO = 'no';
 }

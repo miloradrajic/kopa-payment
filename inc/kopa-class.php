@@ -59,7 +59,7 @@ class KOPA_Payment extends WC_Payment_Gateway
   {
     $active_gateways = array();
     foreach (WC()->payment_gateways()->payment_gateways as $gateway) {
-      if ($gateway->settings['enabled'] == 'yes') {
+      if (isset($gateway->settings['enabled']) && $gateway->settings['enabled'] == 'yes') {
         $active_gateways[] = $gateway->id;
       }
     }
@@ -167,13 +167,13 @@ class KOPA_Payment extends WC_Payment_Gateway
           'type' => 'select',
           'class' => 'wc-enhanced-select',
           'label' => '',
-          'description' => __('In case of conflicts on redirection after payment, use REST API redirection, but check if REST API is not blocked.', 'kopa-payment') . ' <a target="_blank" href="' . rest_url('kopa-payment/v1/test') . '">' . __('REST API check here', 'kopa-payment') . '</a>',
+          // 'description' => __('In case of conflicts on redirection after payment, use REST API redirection, but check if REST API is not blocked.', 'kopa-payment') . ' <a target="_blank" href="' . rest_url('kopa-payment/v1/test') . '">' . __('REST API check here', 'kopa-payment') . '</a>',
           'default' => 'regular',
           'desc_tip' => false,
           'options' => [
-            'regular' => __('Regular redirect', 'kopa-payment'),
-            'rest' => __('REST API Redirect', 'kopa-payment'),
-            'file' => __('Plugin file', 'kopa-payment'),
+            'regular' => __('Additional page redirect', 'kopa-payment'),
+            // 'rest' => __('REST API Redirect', 'kopa-payment'),
+            // 'file' => __('Plugin file', 'kopa-payment'),
             'checkout' => __('Checkout', 'kopa-payment'),
           ],
         ],
@@ -269,6 +269,7 @@ class KOPA_Payment extends WC_Payment_Gateway
           'no' => __('Inactive', 'kopa-payment'),
           'after_payment' => __('After payment (3D)', 'kopa-payment'),
           'before_payment' => __('Global (payment will not work, it will only return sent values)', 'kopa-payment'),
+          'fiscalization' => __('Fiscalization debugging options', 'kopa-payment'),
           'save_cc' => __('Saving CC', 'kopa-payment'),
         ),
       ];
