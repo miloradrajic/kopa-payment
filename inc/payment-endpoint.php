@@ -24,11 +24,14 @@ function handle_kopa_payment_endpoint($wp)
         // Check if OrderId and kopa reference id match
         if ($data['OrderId'] === $kopaOrderId) {
           // Update transaction meta data
-          // update_post_meta($orderId, 'kopaOrderPaymentData', $data);
           $order->update_meta_data('kopaOrderPaymentData', $data);
-          $order->save();
+
           // Check for payment transaction details on KOPA
           $orderDetailsKopa = $kopaCurl->getOrderDetails($kopaOrderId, $userId);
+
+          // Save details about transaction from KOPA
+          $order->update_meta_data('paymentCheckup', $orderDetailsKopa);
+          $order->save();
 
           // Update Status on order and return transaction status BOOLEAN
           $successPayment = paymentSuccessCheckup($order, $orderDetailsKopa, $physicalProducts);
@@ -353,8 +356,7 @@ function paymentSuccessCheckup($order, $orderDetailsKopa, $physicalProducts)
       $order->update_meta_data('isPhysicalProducts', 'false');
       $order->update_status('completed');
     }
-    // Save details about transaction from KOPA
-    $order->update_meta_data('paymentCheckup', $orderDetailsKopa);
+
     $order->update_meta_data('kopaTranType', '3d_success');
     $order->save();
     return true;

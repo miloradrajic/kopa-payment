@@ -4,7 +4,7 @@ Tags: WooCommerce, payments, sopping, products, credit card
 Requires at least: 6.0
 Tested up to: 6.6.2
 Requires PHP: 7.4
-Stable tag: 1.2.3
+Stable tag: 1.2.2
 Author: Tehnološko Partnerstvo
 Author URI: kopa.rs
 License: GPLv2 or later
@@ -31,10 +31,10 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 == Changelog ==
 
 = 1.2.3 =
-* Installments change, changed checkup for Dina cards, because of changed paterns
+* Removed Diners CC type checkup, added additional debugging options on orders
 
-= 1.2.02 =
-* Added fiscalization debug options, removed REST API and custom files for transaction details POST
+= 1.2.2 =
+* Added Intesa flagging fro 3D and Moto payment, added intallments options
 
 = 1.2.01 =
 * Enableing checkout post request for bank transfers

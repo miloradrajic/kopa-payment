@@ -269,7 +269,7 @@ class KOPA_Payment extends WC_Payment_Gateway
           'no' => __('Inactive', 'kopa-payment'),
           'after_payment' => __('After payment (3D)', 'kopa-payment'),
           'before_payment' => __('Global (payment will not work, it will only return sent values)', 'kopa-payment'),
-          'fiscalization' => __('Fiscalization debugging options', 'kopa-payment'),
+          'order_details' => __('Order details', 'kopa-payment'),
           'save_cc' => __('Saving CC', 'kopa-payment'),
         ),
       ];
