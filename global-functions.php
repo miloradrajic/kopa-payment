@@ -9,9 +9,9 @@ function detectCreditCardType($cardNumber, $sentType = 'dynamic')
     'visa' => '/^4\d{12}(\d{3})?$/',
     'master' => '/^5[1-5]\d{14}$/',
     'amex' => '/^3[47]\d{13}$/',
-    'discover' => '/^6(?:011|5\d{2})\d{12}$/',
-    'diners' => '/^3(?:0[0-5]|[68]\d)\d{11}$/',
-    'jbc' => '/^(?:2131|1800|35\d{3})\d{11}$/',
+    // 'discover' => '/^6(?:011|5\d{2})\d{12}$/',
+    // 'diners' => '/^3(?:0[0-5]|[68]\d)\d{11}$/',
+    // 'jbc' => '/^(?:2131|1800|35\d{3})\d{11}$/',
   );
 
   // Check the card number against each pattern
@@ -145,6 +145,7 @@ class Debug
 {
   const BEFORE_PAYMENT = 'before_payment';
   const AFTER_PAYMENT = 'after_payment';
+  const ORDER_DETAILS = 'order_details';
   const SAVE_CC = 'save_cc';
   const NO = 'no';
 }
@@ -238,3 +239,36 @@ function load_kopa_textdomain()
     }
   }
 }
+
+// Display order custom fields when ORDER_DETAILS debug is active
+function display_order_custom_fields($order)
+{
+  if (!isDebugActive(Debug::ORDER_DETAILS)) {
+    return;
+  }
+
+  $custom_fields = array(
+    'kopaOrderPaymentData' => get_post_meta($order->get_id(), 'kopaOrderPaymentData', true),
+    'kopaIdReferenceId' => get_post_meta($order->get_id(), 'kopaIdReferenceId', true),
+    'paymentCheckup' => get_post_meta($order->get_id(), 'paymentCheckup', true),
+    'kopaTranType' => get_post_meta($order->get_id(), 'kopaTranType', true),
+    'isPhysicalProducts' => get_post_meta($order->get_id(), 'isPhysicalProducts', true)
+
+  );
+
+  echo '<div class="kopa-debug-order-fields" style="background: #f8f8f8; padding: 15px; margin: 15px 0; border: 1px solid #ddd;">';
+  echo '<h3>Kopa Debug Information</h3>';
+
+  foreach ($custom_fields as $field_name => $field_value) {
+    echo '<p><strong>' . esc_html($field_name) . ':</strong> ';
+    if (is_array($field_value)) {
+      echo '<pre>' . esc_html(print_r($field_value, true)) . '</pre>';
+    } else {
+      echo esc_html($field_value);
+    }
+    echo '</p>';
+  }
+
+  echo '</div>';
+}
+add_action('woocommerce_admin_order_data_after_shipping_address', 'display_order_custom_fields');
