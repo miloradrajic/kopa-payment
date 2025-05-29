@@ -126,8 +126,13 @@ class KopaCurl
     } else {
       $user = get_user_by('ID', $userId);
       $registerCode = get_user_meta($userId, 'kopa_user_registered_code', true);
-      $username = $user->user_login . '_' . $userId . '_' . $registerCode;
-      $password = base64_encode($user->user_login . $userId);
+      if (empty($registerCode)) {
+        $username = 'anonymous';
+        $password = 'anonymous';
+      } else {
+        $username = $user->user_login . '_' . $userId . '_' . $registerCode;
+        $password = base64_encode($user->user_login . $userId);
+      }
     }
     $loginUrl = $this->serverUrl . '/api/auth/login';
     $merchantID = $this->merchantId;
