@@ -22,8 +22,8 @@ class KOPA_Payment extends WC_Payment_Gateway
         'merchantDetails',
         [
           'totalAmount' => WC()->cart->get_total('edit'),
-          'installments' => ($this->merchantDetails['installments']) ? 'true' : 'false',
-          'minInstalmentsAmount' => ($this->merchantDetails['installmentsPlan']['minInstalmentsAmount']) ? $this->merchantDetails['installmentsPlan']['minInstalmentsAmount'] : 0,
+          'installments' => isset($this->merchantDetails['installments']) && $this->merchantDetails['installments'] ? 'true' : 'false',
+          'minInstalmentsAmount' => isset($this->merchantDetails['installmentsPlan']['minInstalmentsAmount']) ? $this->merchantDetails['installmentsPlan']['minInstalmentsAmount'] : 0,
         ]
       );
     });

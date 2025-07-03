@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.2.5 =
+* Fix for BIN checkup for active installments.
+
 = 1.2.4 =
 * Fix for automatically creating user and login after payment completed, on thank you page.
 
