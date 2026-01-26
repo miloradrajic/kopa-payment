@@ -208,7 +208,7 @@ class KopaCurl
     $returnData = json_decode($this->post($loginUrl, $data), true);
 
     if (isDebugActive(Debug::BEFORE_PAYMENT)) {
-      echo 'LOGIN';
+      echo 'LOGIN<br>';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
       echo 'Merchant details<pre>' . print_r($this->getMerchantDetails(), true) . '</pre>';
@@ -268,7 +268,7 @@ class KopaCurl
 
     $returnData = json_decode($this->post($registerUrl, $data), true);
     if (isDebugActive(Debug::BEFORE_PAYMENT)) {
-      echo 'REGISTER';
+      echo 'REGISTER <br>';
       echo 'data<pre>' . print_r($data, true) . '</pre>';
       echo 'return data<pre>' . print_r($returnData, true) . '</pre>';
       echo 'cURL error<pre>' . print_r(curl_error($this->ch), true) . '</pre>';

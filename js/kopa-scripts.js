@@ -252,7 +252,7 @@ $(document).ready(async function() {
         }
 
         // use API payment
-        if(cardType.cardType == 'dina' || cardType.cardType == 'amex'){
+        if(cardType.cardType == 'dina'){
           let secretKey = await getPiKey();
           let encodedCC = encodeCcDetails(ccNumber, ccExpDate, ccv, secretKey);
           form.append(' <input type="hidden" class="additionalKopaInput" name="paymentType" value="api">'
@@ -302,8 +302,7 @@ $(document).ready(async function() {
 
           if(
             cardParsed.is3dAuth == false &&
-            cardParsed.type !== 'dina'&&
-            cardParsed.type !== 'amex'
+            cardParsed.type !== 'dina'
           ){
             // use 3D payment
             const secretKey = await getPiKey();
@@ -322,8 +321,7 @@ $(document).ready(async function() {
             return;
           }else if(
             cardParsed.is3dAuth == true &&
-            cardParsed.type !== 'dina' &&
-            cardParsed.type !== 'amex'
+            cardParsed.type !== 'dina'
           ){
             //use MOTO payment 
             form.append(' <input type="hidden" class="additionalKopaInput" name="kopa_cc_alias" value="'+cardAlias+'">'
@@ -335,7 +333,7 @@ $(document).ready(async function() {
             form.submit();
             form.find('.additionalKopaInput').remove();
             return;
-          }else if(cardParsed.type == 'dina' || cardParsed.type == 'amex'){
+          }else if(cardParsed.type == 'dina'){
             // use API payment
             let ccNumber = $('#kopa_cc_number').val().replace(/\D/g, '');
             let ccExpDate = $('#kopa_cc_exparation_date').val().replace(/\D/g, '');

@@ -578,7 +578,7 @@ class KOPA_Payment extends WC_Payment_Gateway
       if (!$this->errorsCheck($errors)) {
         return false;
       }
-      if (in_array($kopa_cc_type, ['dina', 'amex'])) {
+      if (in_array($kopa_cc_type, ['dina'])) {
         // Start API incognito cc payment
         $paymentMethod = 'api';
         $apiPaymentStatus = $this->startApiPayment($_POST, [], $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
@@ -666,7 +666,7 @@ class KOPA_Payment extends WC_Payment_Gateway
         return false;
       }
       // Check for CC Type, if amex or dina use API payment
-      if (in_array($kopa_cc_type, ['dina', 'amex'])) {
+      if (in_array($kopa_cc_type, ['dina'])) {
         // Start API payment
         $apiPaymentStatus = $this->startApiPayment($_POST, $savedCard, $kopa_cc_type, $orderTotalAmount, $physicalProducts, $kopaOrderId, $order);
 

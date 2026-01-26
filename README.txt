@@ -30,6 +30,9 @@ Upgrade your WooCommerce store with the KÖPA payment plugin and redefine your c
 
 == Changelog ==
 
+= 1.3 =
+* Added AMEX cards on 3D payment model
+
 = 1.2.5 =
 * Fix for BIN checkup for active installments.
 
